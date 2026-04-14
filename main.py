@@ -3,10 +3,14 @@ from typing import List
 # import PIL
 import pretty_midi
 
-from utility.midi_util import MidiUtil
+from models import Track
+from utility import MidiUtil
 
 INPUT_FILE = 'input/MIDI Test.midi'
 
-pm = pretty_midi.PrettyMIDI(INPUT_FILE)
+midi_data = pretty_midi.PrettyMIDI(INPUT_FILE)
 
-MidiUtil.print_midi_data(pm)
+tracks: List[Track] = MidiUtil.create_tracks_from_prettymidi(midi_data)
+
+for t in tracks:
+    print(f'Track {t.name}: {len(t.notes)} notes')
