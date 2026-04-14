@@ -1,8 +1,9 @@
 
 from typing import List
 import pretty_midi
-
 from models import Note, Track
+
+# ----
 
 class MidiUtil:
     @staticmethod
@@ -10,6 +11,12 @@ class MidiUtil:
         instruments: List[pretty_midi.Instrument] = midi_data.instruments
 
         print(f"Loaded MIDI with {len(instruments)} instrument track(s)\n")
+
+        tempo_times, tempi = midi_data.get_tempo_changes()
+        print("Tempo changes:")
+        for time, tempo in zip(tempo_times, tempi):
+            print(f"time={time:.3f}s tempo={tempo:.2f} BPM")
+        print()
 
         for i, instrument in enumerate(instruments):
             instrument_name = instrument.name or "(no name)"
@@ -39,20 +46,36 @@ class MidiUtil:
             print()
 
     @staticmethod
-    def get_pitch_bounds(midi_data: pretty_midi.PrettyMIDI) -> tuple[int, int]:
+    def get_pitch_bounds(tracks: List[Track]) -> tuple[int, int]:
         min_pitch = min(
             note.pitch
-            for instrument in midi_data.instruments
-            for note in instrument.notes
+            for track in tracks
+            for note in track.notes
         )
 
         max_pitch = max(
             note.pitch
-            for instrument in midi_data.instruments
-            for note in instrument.notes
+            for track in tracks
+            for note in track.notes
         )
 
         return (min_pitch, max_pitch)
+    
+    @staticmethod
+    def get_time_bounds(tracks: List[Track]) -> tuple[int, int]:
+        start = min(
+            note.start
+            for track in tracks
+            for note in track.notes
+        )
+
+        end = max(
+            note.end
+            for track in tracks
+            for note in track.notes
+        )
+
+        return (start, end)
     
     @staticmethod
     def create_tracks_from_prettymidi(midi_data: pretty_midi.PrettyMIDI) -> List[Track]:

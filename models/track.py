@@ -1,7 +1,8 @@
+from typing import List
 from dataclasses import dataclass
-from typing import List, Optional
-
 from models.note import Note
+
+# ----
 
 '''
 A Track corresponds to a single track from a MIDI file.
