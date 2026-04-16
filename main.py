@@ -1,8 +1,9 @@
 from typing import List
-import pygame
+import pygame as pg
 # import PIL
 import sys
 import pretty_midi
+from common.constants import Const
 from models import Track
 from common import Color
 from utility import MidiUtil
@@ -33,40 +34,53 @@ print(f'Time bounds: {start:.3f} to {end:.3f}')
 
 # ----
 
-pygame.init()
+# Animation start
 
-# Window setup
-WIDTH, HEIGHT = 800, 600
-PADDING = 50
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Test Window")
+pg.init()
 
-running = True
+# constants
+BAR_WIDTH_STRETCH_MULT = 200
+BAR_HEIGHT = 10
+SW = Const.SCREEN_WIDTH # shorthand for easier reading
+SH = Const.SCREEN_HEIGHT
+PAD = Const.SCREEN_PADDING
 
-while running:
-    # Handle events (close window)
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+screen = pg.display.set_mode((SW, SH))
+pg.display.set_caption(Const.TITLE)
+clock = pg.time.Clock()
+
+current_frame = 0
+initial_x = SW
+x_vel = 10 # pixels per frame
+
+# main animation loop
+while True:
+    # get all events currently in the queue and handle
+    for event in pg.event.get():
+        match event.type:
+            case pg.QUIT:
+                pg.quit()
+                raise SystemExit
 
     # Draw
     screen.fill(Color.WHITE)
 
-    BAR_WIDTH_STRETCH_MULT = 100
-    BAR_HEIGHT = 10
+    # draw midi bars
     for track in tracks:
         for n in track.notes:
-            x = PADDING + n.start * BAR_WIDTH_STRETCH_MULT
+            x = initial_x + n.start * BAR_WIDTH_STRETCH_MULT - current_frame * x_vel
             width = n.duration * BAR_WIDTH_STRETCH_MULT
-            y = MidiUtil.pitch_to_y(n.pitch, pitch_min, pitch_max, HEIGHT, PADDING) - BAR_HEIGHT
+            y = MidiUtil.pitch_to_y(n.pitch, pitch_min, pitch_max, SH, PAD) - BAR_HEIGHT / 2
             height = BAR_HEIGHT
 
-            pygame.draw.rect(screen, track.color, (x, y, width, height))
+            pg.draw.rect(screen, track.color, (x, y, width, height))
 
-            pygame.draw.line(screen, Color.BLACK, (WIDTH / 2, 0), (WIDTH / 2, HEIGHT), 1)
+    # center vertical line
+    pg.draw.line(screen, Color.LIGHT_GRAY, (SW / 2, 0), (SW / 2, SH), 1)
 
-    # Update display
-    pygame.display.flip()
+    # update display
+    pg.display.flip()
 
-pygame.quit()
-sys.exit()
+    # sleep then iterate frame count
+    clock.tick(Const.FPS)
+    current_frame += 1
