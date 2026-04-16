@@ -54,7 +54,12 @@ SW = Const.SCREEN_WIDTH # shorthand for easier reading
 SH = Const.SCREEN_HEIGHT
 PAD = Const.SCREEN_PADDING
 PLAYHEAD_X = SW / 2 # line where notes cross when they play
-TIME_OFFSET = time_min - (SW - PLAYHEAD_X) / PIXELS_PER_SECOND
+
+# Initial time offset, in seconds
+# Defaults to the time needed to have all the midi data just to the right
+# edge of the screen. Can also override this to any positive second value
+# to start midi/playback at some part of the piece.
+time_offset = time_min - (SW - PLAYHEAD_X) / PIXELS_PER_SECOND
 
 screen = pg.display.set_mode((SW, SH))
 pg.display.set_caption(Const.TITLE)
@@ -62,6 +67,8 @@ clock = pg.time.Clock()
 
 current_frame = 0
 audio_started = False
+
+start_ms = pg.time.get_ticks()
 
 # main animation loop
 while True:
@@ -73,11 +80,13 @@ while True:
                 raise SystemExit
 
     # calculate current time
-    current_time = TIME_OFFSET + current_frame / Const.FPS
+    current_ms = pg.time.get_ticks()
+    elapsed = (current_ms - start_ms) / 1000.0
+    current_time = time_offset + elapsed
 
     # start audio once we're at the playhead
     if not audio_started and current_time >= 0:
-        pg.mixer.music.play()
+        pg.mixer.music.play(start = current_time)
         audio_started = True
 
     # draw background
