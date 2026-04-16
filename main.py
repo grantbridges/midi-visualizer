@@ -69,11 +69,14 @@ while True:
     for track in tracks:
         for n in track.notes:
             x = initial_x + n.start * BAR_WIDTH_STRETCH_MULT - current_frame * x_vel
-            width = n.duration * BAR_WIDTH_STRETCH_MULT
             y = MidiUtil.pitch_to_y(n.pitch, pitch_min, pitch_max, SH, PAD) - BAR_HEIGHT / 2
-            height = BAR_HEIGHT
+            w = n.duration * BAR_WIDTH_STRETCH_MULT
+            h = BAR_HEIGHT
 
-            pg.draw.rect(screen, track.color, (x, y, width, height))
+            surf = pg.Surface((w, h), pg.SRCALPHA)
+            alpha = max(0, 255 - current_frame * 2) # temp: POC for changing alpha
+            surf.fill(Color.rgba(track.color, alpha))
+            screen.blit(surf, (x, y))
 
     # center vertical line
     pg.draw.line(screen, Color.LIGHT_GRAY, (SW / 2, 0), (SW / 2, SH), 1)
