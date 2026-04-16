@@ -12,3 +12,4 @@ It contains MIDI note data.
 class Track:
     name: str
     notes: List[Note]
+    color: tuple[int, int, int]

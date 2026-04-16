@@ -2,6 +2,7 @@
 from typing import List
 import pretty_midi
 from models import Note, Track
+from common import Color
 
 # ----
 
@@ -90,6 +91,15 @@ class MidiUtil:
                 notes.append(Note(note.pitch, note.velocity, note.start, note.end))
 
             inst_name = inst.name or "(no name)"
-            tracks.append(Track(inst_name, notes))
+            tracks.append(Track(inst_name, notes, Color.BLACK.value))
 
         return tracks
+    
+    @staticmethod
+    def pitch_to_y(pitch: int, pitch_min: int, pitch_max: int, screen_height: int, padding: int) -> float:
+        # use normalized interpolation to convert pitch to screen coordinates
+        t = (pitch - pitch_min) / (pitch_max - pitch_min)
+        y_min = padding
+        y_max = screen_height - padding
+
+        return y_max + t * (y_min - y_max)
