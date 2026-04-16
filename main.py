@@ -12,7 +12,7 @@ from utility import MidiUtil
 # ----
 
 INPUT_MIDI_FILE = 'input/MIDI Test.midi'
-#INPUT_MP3_FILE = 'input/MIDI Test.mp3'
+INPUT_MP3_FILE = 'input/MIDI Test.mp3'
 
 # Import data
 midi_data = pretty_midi.PrettyMIDI(INPUT_MIDI_FILE)
@@ -45,6 +45,8 @@ print(f'Time bounds: {time_min:.3f} to {time_max:.3f}')
 # show on right monitor (Grant local debug setup)
 #os.environ['SDL_VIDEO_WINDOW_POS'] = '2200,200'
 pg.init()
+pg.mixer.init()
+pg.mixer.music.load(INPUT_MP3_FILE)
 
 # constants
 PIXELS_PER_SECOND = 200
@@ -52,14 +54,14 @@ SW = Const.SCREEN_WIDTH # shorthand for easier reading
 SH = Const.SCREEN_HEIGHT
 PAD = Const.SCREEN_PADDING
 PLAYHEAD_X = SW / 2 # line where notes cross when they play
+TIME_OFFSET = time_min - (SW - PLAYHEAD_X) / PIXELS_PER_SECOND
 
 screen = pg.display.set_mode((SW, SH))
 pg.display.set_caption(Const.TITLE)
 clock = pg.time.Clock()
 
 current_frame = 0
-initial_x = SW
-x_vel = 10 # pixels per frame
+audio_started = False
 
 # main animation loop
 while True:
@@ -70,19 +72,30 @@ while True:
                 pg.quit()
                 raise SystemExit
 
-    # draw
+    # calculate current time
+    current_time = TIME_OFFSET + current_frame / Const.FPS
+
+    # start audio once we're at the playhead
+    if not audio_started and current_time >= 0:
+        pg.mixer.music.play()
+        audio_started = True
+
+    # draw background
     screen.fill(Color.DARK_GRAY)
 
-    time_offset = time_min - (SW - PLAYHEAD_X) / PIXELS_PER_SECOND
-    current_time = time_offset + current_frame / Const.FPS
-
     # draw midi bars
-    drew_notes = False
+    still_has_notes = False
     for track in tracks:
         for note in track.notes:
             # x and width calc
             x = PLAYHEAD_X + (note.start - current_time) * track.bar_width_mult
             w = note.duration * track.bar_width_mult
+            x_right = x + w
+
+            if x > SW:
+                # note hasn't entered visible area yet - skip rendering
+                still_has_notes = True
+                continue
 
             # y and height calc
             t = (note.pitch - pitch_min) / (pitch_max - pitch_min)
@@ -93,19 +106,21 @@ while True:
 
             color = track.color
             if x <= PLAYHEAD_X:
+                # turn white and start reducing alpha
                 color = Color.WHITE
-                note.alpha = 255 * ((x + w) / PLAYHEAD_X)
+                note.alpha = 255 * (x_right / PLAYHEAD_X)
                 note.alpha = max(0, min(255, note.alpha))  # clamp
 
-            if note.alpha > 0:
-                # draw
+            if x_right >= 0:
+                # still visible - draw
                 surf = pg.Surface((w, h), pg.SRCALPHA)
                 surf.fill(Color.rgba(color, note.alpha))
                 screen.blit(surf, (x, y))
 
-                drew_notes = True
+                still_has_notes = True
+            # else - note has fallen off screen, don't draw
 
-    if not drew_notes:
+    if not still_has_notes:
         # done
         pg.quit()
         raise SystemExit
