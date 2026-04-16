@@ -1,5 +1,5 @@
-from typing import List
-from dataclasses import dataclass
+from typing import List, Tuple
+from dataclasses import dataclass, field
 from models.note import Note
 
 # ----
@@ -10,6 +10,10 @@ It contains MIDI note data.
 '''
 @dataclass
 class Track:
-    name: str
-    notes: List[Note]
-    color: tuple[int, int, int]
+    name: str = 'Track'
+    notes: List[Note] = field(default_factory=list)
+    
+    # draw fields
+    color: Tuple[int, int, int] = (0, 0, 0)
+    bar_height: int = 10
+    bar_width_mult: int = 200 # higher = wider, visually faster

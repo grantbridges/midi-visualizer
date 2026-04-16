@@ -8,10 +8,13 @@ It contains relevant MIDI note data.
 '''
 @dataclass
 class Note:
-    pitch: int
-    velocity: int # 0-127
-    start: float # note start in seconds
-    end: float # note end in seconds
+    pitch: int = 50
+    velocity: int = 70 # 0-127
+    start: float = 0 # note start in seconds
+    end: float = 1 # note end in seconds
+
+    # draw fields
+    alpha: int = 255
 
     @property
     def duration(self):

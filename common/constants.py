@@ -4,7 +4,7 @@ class Const:
     
     # animation window constants
     FPS = 24
-    SCREEN_WIDTH = 800
-    SCREEN_HEIGHT = 600
+    SCREEN_WIDTH = 1200
+    SCREEN_HEIGHT = 900
     SCREEN_PADDING = 50
     TITLE = "Midi Visualizer"
