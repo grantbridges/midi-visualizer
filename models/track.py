@@ -16,4 +16,4 @@ class Track:
     # draw fields
     color: Tuple[int, int, int] = (0, 0, 0)
     bar_height: int = 10
-    bar_width_mult: int = 200 # higher = wider, visually faster
+    bar_pixels_per_second: int = 200 # higher = wider, visually faster

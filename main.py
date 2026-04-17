@@ -11,8 +11,8 @@ from utility import MidiUtil
 
 # ----
 
-INPUT_MIDI_FILE = 'input/MIDI Test.midi'
-INPUT_MP3_FILE = 'input/MIDI Test.mp3'
+INPUT_MIDI_FILE = 'input/Puppet Master.midi'
+INPUT_MP3_FILE = 'input/Puppet Master.mp3'
 
 # Import data
 midi_data = pretty_midi.PrettyMIDI(INPUT_MIDI_FILE)
@@ -22,15 +22,15 @@ midi_data = pretty_midi.PrettyMIDI(INPUT_MIDI_FILE)
 tracks: List[Track] = MidiUtil.create_tracks_from_prettymidi(midi_data)
 
 # temp: dummy hardcoding of track settings
-tracks[0].color = Color.RED
+tracks[0].color = Color.KAYLA_1
 tracks[0].bar_height = 10
-tracks[0].bar_width_mult = 400
-tracks[1].color = Color.BLUE
+tracks[0].bar_pixels_per_second = 400
+tracks[1].color = Color.KAYLA_2
 tracks[1].bar_height = 5
-tracks[1].bar_width_mult = 200
+tracks[1].bar_pixels_per_second = 100
 
-for t in tracks:
-    print(f'Track {t.name}: {len(t.notes)} notes')
+for (i, t) in enumerate(tracks):
+    print(f'Track {i} | {t.name} | {len(t.notes)} notes')
 
 (pitch_min, pitch_max) = MidiUtil.get_pitch_bounds(tracks)
 print(f'Pitch bounds: {pitch_min} to {pitch_max}')
@@ -42,8 +42,17 @@ print(f'Time bounds: {time_min:.3f} to {time_max:.3f}')
 
 # Animation start
 
+# text helper
+def draw_text(screen: pg.Surface, text, x, y, color, font_size):
+    font = pg.font.Font(Const.PRIMARY_FONT, font_size)
+    text_object = font.render(text, True, color)
+    text_rect = text_object.get_rect()
+    text_rect.left = x
+    text_rect.top = y
+    screen.blit(text_object, text_rect)
+
 # show on right monitor (Grant local debug setup)
-#os.environ['SDL_VIDEO_WINDOW_POS'] = '2200,200'
+os.environ['SDL_VIDEO_WINDOW_POS'] = '2200,200'
 pg.init()
 pg.mixer.init()
 pg.mixer.music.load(INPUT_MP3_FILE)
@@ -59,7 +68,7 @@ PLAYHEAD_X = SW / 2 # line where notes cross when they play
 # Defaults to the time needed to have all the midi data just to the right
 # edge of the screen. Can also override this to any positive second value
 # to start midi/playback at some part of the piece.
-time_offset = time_min - (SW - PLAYHEAD_X) / PIXELS_PER_SECOND
+time_offset = time_min - (SW - PLAYHEAD_X) / PIXELS_PER_SECOND + Const.START_TIME_OFFSET
 
 screen = pg.display.set_mode((SW, SH))
 pg.display.set_caption(Const.TITLE)
@@ -90,15 +99,21 @@ while True:
         audio_started = True
 
     # draw background
-    screen.fill(Color.DARK_GRAY)
+    screen.fill(Color.DARKEST_GRAY)
+
+    # draw time markers
+    for i in range(int(time_min), int(time_max) + 1):
+        x = PLAYHEAD_X + (i - current_time) * PIXELS_PER_SECOND
+        if x >= 0 and x <= (SW + 25):
+            pg.draw.line(screen, Color.DARKER_GRAY, (x, 0), (x, SH), 1)
 
     # draw midi bars
     still_has_notes = False
     for track in tracks:
         for note in track.notes:
             # x and width calc
-            x = PLAYHEAD_X + (note.start - current_time) * track.bar_width_mult
-            w = note.duration * track.bar_width_mult
+            x = PLAYHEAD_X + (note.start - current_time) * track.bar_pixels_per_second
+            w = note.duration * track.bar_pixels_per_second
             x_right = x + w
 
             if x > SW:
@@ -136,6 +151,9 @@ while True:
 
     # draw playhead line that notes will cross when they "play"
     pg.draw.line(screen, Color.LIGHT_GRAY, (PLAYHEAD_X, 0), (PLAYHEAD_X, SH), 1)
+
+    m, s = divmod(int(current_ms / 1000), 60)
+    draw_text(screen, f'{m:02d}:{s:02d}', 20, 20, Color.LIGHT_GRAY, 18)
 
     # update display
     pg.display.flip()
