@@ -5,9 +5,9 @@ import sys
 import os
 import pretty_midi
 from common.constants import Const
-from models import Track, Note
+from models import VisConfig, Track, Note
 from common import Color
-from utility import MidiUtil
+from utility import MidiUtil, FileUtil
 
 # ----
 
@@ -19,23 +19,26 @@ midi_data = pretty_midi.PrettyMIDI(INPUT_MIDI_FILE)
 # MidiUtil.print_midi_data(midi_data)
 
 # Initialize models
-tracks: List[Track] = MidiUtil.create_tracks_from_prettymidi(midi_data)
+vis_config: VisConfig = VisConfig()
+vis_config.tracks = MidiUtil.create_tracks_from_prettymidi(midi_data)
 
 # temp: dummy hardcoding of track settings
-tracks[0].color = Color.KAYLA_1
-tracks[0].bar_height = 10
-tracks[0].bar_pixels_per_second = 400
-tracks[1].color = Color.KAYLA_2
-tracks[1].bar_height = 5
-tracks[1].bar_pixels_per_second = 100
+vis_config.tracks[0].color = Color.KAYLA_1
+vis_config.tracks[0].bar_height = 10
+vis_config.tracks[0].bar_pixels_per_second = 400
+vis_config.tracks[1].color = Color.KAYLA_2
+vis_config.tracks[1].bar_height = 5
+vis_config.tracks[1].bar_pixels_per_second = 100
 
-for (i, t) in enumerate(tracks):
+FileUtil.write_vis_config_to_xml(vis_config, 'xml/puppet_master.xml')
+
+for (i, t) in enumerate(vis_config.tracks):
     print(f'Track {i} | {t.name} | {len(t.notes)} notes')
 
-(pitch_min, pitch_max) = MidiUtil.get_pitch_bounds(tracks)
+(pitch_min, pitch_max) = MidiUtil.get_pitch_bounds(vis_config.tracks)
 print(f'Pitch bounds: {pitch_min} to {pitch_max}')
 
-(time_min, time_max) = MidiUtil.get_time_bounds(tracks)
+(time_min, time_max) = MidiUtil.get_time_bounds(vis_config.tracks)
 print(f'Time bounds: {time_min:.3f} to {time_max:.3f}')
 
 # ----
@@ -99,7 +102,7 @@ while True:
         audio_started = True
 
     # draw background
-    screen.fill(Color.DARKEST_GRAY)
+    screen.fill(vis_config.bg_color)
 
     # draw time markers
     for i in range(int(time_min), int(time_max) + 1):
@@ -109,7 +112,7 @@ while True:
 
     # draw midi bars
     still_has_notes = False
-    for track in tracks:
+    for track in vis_config.tracks:
         for note in track.notes:
             # x and width calc
             x = PLAYHEAD_X + (note.start - current_time) * track.bar_pixels_per_second
