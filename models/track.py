@@ -1,6 +1,7 @@
 from typing import List, Tuple
 from dataclasses import dataclass, field
 import pretty_midi
+from common import Color
 from models.note import Note
 import xml.etree.ElementTree as ET
 
@@ -20,7 +21,7 @@ class Track:
     
     # properties
     visible: bool = True
-    color: Tuple[int, int, int] = (0, 0, 0)
+    color: Tuple[int, int, int] = Color.KAYLA_1
     bar_height: int = 10
     bar_pixels_per_second: int = 200 # higher = wider, visually faster
 

@@ -22,7 +22,7 @@ class Note:
     # (none)
 
     # current draw values
-    alpha: int = 255
+    alpha: int = 180
 
     @property
     def duration(self):

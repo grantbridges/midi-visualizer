@@ -1,15 +1,12 @@
 from enum import Enum
-from typing import List
 import pygame as pg
-from pathlib import Path
 # import PIL
 import sys
 import os
 import pretty_midi
 from common.constants import Const
-from models import VisConfig, Track, Note
+from models import VisConfig
 from common import Color
-from utility import MidiUtil, FileUtil
 
 # ----
 
@@ -23,10 +20,14 @@ run_mode = RunMode.Test
 if len(sys.argv) > 1:
     run_mode = sys.argv[1]
 
-print(f"Init: Running script in {run_mode} mode")
+print(f"Running script in {run_mode} mode")
 
-#TRACK_NAME = 'Puppet Master'
-TRACK_NAME = 'MIDI Test'
+if run_mode != RunMode.Test:
+    print(f"Warning: {RunMode.Generate} mode not yet supported - exiting")
+    quit()
+
+TRACK_NAME = 'Puppet Master'
+#TRACK_NAME = 'MIDI Test'
 INPUT_MIDI_FILE = f'input/{TRACK_NAME}.midi'
 INPUT_MP3_FILE = f'input/{TRACK_NAME}.mp3'
 INPUT_CONFIG_FILE = f'input/{TRACK_NAME}.mvc'
@@ -45,13 +46,13 @@ if vis_config is None:
     vis_config = VisConfig.create_from_midi_data(TRACK_NAME, midi_data)
 
     # temp: dummy hardcoding of track settings
-    vis_config.play_audio = False
-    vis_config.tracks[0].color = Color.KAYLA_1
-    vis_config.tracks[0].bar_height = 10
-    vis_config.tracks[0].bar_pixels_per_second = 400
-    vis_config.tracks[1].color = Color.KAYLA_2
-    vis_config.tracks[1].bar_height = 5
-    vis_config.tracks[1].bar_pixels_per_second = 100
+    # vis_config.play_audio = False
+    # vis_config.tracks[0].color = Color.KAYLA_1
+    # vis_config.tracks[0].bar_height = 10
+    # vis_config.tracks[0].bar_pixels_per_second = 400
+    # vis_config.tracks[1].color = Color.KAYLA_2
+    # vis_config.tracks[1].bar_height = 5
+    # vis_config.tracks[1].bar_pixels_per_second = 100
 
     # 2.1) Save out as initial generated file
     vis_config.save(INPUT_CONFIG_FILE)
