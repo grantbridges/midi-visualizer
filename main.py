@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import List
 import pygame as pg
 # import PIL
@@ -11,39 +12,72 @@ from utility import MidiUtil, FileUtil
 
 # ----
 
-INPUT_MIDI_FILE = 'input/Puppet Master.midi'
-INPUT_MP3_FILE = 'input/Puppet Master.mp3'
+class RunMode(str, Enum):
+    # Reads MIDI from file and generates new xml config file starting point
+    GenerateConfig = "GenerateConfig",
+    # Reads MIDI and vis config from file (if available) and animates in pygame window
+    TestVisualizer = "TestVisualizer",
+    # Reads MIDI and vis config from file (if available) and generates output MP4
+    GenerateMP4 = "GenerateMP4"
 
-# Import data
+run_mode = RunMode.TestVisualizer
+if len(sys.argv) > 1:
+    run_mode = sys.argv[1]
+
+print(f"Init: Running script in {run_mode} mode")
+
+INPUT_FILE_NAME = 'Puppet Master'
+INPUT_MIDI_FILE = f'input/{INPUT_FILE_NAME}.midi'
+INPUT_MP3_FILE = f'input/{INPUT_FILE_NAME}.mp3'
+INPUT_CONFIG_FILE = f'input/{INPUT_FILE_NAME}.xml'
+
+START_TIME_OFFSET = 0 # seconds
+
+# ----
+
+# Import MIDI data
 midi_data = pretty_midi.PrettyMIDI(INPUT_MIDI_FILE)
 # MidiUtil.print_midi_data(midi_data)
 
-# Initialize models
-vis_config: VisConfig = VisConfig()
-vis_config.tracks = MidiUtil.create_tracks_from_prettymidi(midi_data)
+if run_mode == RunMode.GenerateDefaultConfig:
+    # Initialize models
+    vis_config = MidiUtil.create_vis_config_from_prettymidi(midi_data)
 
-# temp: dummy hardcoding of track settings
-vis_config.tracks[0].color = Color.KAYLA_1
-vis_config.tracks[0].bar_height = 10
-vis_config.tracks[0].bar_pixels_per_second = 400
-vis_config.tracks[1].color = Color.KAYLA_2
-vis_config.tracks[1].bar_height = 5
-vis_config.tracks[1].bar_pixels_per_second = 100
+    # temp: dummy hardcoding of track settings
+    vis_config.tracks[0].color = Color.KAYLA_1
+    vis_config.tracks[0].bar_height = 10
+    vis_config.tracks[0].bar_pixels_per_second = 400
+    vis_config.tracks[1].color = Color.KAYLA_2
+    vis_config.tracks[1].bar_height = 5
+    vis_config.tracks[1].bar_pixels_per_second = 100
 
-FileUtil.write_vis_config_to_xml(vis_config, 'xml/puppet_master.xml')
-
-for (i, t) in enumerate(vis_config.tracks):
-    print(f'Track {i} | {t.name} | {len(t.notes)} notes')
-
-(pitch_min, pitch_max) = MidiUtil.get_pitch_bounds(vis_config.tracks)
-print(f'Pitch bounds: {pitch_min} to {pitch_max}')
-
-(time_min, time_max) = MidiUtil.get_time_bounds(vis_config.tracks)
-print(f'Time bounds: {time_min:.3f} to {time_max:.3f}')
+    # Writes to temp raw_generated_xml folder so we don't risk overwriting anything in "input"
+    # that's already been configured. Copy from here to "input" to load in test & generation runs.
+    raw_xml_path = f'input/raw_generated_xml/{INPUT_FILE_NAME}.xml'
+    FileUtil.write_vis_config_to_xml(vis_config, raw_xml_path)
+    print(f"Saved visualizer config to \"{raw_xml_path}\"")
+    quit()
+elif run_mode == RunMode.GenerateMP4:
+    # TODO
+    print(f"Warning: Generate MP4 not yet implemented. Exiting.")
+    quit()
 
 # ----
 
 # Animation start
+
+# Load or initialize visual config
+vis_config: VisConfig = None
+try:
+    vis_config = FileUtil.read_vis_config_from_xml(INPUT_CONFIG_FILE)
+    vis_config.populate_notes_from_midi_data(midi_data)
+except Exception as e:
+    print(f"Warning: Unable to load vis config from file - generating fresh: {str(e)}")
+    # generate config fresh with midi data populated
+    vis_config = MidiUtil.create_vis_config_from_prettymidi(midi_data)
+
+(pitch_min, pitch_max) = MidiUtil.get_pitch_bounds(vis_config.tracks)
+(time_min, time_max) = MidiUtil.get_time_bounds(vis_config.tracks)
 
 # text helper
 def draw_text(screen: pg.Surface, text, x, y, color, font_size):
@@ -71,7 +105,7 @@ PLAYHEAD_X = SW / 2 # line where notes cross when they play
 # Defaults to the time needed to have all the midi data just to the right
 # edge of the screen. Can also override this to any positive second value
 # to start midi/playback at some part of the piece.
-time_offset = time_min - (SW - PLAYHEAD_X) / PIXELS_PER_SECOND + Const.START_TIME_OFFSET
+time_offset = time_min - (SW - PLAYHEAD_X) / PIXELS_PER_SECOND + START_TIME_OFFSET
 
 screen = pg.display.set_mode((SW, SH))
 pg.display.set_caption(Const.TITLE)
@@ -97,9 +131,10 @@ while True:
     current_time = time_offset + elapsed
 
     # start audio once we're at the playhead
-    if not audio_started and current_time >= 0:
-        pg.mixer.music.play(start = current_time)
-        audio_started = True
+    if vis_config.play_audio == True:
+        if not audio_started and current_time >= 0:
+            pg.mixer.music.play(start = current_time)
+            audio_started = True
 
     # draw background
     screen.fill(vis_config.bg_color)

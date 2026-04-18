@@ -8,6 +8,7 @@ It contains relevant MIDI note data.
 '''
 @dataclass
 class Note:
+    # read from midi data
     pitch: int = 50
     velocity: int = 70 # 0-127
     start: float = 0 # note start in seconds

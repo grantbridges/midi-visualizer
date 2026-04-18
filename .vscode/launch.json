@@ -5,11 +5,20 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug",
+      "name": "Debug Visualizer Test",
       "type": "debugpy",
       "request": "launch",
       "program": "./main.py",
-      "console": "integratedTerminal"
+      "console": "integratedTerminal",
+      "args": ["TestVisualizer"]
+    },
+    {
+      "name": "Debug Generate Config",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "./main.py",
+      "console": "integratedTerminal",
+      "args": ["GenerateConfig"]
     }
   ]
 }

@@ -1,12 +1,12 @@
 
 from typing import List
 import pretty_midi
-from models import Note, Track
-from common import Color
-
-# ----
+from models import VisConfig, Track, Note
 
 class MidiUtil:
+    def __new__(cls):
+        raise TypeError("MidiUtil is static")
+
     @staticmethod
     def print_midi_data(midi_data: pretty_midi.PrettyMIDI) -> None:
         instruments: List[pretty_midi.Instrument] = midi_data.instruments
@@ -79,10 +79,10 @@ class MidiUtil:
         return (start, end)
     
     @staticmethod
-    def create_tracks_from_prettymidi(midi_data: pretty_midi.PrettyMIDI) -> List[Track]:
-        instruments: List[pretty_midi.Instrument] = midi_data.instruments
+    def create_vis_config_from_prettymidi(midi_data: pretty_midi.PrettyMIDI) -> VisConfig:
+        vis_config = VisConfig()
 
-        tracks: List[Track] = []
+        instruments: List[pretty_midi.Instrument] = midi_data.instruments
 
         for inst in instruments:
             notes: List[Note] = []
@@ -91,6 +91,6 @@ class MidiUtil:
                 notes.append(Note(note.pitch, note.velocity, note.start, note.end))
 
             inst_name = inst.name or "(no name)"
-            tracks.append(Track(name=inst_name, notes=notes))
+            vis_config.tracks.append(Track(name=inst_name, notes=notes))
 
-        return tracks
+        return vis_config

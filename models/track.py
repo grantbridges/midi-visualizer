@@ -10,10 +10,12 @@ It contains MIDI note data.
 '''
 @dataclass
 class Track:
+    # read from midi data
     name: str = 'Track'
     notes: List[Note] = field(default_factory=list)
     
-    # draw fields
+    # visualization properties from config
+    visible: bool = True
     color: Tuple[int, int, int] = (0, 0, 0)
     bar_height: int = 10
     bar_pixels_per_second: int = 200 # higher = wider, visually faster

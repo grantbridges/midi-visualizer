@@ -9,7 +9,5 @@ class Const:
     SCREEN_PADDING = 50
     TITLE = "Midi Visualizer"
 
-    START_TIME_OFFSET = 0 # seconds
-
     # visual
     PRIMARY_FONT = 'freesansbold.ttf'
