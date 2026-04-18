@@ -1,7 +1,6 @@
 
 from typing import List
 import pretty_midi
-from models import VisConfig, Track, Note
 
 class MidiUtil:
     def __new__(cls):
@@ -45,52 +44,3 @@ class MidiUtil:
                 )
 
             print()
-
-    @staticmethod
-    def get_pitch_bounds(tracks: List[Track]) -> tuple[int, int]:
-        min_pitch = min(
-            note.pitch
-            for track in tracks
-            for note in track.notes
-        )
-
-        max_pitch = max(
-            note.pitch
-            for track in tracks
-            for note in track.notes
-        )
-
-        return (min_pitch, max_pitch)
-    
-    @staticmethod
-    def get_time_bounds(tracks: List[Track]) -> tuple[int, int]:
-        start = min(
-            note.start
-            for track in tracks
-            for note in track.notes
-        )
-
-        end = max(
-            note.end
-            for track in tracks
-            for note in track.notes
-        )
-
-        return (start, end)
-    
-    @staticmethod
-    def create_vis_config_from_prettymidi(midi_data: pretty_midi.PrettyMIDI) -> VisConfig:
-        vis_config = VisConfig()
-
-        instruments: List[pretty_midi.Instrument] = midi_data.instruments
-
-        for inst in instruments:
-            notes: List[Note] = []
-
-            for note in inst.notes:
-                notes.append(Note(note.pitch, note.velocity, note.start, note.end))
-
-            inst_name = inst.name or "(no name)"
-            vis_config.tracks.append(Track(name=inst_name, notes=notes))
-
-        return vis_config

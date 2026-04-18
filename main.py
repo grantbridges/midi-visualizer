@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import List
 import pygame as pg
+from pathlib import Path
 # import PIL
 import sys
 import os
@@ -13,37 +14,38 @@ from utility import MidiUtil, FileUtil
 # ----
 
 class RunMode(str, Enum):
-    # Reads MIDI from file and generates new xml config file starting point
-    GenerateConfig = "GenerateConfig",
-    # Reads MIDI and vis config from file (if available) and animates in pygame window
-    TestVisualizer = "TestVisualizer",
-    # Reads MIDI and vis config from file (if available) and generates output MP4
-    GenerateMP4 = "GenerateMP4"
+    # Animates MIDI in pygame window
+    Test = "Test",
+    # Generates MIDI animation to mp4
+    Generate = "Generate"
 
-run_mode = RunMode.TestVisualizer
+run_mode = RunMode.Test
 if len(sys.argv) > 1:
     run_mode = sys.argv[1]
 
 print(f"Init: Running script in {run_mode} mode")
 
-INPUT_FILE_NAME = 'Puppet Master'
-INPUT_MIDI_FILE = f'input/{INPUT_FILE_NAME}.midi'
-INPUT_MP3_FILE = f'input/{INPUT_FILE_NAME}.mp3'
-INPUT_CONFIG_FILE = f'input/{INPUT_FILE_NAME}.xml'
+#TRACK_NAME = 'Puppet Master'
+TRACK_NAME = 'MIDI Test'
+INPUT_MIDI_FILE = f'input/{TRACK_NAME}.midi'
+INPUT_MP3_FILE = f'input/{TRACK_NAME}.mp3'
+INPUT_CONFIG_FILE = f'input/{TRACK_NAME}.mvc'
 
 START_TIME_OFFSET = 0 # seconds
 
 # ----
 
-# Import MIDI data
-midi_data = pretty_midi.PrettyMIDI(INPUT_MIDI_FILE)
-# MidiUtil.print_midi_data(midi_data)
+# 1) Check if we already have a .mvc (midi visual config) file for this track
+vis_config = VisConfig.load(INPUT_CONFIG_FILE)
 
-if run_mode == RunMode.GenerateDefaultConfig:
-    # Initialize models
-    vis_config = MidiUtil.create_vis_config_from_prettymidi(midi_data)
+if vis_config is None:
+    # 2) Generate new vis_config from midi file
+    print(f"Generating new config for \"{TRACK_NAME}\"")
+    midi_data = pretty_midi.PrettyMIDI(INPUT_MIDI_FILE)
+    vis_config = VisConfig.create_from_midi_data(TRACK_NAME, midi_data)
 
     # temp: dummy hardcoding of track settings
+    vis_config.play_audio = False
     vis_config.tracks[0].color = Color.KAYLA_1
     vis_config.tracks[0].bar_height = 10
     vis_config.tracks[0].bar_pixels_per_second = 400
@@ -51,33 +53,15 @@ if run_mode == RunMode.GenerateDefaultConfig:
     vis_config.tracks[1].bar_height = 5
     vis_config.tracks[1].bar_pixels_per_second = 100
 
-    # Writes to temp raw_generated_xml folder so we don't risk overwriting anything in "input"
-    # that's already been configured. Copy from here to "input" to load in test & generation runs.
-    raw_xml_path = f'input/raw_generated_xml/{INPUT_FILE_NAME}.xml'
-    FileUtil.write_vis_config_to_xml(vis_config, raw_xml_path)
-    print(f"Saved visualizer config to \"{raw_xml_path}\"")
-    quit()
-elif run_mode == RunMode.GenerateMP4:
-    # TODO
-    print(f"Warning: Generate MP4 not yet implemented. Exiting.")
-    quit()
+    # 2.1) Save out as initial generated file
+    vis_config.save(INPUT_CONFIG_FILE)
 
 # ----
 
 # Animation start
 
-# Load or initialize visual config
-vis_config: VisConfig = None
-try:
-    vis_config = FileUtil.read_vis_config_from_xml(INPUT_CONFIG_FILE)
-    vis_config.populate_notes_from_midi_data(midi_data)
-except Exception as e:
-    print(f"Warning: Unable to load vis config from file - generating fresh: {str(e)}")
-    # generate config fresh with midi data populated
-    vis_config = MidiUtil.create_vis_config_from_prettymidi(midi_data)
-
-(pitch_min, pitch_max) = MidiUtil.get_pitch_bounds(vis_config.tracks)
-(time_min, time_max) = MidiUtil.get_time_bounds(vis_config.tracks)
+(pitch_min, pitch_max) = vis_config.get_pitch_bounds()
+(time_min, time_max) = vis_config.get_time_bounds()
 
 # text helper
 def draw_text(screen: pg.Surface, text, x, y, color, font_size):

@@ -215,10 +215,8 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# Ignore input files under "input", but keep folder structure
+# Ignore input files under "input"
 input/*
-!input/raw_generated_xml
-input/raw_generated_xml/*
 
 # Keep all .keep files
 !.keep
