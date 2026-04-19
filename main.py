@@ -4,18 +4,12 @@ from enum import Enum
 import sys
 import os
 import pretty_midi
-from common.constants import Const
+from common import Const
 from models import VisConfig
 from common import Color
 from preview import PreviewWindow
 
 # ----
-
-class RunMode(str, Enum):
-    # Animates MIDI in pygame window
-    Test = "Test",
-    # Generates MIDI animation to mp4
-    Generate = "Generate"
 
 TRACK_NAME = 'Puppet Master'
 #TRACK_NAME = 'MIDI Test'
@@ -27,15 +21,11 @@ START_TIME_OFFSET = 0 # seconds
 
 @dataclass
 class App:
-    run_mode: RunMode = RunMode.Test
     vis_config: VisConfig = None
+    preview_window: PreviewWindow = None
 
     def start(self):
-        print(f"Starting app in {self.run_mode} mode")
-
-        if run_mode != RunMode.Test:
-            print(f"Warning: {RunMode.Generate} mode not yet supported - exiting")
-            quit()
+        print(f"Starting MIDI Visualizer app")
 
         # 1) Check if we already have a .mvc (midi visual config) file for this track
         self.vis_config = VisConfig.load(INPUT_CONFIG_FILE)
@@ -50,11 +40,7 @@ class App:
             self.vis_config.save(INPUT_CONFIG_FILE)
 
         # 3) Start animation
-        PreviewWindow().start(self.vis_config, INPUT_MP3_FILE, START_TIME_OFFSET)
+        self.preview_window = PreviewWindow()
+        self.preview_window.start(self.vis_config, INPUT_MP3_FILE, START_TIME_OFFSET)
 
-
-run_mode = RunMode.Test
-if len(sys.argv) > 1:
-    run_mode = sys.argv[1]
-
-App(run_mode=run_mode).start()
+App().start()
