@@ -29,19 +29,37 @@ class VisConfig:
     play_audio: bool = True
     
     @staticmethod
-    def create_from_midi_data(track_name: str, midi_data: pretty_midi.PrettyMIDI):
+    def create_from_midi_data(track_name: str, midi_data: pretty_midi.PrettyMIDI) -> None:
         vis_config = VisConfig(track_name=track_name)
 
         instruments: List[pretty_midi.Instrument] = midi_data.instruments
+
+        inst_names = set()
         for inst in instruments:
             if not inst.name:
                 print("Warning: Loaded instrument from MIDI data with no name - skipping")
                 continue
 
+            if inst.name in inst_names:
+                print(f"Warning: Loaded instrument with duplicate name \"{inst.name}\" - skipping")
+                continue
+
             track = Track.create_from_midi_data(inst)
             vis_config.tracks.append(track)
+            inst_names.add(inst.name)
 
         return vis_config
+    
+    @staticmethod
+    def update_from_midi_data(midi_data: pretty_midi.PrettyMIDI) -> None:
+        # TODO
+        # Updates an existing config's track and note data from a provided
+        # midi track - useful for updating underlying midi data for a track 
+        # without losing existing config settings.
+        # 1) Remove any tracks that don't exist in update
+        # 2) Add any new tracks that only exist in update
+        # 3) Update existing tracks that still exist with refreshed note data
+        pass
     
     def save(self, path: str) -> None:
         print(f"Saving config at \"{path}\"")
