@@ -1,13 +1,14 @@
-from typing import List
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QMainWindow,
+    QTabWidget,
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
     QPushButton,
     QLabel,
     QMessageBox,
+    QCheckBox,
     QTableWidget,
     QTableWidgetItem,
     QHeaderView,
@@ -18,12 +19,13 @@ from models import VisConfig, Track, Note
 class EditorWindow(QMainWindow):
     def __init__(self, vis_config: VisConfig, save_file_path: str):
         super().__init__()
-        self.setWindowTitle("Visualizer Config Editor")
+        self.setWindowTitle("MIDI Visualizer Config Editor")
         self.resize(900, 500)
 
         self.vis_config = vis_config
         self.save_file_path = save_file_path
 
+        # Layout
         central = QWidget()
         self.setCentralWidget(central)
         root = QVBoxLayout(central)
@@ -32,32 +34,62 @@ class EditorWindow(QMainWindow):
         top_row = QHBoxLayout()
         root.addLayout(top_row)
 
-        top_row.addWidget(QLabel("Background:"))
-        self.bg_button = ColorButton(self.vis_config.bg_color)
-        top_row.addWidget(self.bg_button)
-
-        #self.load_btn = QPushButton("Load")
+        self.create_btn = QPushButton("Create from MIDI")
+        self.load_btn = QPushButton("Load Config")
         self.save_btn = QPushButton("Save")
 
+        top_row.addWidget(self.create_btn)
+        top_row.addWidget(self.load_btn)
         top_row.addStretch()
-        #top_row.addWidget(self.load_btn)
         top_row.addWidget(self.save_btn)
+
+        # tabs control
+        self.tabs = QTabWidget()
+        root.addWidget(self.tabs)
+
+        # --- Config Tab ---
+        config_tab = QWidget()
+        config_tab_layout = QVBoxLayout(config_tab)
+
+        # vis config layout
+        vis_config_layout = QHBoxLayout()
+        config_tab_layout.addLayout(vis_config_layout)
+
+        vis_config_layout.addWidget(QLabel("Background:"))
+        self.bg_button = ColorButton(self.vis_config.bg_color)
+        vis_config_layout.addWidget(self.bg_button)
+        vis_config_layout.addStretch()
 
         # track table
         track_columns = ["Name", "Visible", "Color", "Alpha", "Bar Height", "Pixels/Sec"]
         self.table = QTableWidget(0, len(track_columns))
         self.table.setHorizontalHeaderLabels(track_columns)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        root.addWidget(self.table)
+        config_tab_layout.addWidget(self.table)
 
-        # signals
+        self.tabs.addTab(config_tab, "Config")
+
+        # --- Preview Tab ---
+
+        preview_tab = QWidget()
+        preview_tab_layout = QVBoxLayout(preview_tab)
+
+        # preview controls
+        preview_controls_layout = QHBoxLayout()
+        preview_tab_layout.addLayout(preview_controls_layout)
+
+        self.play_preview = QPushButton("Play")
+        preview_controls_layout.addWidget(self.play_preview)
+
+        self.mute_checkbox = QCheckBox("Mute")
+        preview_controls_layout.addWidget(self.mute_checkbox)
+
+        self.tabs.addTab(preview_tab, "Preview")
+
+        # button callbacks
         #self.load_btn.clicked.connect(self.load_xml)
         self.save_btn.clicked.connect(self.save_config)
-        #self.add_btn.clicked.connect(self.add_track)
-        #self.remove_btn.clicked.connect(self.remove_selected_track)
 
-        # starter data
-        #self.vis_config.tracks.append(Track(name="Track 1", color=(255, 0, 0)))
         self.refresh_ui()
 
     def refresh_ui(self):
@@ -105,17 +137,6 @@ class EditorWindow(QMainWindow):
             pps.setValue(track.bar_pixels_per_second)
             self.table.setCellWidget(row, col, pps)
             col += 1
-
-    def load_xml(self):
-        pass
-    #     path, _ = QFileDialog.getOpenFileName(self, "Open Config", "", "XML Files (*.xml)")
-    #     if not path:
-    #         return
-    #     try:
-    #         self.config = VisConfig.load(path)
-    #         self.refresh_ui()
-    #     except Exception as e:
-    #         QMessageBox.critical(self, "Load failed", str(e))
 
     def save_config(self):
         # path, _ = QFileDialog.getSaveFileName(self, "Save Config", "", "MIDI Visualizer Config (*.mvc)")
