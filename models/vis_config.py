@@ -1,10 +1,11 @@
 from pathlib import Path
 import xml.etree.ElementTree as ET
-from typing import List, Tuple
+from typing import List
 from dataclasses import dataclass, field
 import pretty_midi
-from common.colors import Color
-from models.track import Track, Note
+from common import Color, RGB
+from models.track import Track
+from models.note import Note
 from utility import FileUtil
 
 # ----
@@ -12,8 +13,9 @@ from utility import FileUtil
 '''
 History
   1 - Initial version
+  2 - Added track alphas
 '''
-VIS_CONFIG_SCHEMA_VERSION = 1
+VIS_CONFIG_SCHEMA_VERSION = 2
 
 '''
 Top level construct containing all visualizing info
@@ -25,7 +27,7 @@ class VisConfig:
 
     # properties
     track_name: str = ""
-    bg_color: Tuple[int, int, int] = Color.DARKEST_GRAY
+    bg_color: RGB = Color.DARKEST_GRAY
     play_audio: bool = True
     
     @staticmethod

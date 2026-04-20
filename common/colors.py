@@ -1,5 +1,7 @@
 from enum import Enum
 
+from common.types import RGB
+
 class Color(tuple, Enum):
     WHITE = (255, 255, 255)
     BLACK = (0, 0, 0)
@@ -14,5 +16,5 @@ class Color(tuple, Enum):
 
     # takes an rgb tuple + alpha value and returns rgba tuple
     @staticmethod
-    def rgba(color: tuple[int, int, int], alpha: int) -> tuple[int, int, int, int]:
+    def rgba(color: RGB, alpha: int) -> tuple[int, int, int, int]:
         return (color[0], color[1], color[2], alpha)

@@ -94,16 +94,17 @@ class PreviewWindow:
                     h = track.bar_height
 
                     color = track.color
+                    alpha = track.alpha
                     if x <= PLAYHEAD_X:
                         # turn white and start reducing alpha
                         color = Color.WHITE
-                        note.alpha = 255 * (x_right / PLAYHEAD_X)
-                        note.alpha = max(0, min(255, note.alpha))  # clamp
+                        alpha = 255 * (x_right / PLAYHEAD_X)
+                        alpha = max(0, min(255, alpha))  # clamp
 
                     if x_right >= 0:
                         # still visible - draw
                         surf = pg.Surface((w, h), pg.SRCALPHA)
-                        surf.fill(Color.rgba(color, note.alpha))
+                        surf.fill(Color.rgba(color, alpha))
                         screen.blit(surf, (x, y))
 
                         still_has_notes = True

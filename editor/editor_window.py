@@ -44,8 +44,9 @@ class EditorWindow(QMainWindow):
         top_row.addWidget(self.save_btn)
 
         # track table
-        self.table = QTableWidget(0, 5)
-        self.table.setHorizontalHeaderLabels(["Name", "Visible", "Color", "Bar Height", "Pixels/Sec"])
+        track_columns = ["Name", "Visible", "Color", "Alpha", "Bar Height", "Pixels/Sec"]
+        self.table = QTableWidget(0, len(track_columns))
+        self.table.setHorizontalHeaderLabels(track_columns)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         root.addWidget(self.table)
 
@@ -82,6 +83,13 @@ class EditorWindow(QMainWindow):
             # color button
             color_btn = ColorButton(track.color)
             self.table.setCellWidget(row, col, color_btn)
+            col += 1
+
+            # alpha
+            alpha = TableSpinbox()
+            alpha.setRange(0, 255)
+            alpha.setValue(track.alpha)
+            self.table.setCellWidget(row, col, alpha)
             col += 1
 
             # bar height
@@ -126,13 +134,17 @@ class EditorWindow(QMainWindow):
             if track is not None:
                 visible_checkbox: TableCheckbox = self.table.cellWidget(row, 1)
                 color_btn: ColorButton = self.table.cellWidget(row, 2)
-                bar_height = self.table.cellWidget(row, 3)
-                pps = self.table.cellWidget(row, 4)
+                alpha = self.table.cellWidget(row, 3)
+                bar_height = self.table.cellWidget(row, 4)
+                pps = self.table.cellWidget(row, 5)
 
                 track.visible = visible_checkbox.isChecked()
                 track.color = color_btn.rgb
+                track.alpha = alpha.value()
                 track.bar_height = bar_height.value()
                 track.bar_pixels_per_second = pps.value()
+            else:
+                print(f"Warning: Unknown track row \"{name}\"")
         
         try:
             self.vis_config.save(self.save_file_path)

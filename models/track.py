@@ -1,7 +1,7 @@
 from typing import List, Tuple
 from dataclasses import dataclass, field
 import pretty_midi
-from common import Color
+from common import Color, RGB
 from models.note import Note
 import xml.etree.ElementTree as ET
 
@@ -21,12 +21,10 @@ class Track:
     
     # properties
     visible: bool = True
-    color: Tuple[int, int, int] = Color.KAYLA_1
+    color: RGB = Color.KAYLA_1
+    alpha: int = 255
     bar_height: int = 10
     bar_pixels_per_second: int = 200 # higher = wider, visually faster
-
-    # current draw values
-    # (none)
 
     @staticmethod
     def create_from_midi_data(inst: pretty_midi.Instrument) -> Track:
@@ -46,6 +44,7 @@ class Track:
         el.set("name", self.name)
         el.set("visible", FileUtil.bool_to_str(self.visible))
         el.set("color", FileUtil.tuple_to_str(self.color))
+        el.set("alpha", str(self.alpha))
         el.set("barHeight", str(self.bar_height))
         el.set("pps", str(self.bar_pixels_per_second))
 
@@ -60,6 +59,8 @@ class Track:
         track.name=track_el.get("name")
         track.visible=FileUtil.str_to_bool(track_el.get("visible"))
         track.color=FileUtil.str_to_tuple(track_el.get("color"))
+        if schema_version >= 2:
+            track.alpha=int(track_el.get("alpha"))
         track.bar_height=int(track_el.get("barHeight"))
         track.bar_pixels_per_second=int(track_el.get("pps"))
 

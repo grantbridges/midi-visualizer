@@ -21,9 +21,6 @@ class Note:
     # properties
     # (none)
 
-    # current draw values
-    alpha: int = 180
-
     @property
     def duration(self):
         return self.end - self.start
