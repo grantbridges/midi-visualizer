@@ -72,6 +72,9 @@ class PreviewWindow:
             # draw midi bars
             still_has_notes = False
             for track in vis_config.tracks:
+                if not track.visible:
+                    continue
+
                 for note in track.notes:
                     # x and width calc
                     x = PLAYHEAD_X + (note.start - current_time) * track.bar_pixels_per_second
