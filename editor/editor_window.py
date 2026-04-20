@@ -7,19 +7,12 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QPushButton,
     QLabel,
-    QFileDialog,
-    QWidget, 
-    QHBoxLayout, 
-    QCheckBox,
     QMessageBox,
     QTableWidget,
     QTableWidgetItem,
     QHeaderView,
-    QSpinBox,
 )
-from editor.color_button import ColorButton
-from editor.table_spinbox import TableSpinbox
-from editor.table_checkbox import TableCheckbox
+from editor.common_ui import ColorButton, TableSpinbox, TableCheckbox
 from models import VisConfig, Track, Note
 
 class EditorWindow(QMainWindow):
@@ -46,9 +39,9 @@ class EditorWindow(QMainWindow):
         #self.load_btn = QPushButton("Load")
         self.save_btn = QPushButton("Save")
 
+        top_row.addStretch()
         #top_row.addWidget(self.load_btn)
         top_row.addWidget(self.save_btn)
-        top_row.addStretch()
 
         # track table
         self.table = QTableWidget(0, 5)

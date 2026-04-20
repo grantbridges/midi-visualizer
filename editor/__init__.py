@@ -1,2 +1,2 @@
 from editor.editor_window import EditorWindow
-from editor.color_button import ColorButton
+from editor.common_ui.color_button import ColorButton
