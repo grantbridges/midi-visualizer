@@ -13,7 +13,12 @@ from PySide6.QtWidgets import (
     QTableWidgetItem,
     QHeaderView,
 )
-from editor.common_ui import ColorButton, TableSpinbox, TableCheckbox
+from editor.common_ui import (
+    ColorButton, 
+    TableSpinbox, 
+    TableCheckbox, 
+    PreviewWidget
+)
 from models import VisConfig, Track, Note
 
 class EditorWindow(QMainWindow):
@@ -61,7 +66,7 @@ class EditorWindow(QMainWindow):
         vis_config_layout.addStretch()
 
         # track table
-        track_columns = ["Name", "Visible", "Color", "Alpha", "Bar Height", "Pixels/Sec"]
+        track_columns = ["Name", "Visible", "Color", "Alpha", "Bar Height (px)", "Speed (px/sec)"]
         self.table = QTableWidget(0, len(track_columns))
         self.table.setHorizontalHeaderLabels(track_columns)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
@@ -78,17 +83,23 @@ class EditorWindow(QMainWindow):
         preview_controls_layout = QHBoxLayout()
         preview_tab_layout.addLayout(preview_controls_layout)
 
-        self.play_preview = QPushButton("Play")
-        preview_controls_layout.addWidget(self.play_preview)
+        self.play_stop_preview = QPushButton("Play")
+        preview_controls_layout.addWidget(self.play_stop_preview)
 
         self.mute_checkbox = QCheckBox("Mute")
         preview_controls_layout.addWidget(self.mute_checkbox)
+        preview_controls_layout.addStretch()
+
+        # preview area
+        self.preview_widget = PreviewWidget(self.vis_config)
+        preview_tab_layout.addWidget(self.preview_widget)
 
         self.tabs.addTab(preview_tab, "Preview")
 
         # button callbacks
         #self.load_btn.clicked.connect(self.load_xml)
         self.save_btn.clicked.connect(self.save_config)
+        self.play_stop_preview.clicked.connect(self.toggle_play_preview)
 
         self.refresh_ui()
 
@@ -138,6 +149,8 @@ class EditorWindow(QMainWindow):
             self.table.setCellWidget(row, col, pps)
             col += 1
 
+        self.play_stop_preview.setText("Play" if self.preview_widget.is_playing() == False else "Stop")
+
     def save_config(self):
         # path, _ = QFileDialog.getSaveFileName(self, "Save Config", "", "MIDI Visualizer Config (*.mvc)")
         # if not path:
@@ -172,3 +185,11 @@ class EditorWindow(QMainWindow):
             # QMessageBox.information(self, "Saved", f"Saved {self.vis_config.track_name} midi visualizer config to {self.save_file_path}")
         except Exception as e:
             QMessageBox.critical(self, "Save failed", str(e))
+
+    def toggle_play_preview(self):
+        if not self.preview_widget.is_playing():
+            self.preview_widget.start()
+        else:
+            self.preview_widget.stop()
+        
+        self.refresh_ui()

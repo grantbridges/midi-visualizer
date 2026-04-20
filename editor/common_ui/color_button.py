@@ -1,5 +1,6 @@
 from common import RGB
-from PySide6.QtGui import QColor
+from utility import QUtil
+
 from PySide6.QtWidgets import (
     QPushButton,
     QColorDialog
@@ -21,16 +22,8 @@ class ColorButton(QPushButton):
         )
 
     def pick_color(self):
-        color = QColorDialog.getColor(ColorButton._rgb_to_qcolor(self.rgb), self, "Choose color")
+        color = QColorDialog.getColor(QUtil.rgb_to_qcolor(self.rgb), self, "Choose color")
         if color.isValid():
-            self.rgb = ColorButton._qcolor_to_rgb(color)
+            self.rgb = QUtil.qcolor_to_rgb(color)
             self.refresh()
-
-    @staticmethod
-    def _rgb_to_qcolor(rgb: RGB) -> QColor:
-        return QColor(*rgb)
-
-    @staticmethod
-    def _qcolor_to_rgb(color: QColor) -> RGB:
-        return (color.red(), color.green(), color.blue())
             
