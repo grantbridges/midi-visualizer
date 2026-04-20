@@ -1,7 +1,7 @@
 import time
 from PySide6.QtWidgets import QWidget
 from PySide6.QtGui import QFont, QPainter, QColor, QPen
-from PySide6.QtCore import QTimer, Qt
+from PySide6.QtCore import QRect, QTimer, Qt
 from common import Const, Color
 from models import VisConfig
 from utility import QUtil
@@ -139,3 +139,14 @@ class PreviewWidget(QWidget):
         pen.setWidth(2)
         painter.setPen(pen)
         painter.drawLine(self._playhead_x(), 0, self._playhead_x(), self.height())
+
+        # draw text time display
+        color = QUtil.rgb_to_qcolor(Color.WHITE)
+        color.setAlpha(200)
+        font = QFont(Const.PRIMARY_FONT, 12)
+        painter.setPen(color)
+        painter.setFont(font)
+        m = s = 0
+        if self.current_time > 0:
+            m, s = divmod(int(self.current_time), 60)
+        painter.drawText(QRect(5, 5, 100, 100), f'{m:02d}:{s:02d}')

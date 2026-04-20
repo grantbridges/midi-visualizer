@@ -25,7 +25,7 @@ class EditorWindow(QMainWindow):
     def __init__(self, vis_config: VisConfig, save_file_path: str):
         super().__init__()
         self.setWindowTitle("MIDI Visualizer Config Editor")
-        self.resize(900, 500)
+        self.resize(1200, 900)
 
         self.vis_config = vis_config
         self.save_file_path = save_file_path
@@ -84,9 +84,9 @@ class EditorWindow(QMainWindow):
         preview_tab_layout.addLayout(preview_controls_layout)
 
         self.play_stop_preview = QPushButton("Play")
-        preview_controls_layout.addWidget(self.play_stop_preview)
-
         self.mute_checkbox = QCheckBox("Mute")
+
+        preview_controls_layout.addWidget(self.play_stop_preview)
         preview_controls_layout.addWidget(self.mute_checkbox)
         preview_controls_layout.addStretch()
 
@@ -151,11 +151,7 @@ class EditorWindow(QMainWindow):
 
         self.play_stop_preview.setText("Play" if self.preview_widget.is_playing() == False else "Stop")
 
-    def save_config(self):
-        # path, _ = QFileDialog.getSaveFileName(self, "Save Config", "", "MIDI Visualizer Config (*.mvc)")
-        # if not path:
-        #     return
-        
+    def update_model(self):
         # update top-level props
         self.vis_config.bg_color = self.bg_button.rgb
 
@@ -179,15 +175,18 @@ class EditorWindow(QMainWindow):
                 track.bar_pixels_per_second = pps.value()
             else:
                 print(f"Warning: Unknown track row \"{name}\"")
+
+    def save_config(self):
+        self.update_model()
         
         try:
             self.vis_config.save(self.save_file_path)
-            # QMessageBox.information(self, "Saved", f"Saved {self.vis_config.track_name} midi visualizer config to {self.save_file_path}")
         except Exception as e:
             QMessageBox.critical(self, "Save failed", str(e))
 
     def toggle_play_preview(self):
         if not self.preview_widget.is_playing():
+            self.update_model()
             self.preview_widget.start()
         else:
             self.preview_widget.stop()
