@@ -53,11 +53,11 @@ class PreviewTab(QWidget):
         v_layout.addWidget(self.preview_widget)
 
     def refresh_ui(self):
-        self.play_btn.setText("Play" if self.state == PreviewState.Stopped else "Stop")
+        self.play_btn.setText("▶ Play" if self.state == PreviewState.Stopped else "⏹ Stop")
 
         # hide pause btn when stopped
         self.pause_btn.setVisible(self.state is not PreviewState.Stopped)
-        self.pause_btn.setText("Resume" if self.state == PreviewState.Paused else "Pause")
+        self.pause_btn.setText("▶ Resume" if self.state == PreviewState.Paused else "⏸ Pause")
     
     def update_model(self):
         pass
