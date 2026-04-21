@@ -22,6 +22,8 @@ Top level construct containing all visualizing info
 '''
 @dataclass
 class VisConfig:
+    # TODO filepaths
+
     # midi data
     tracks: List[Track] = field(default_factory=list)
 
