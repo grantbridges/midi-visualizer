@@ -41,7 +41,7 @@ class MainWindow(QMainWindow):
         print(f"Starting MIDI Visualizer app")
 
         self.setWindowTitle("MIDI Visualizer Config Editor")
-        self.resize(1200, 900)
+        self.setFixedSize(1200, 900)
 
         # 1) Check if we already have a .mvc (midi visual config) file for this track
         self.vis_config = VisConfig.load(INPUT_CONFIG_FILE)

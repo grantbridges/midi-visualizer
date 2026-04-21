@@ -7,37 +7,35 @@ from models import VisConfig
 from utility import QUtil
 
 class PreviewWidget(QWidget):
-    PIXELS_PER_SECOND = 200
-    PAD = Const.SCREEN_PADDING
-
     def __init__(self, vis_config: VisConfig, parent=None):
         super().__init__(parent)
-        self.setMinimumHeight(200)
-        self.vis_config = vis_config
-        self.active = False
+        self.vis_config: VisConfig = vis_config
+        self.active: bool = False
 
-        self.start_time_ms = 0
-        self.current_time = 0.0 # sec
+        self.current_time: float = 0.0 # sec
 
+        # computed from vis config
         self.pitch_min = 0
         self.pitch_max = 0
         self.time_min = 0.0
         self.time_max = 0.0
+        self.time_offset = 0.0
 
     def set_active(self, active: bool):
         self.active = active
 
     def reset(self):
-        self.playing = True
-        self.start_time_ms = time.time_ns() // 1_000_000 # ms
+        self.current_time = 0.0
 
         (self.pitch_min, self.pitch_max) = self.vis_config.get_pitch_bounds()
         (self.time_min, self.time_max) = self.vis_config.get_time_bounds()
 
-    def tick(self, elapsed):
-        # screen can be resized, so time_offset needs to be recalculated every tick
-        time_offset = self.time_min - (self.width() - self._playhead_x()) / self.PIXELS_PER_SECOND #+ start_time_offset
-        self.current_time = time_offset + elapsed
+        min_pps = self.vis_config.get_min_pixels_per_second()
+
+        self.time_offset = self.time_min - (self.width() - self._playhead_x()) / min_pps
+
+    def tick(self, elapsed: float):
+        self.current_time = self.time_offset + elapsed
         
         self.update() # queues paint event
 
@@ -67,11 +65,11 @@ class PreviewWidget(QWidget):
         painter.fillRect(self.rect(), QUtil.rgb_to_qcolor(self.vis_config.bg_color))
 
         # draw time markers
-        for i in range(int(self.time_min), int(self.time_max) + 1):
-            x = self._playhead_x() + (i - self.current_time) * self.PIXELS_PER_SECOND
-            if x >= 0 and x <= (self.width() + 25):
-                painter.setPen(QUtil.rgb_to_qcolor(Color.DARKER_GRAY))
-                painter.drawLine(x, 0, x, self.height())
+        # for i in range(int(self.time_min), int(self.time_max) + 1):
+        #     x = self._playhead_x() + (i - self.current_time) * 200
+        #     if x >= 0 and x <= (self.width() + 25):
+        #         painter.setPen(QUtil.rgb_to_qcolor(Color.DARKER_GRAY))
+        #         painter.drawLine(x, 0, x, self.height())
 
         # draw midi bars
         still_has_notes = False
@@ -92,8 +90,8 @@ class PreviewWidget(QWidget):
 
                 # y and height calc
                 t = (note.pitch - self.pitch_min) / (self.pitch_max - self.pitch_min)
-                y_min = self.PAD
-                y_max = self.height() - self.PAD
+                y_min = Const.SCREEN_PADDING
+                y_max = self.height() - Const.SCREEN_PADDING
                 y = (y_max + t * (y_min - y_max)) - track.bar_height / 2
                 h = track.bar_height
 

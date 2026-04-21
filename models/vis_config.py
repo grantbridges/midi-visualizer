@@ -161,3 +161,9 @@ class VisConfig:
         )
 
         return (start, end)
+
+    def get_min_pixels_per_second(self) -> int:
+        return min(
+            track.bar_pixels_per_second
+            for track in self.tracks
+        )

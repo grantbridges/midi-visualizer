@@ -25,7 +25,7 @@ class PreviewTab(QWidget):
 
         self.state = PreviewState.Stopped
 
-        self.start_time_ms = 0
+        self.preview_time = 0.0 # sec since start of preview
         self.timer = QTimer(self)
         self.timer.timeout.connect(self._on_tick)
 
@@ -55,24 +55,26 @@ class PreviewTab(QWidget):
 
         # hide pause btn when stopped
         self.pause_btn.setVisible(self.state is not PreviewState.Stopped)
-        self.pause_btn.setText("Pause" if self.state == PreviewState.Playing else "Play")
+        self.pause_btn.setText("Resume" if self.state == PreviewState.Paused else "Pause")
     
     def update_model(self):
         pass
 
     def _on_tick(self):
-        current_time_ms = time.time_ns() // 1_000_000 # ms
-        elapsed = (current_time_ms - self.start_time_ms) / 1000.0 # sec
+        if self.state == PreviewState.Playing: 
+            self.preview_time += 1 / float(Const.FPS)
 
-        self.preview_widget.tick(elapsed)
+        self.preview_widget.tick(self.preview_time)
 
     def _toggle_play(self):
         if self.state == PreviewState.Stopped:
             self.state = PreviewState.Playing
-            self.preview_widget.set_active(True)
-            self.preview_widget.reset()
+            self.preview_time = 0
 
-            self.start_time_ms = time.time_ns() // 1_000_000 # ms
+            self.preview_widget.reset()
+            self.preview_widget.tick(self.preview_time)
+            self.preview_widget.set_active(True)
+            
             self.timer.start(int(1000 / Const.FPS))
         else: # playing or paused
             self.state = PreviewState.Stopped
@@ -87,3 +89,5 @@ class PreviewTab(QWidget):
             self.state = PreviewState.Paused
         else:
             self.state = PreviewState.Playing
+
+        self.refresh_ui()
