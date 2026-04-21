@@ -28,7 +28,6 @@ class TracksTab(QWidget):
         # layout controls
         v_layout = QVBoxLayout(self)
         v_layout.addWidget(self.table)
-        v_layout.addStretch()
 
     def refresh_ui(self):
         self.table.setRowCount(len(self.vis_config.tracks))

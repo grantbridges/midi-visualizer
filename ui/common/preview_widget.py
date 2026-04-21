@@ -14,61 +14,43 @@ class PreviewWidget(QWidget):
         super().__init__(parent)
         self.setMinimumHeight(200)
         self.vis_config = vis_config
-        self.playing = False
+        self.active = False
+
         self.start_time_ms = 0
         self.current_time = 0.0 # sec
-        self.current_frame = 0
 
         self.pitch_min = 0
         self.pitch_max = 0
         self.time_min = 0.0
         self.time_max = 0.0
 
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self._on_tick)
+    def set_active(self, active: bool):
+        self.active = active
 
-    def is_playing(self):
-        return self.playing
+    def reset(self):
+        self.playing = True
+        self.start_time_ms = time.time_ns() // 1_000_000 # ms
 
-    def start(self):
-        if not self.playing:
-            self.playing = True
-            self.start_time_ms = time.time_ns() // 1_000_000 # ms
-            self.current_frame = 0
+        (self.pitch_min, self.pitch_max) = self.vis_config.get_pitch_bounds()
+        (self.time_min, self.time_max) = self.vis_config.get_time_bounds()
 
-            (self.pitch_min, self.pitch_max) = self.vis_config.get_pitch_bounds()
-            (self.time_min, self.time_max) = self.vis_config.get_time_bounds()
-
-            self.timer.start(int(1000 / Const.FPS))
-
-    def stop(self):
-        if self.playing:
-            self.playing = False
-            self.timer.stop()
-
-    def _on_tick(self):
+    def tick(self, elapsed):
+        # screen can be resized, so time_offset needs to be recalculated every tick
         time_offset = self.time_min - (self.width() - self._playhead_x()) / self.PIXELS_PER_SECOND #+ start_time_offset
-
-        current_time_ms = time.time_ns() // 1_000_000 # ms
-        elapsed = (current_time_ms - self.start_time_ms) / 1000.0 # sec
         self.current_time = time_offset + elapsed
-
+        
         self.update() # queues paint event
-
-    # line where notes cross when they play
-    def _playhead_x(self):
-        return self.width() / 2
 
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
 
-        if self.is_playing():
-            self._paint_playing(painter)
+        if self.active:
+            self._paint_active(painter)
         else:
-            self._paint_stopped(painter)
+            self._paint_inactive(painter)
 
-    def _paint_stopped(self, painter: QPainter):
+    def _paint_inactive(self, painter: QPainter):
         # background
         painter.fillRect(self.rect(), QUtil.rgb_to_qcolor(Color.DARKER_GRAY))
 
@@ -80,7 +62,7 @@ class PreviewWidget(QWidget):
         painter.setFont(font)
         painter.drawText(self.rect(), Qt.AlignCenter, "Click \"Play\" to preview visualization")
             
-    def _paint_playing(self, painter: QPainter):
+    def _paint_active(self, painter: QPainter):
         # background
         painter.fillRect(self.rect(), QUtil.rgb_to_qcolor(self.vis_config.bg_color))
 
@@ -150,3 +132,7 @@ class PreviewWidget(QWidget):
         if self.current_time > 0:
             m, s = divmod(int(self.current_time), 60)
         painter.drawText(QRect(5, 5, 100, 100), f'{m:02d}:{s:02d}')
+
+    # line where notes cross when they play
+    def _playhead_x(self):
+        return self.width() / 2
