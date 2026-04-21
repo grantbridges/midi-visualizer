@@ -56,13 +56,6 @@ class PreviewWidget(QWidget):
         # background
         painter.fillRect(self.rect(), QUtil.rgb_to_qcolor(self.vis_config.bg_color))
 
-        # draw time markers
-        # for i in range(int(self.time_min), int(self.time_max) + 1):
-        #     x = self._playhead_x() + (i - self.current_time) * 200
-        #     if x >= 0 and x <= (self.width() + 25):
-        #         painter.setPen(QUtil.rgb_to_qcolor(Color.DARKER_GRAY))
-        #         painter.drawLine(x, 0, x, self.height())
-
         # draw midi bars
         still_has_notes = False
         for track in self.vis_config.tracks:
