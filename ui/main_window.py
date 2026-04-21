@@ -1,5 +1,9 @@
+import sys
+import pretty_midi
+from models import VisConfig
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QApplication,
     QMainWindow,
     QTabWidget,
     QWidget,
@@ -13,22 +17,44 @@ from PySide6.QtWidgets import (
     QTableWidgetItem,
     QHeaderView,
 )
-from editor.common_ui import (
+from ui.common_ui import (
     ColorButton, 
     TableSpinbox, 
     TableCheckbox, 
     PreviewWidget
 )
-from models import VisConfig, Track, Note
+from models import VisConfig
 
-class EditorWindow(QMainWindow):
-    def __init__(self, vis_config: VisConfig, save_file_path: str):
+# ----
+
+TRACK_NAME = 'Puppet Master'
+#TRACK_NAME = 'MIDI Test'
+INPUT_MIDI_FILE = f'input/{TRACK_NAME}.midi'
+INPUT_MP3_FILE = f'input/{TRACK_NAME}.mp3'
+INPUT_CONFIG_FILE = f'input/{TRACK_NAME}.mvc'
+
+START_TIME_OFFSET = 0 # seconds
+
+class MainWindow(QMainWindow):
+    def __init__(self):
         super().__init__()
+
+        print(f"Starting MIDI Visualizer app")
+
+        # 1) Check if we already have a .mvc (midi visual config) file for this track
+        self.vis_config = VisConfig.load(INPUT_CONFIG_FILE)
+
+        if self.vis_config is None:
+            # 2) Generate new vis_config from midi file
+            print(f"Generating new config for \"{TRACK_NAME}\"")
+            midi_data = pretty_midi.PrettyMIDI(INPUT_MIDI_FILE)
+            self.vis_config = VisConfig.create_from_midi_data(TRACK_NAME, midi_data)
+
+            # 2.1) Save out as initial generated file
+            self.vis_config.save(INPUT_CONFIG_FILE)
+
         self.setWindowTitle("MIDI Visualizer Config Editor")
         self.resize(1200, 900)
-
-        self.vis_config = vis_config
-        self.save_file_path = save_file_path
 
         # Layout
         central = QWidget()
@@ -180,7 +206,7 @@ class EditorWindow(QMainWindow):
         self.update_model()
         
         try:
-            self.vis_config.save(self.save_file_path)
+            self.vis_config.save(INPUT_CONFIG_FILE)
         except Exception as e:
             QMessageBox.critical(self, "Save failed", str(e))
 
