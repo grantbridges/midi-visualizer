@@ -132,35 +132,33 @@ class VisConfig:
     def get_track_by_name(self, name: str) -> Track:
         return next((track for track in self.tracks if track.name == name), None)
     
-    def get_pitch_bounds(self) -> tuple[int, int]:
-        min_pitch = min(
+    def get_min_pitch(self) -> int:
+        return min(
             note.pitch
             for track in self.tracks
             for note in track.notes
         )
 
-        max_pitch = max(
+    def get_max_pitch(self) -> int:
+        return max(
             note.pitch
             for track in self.tracks
             for note in track.notes
         )
-
-        return (min_pitch, max_pitch)
     
-    def get_time_bounds(self) -> tuple[int, int]:
-        start = min(
+    def get_min_time(self) -> float:
+        return min(
             note.start
             for track in self.tracks
             for note in track.notes
         )
-
-        end = max(
+    
+    def get_max_time(self) -> float:
+        return max(
             note.end
             for track in self.tracks
             for note in track.notes
         )
-
-        return (start, end)
 
     def get_min_pixels_per_second(self) -> int:
         return min(

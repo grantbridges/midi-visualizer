@@ -13,30 +13,22 @@ class PreviewWidget(QWidget):
         self.active: bool = False
 
         self.current_time: float = 0.0 # sec
-
-        # computed from vis config
         self.pitch_min = 0
         self.pitch_max = 0
-        self.time_min = 0.0
-        self.time_max = 0.0
-        self.time_offset = 0.0
 
     def set_active(self, active: bool):
         self.active = active
 
-    def reset(self):
-        self.current_time = 0.0
-
-        (self.pitch_min, self.pitch_max) = self.vis_config.get_pitch_bounds()
-        (self.time_min, self.time_max) = self.vis_config.get_time_bounds()
-
+    def calculate_start_time_offset(self):
         min_pps = self.vis_config.get_min_pixels_per_second()
+        return (self.width() - self._playhead_x()) / min_pps
 
-        self.time_offset = self.time_min - (self.width() - self._playhead_x()) / min_pps
+    def reset(self):
+        self.pitch_min = self.vis_config.get_min_pitch()
+        self.pitch_max = self.vis_config.get_max_pitch()
 
-    def tick(self, elapsed: float):
-        self.current_time = self.time_offset + elapsed
-        
+    def tick(self, current_time):
+        self.current_time = current_time
         self.update() # queues paint event
 
     def paintEvent(self, event):

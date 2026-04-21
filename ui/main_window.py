@@ -8,18 +8,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QHBoxLayout,
     QPushButton,
-    QLabel,
     QMessageBox,
-    QCheckBox,
-    QTableWidget,
-    QTableWidgetItem,
-    QHeaderView,
-)
-from ui.common import (
-    ColorButton, 
-    TableSpinbox, 
-    TableCheckbox, 
-    PreviewWidget
 )
 from models import VisConfig
 from ui.tabs import ConfigTab, TracksTab, PreviewTab

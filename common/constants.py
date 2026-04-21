@@ -3,7 +3,7 @@ class Const:
         raise TypeError("Const is static")
     
     # animation window constants
-    FPS = 120
+    FPS = 60
     SCREEN_WIDTH = 1200
     SCREEN_HEIGHT = 900
     SCREEN_PADDING = 50

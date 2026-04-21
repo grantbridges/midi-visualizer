@@ -25,7 +25,9 @@ class PreviewTab(QWidget):
 
         self.state = PreviewState.Stopped
 
-        self.preview_time = 0.0 # sec since start of preview
+        # computed at preview start
+        self.start_time = 0.0
+        self.preview_time = 0.0 # sec since start of preview loop
         self.timer = QTimer(self)
         self.timer.timeout.connect(self._on_tick)
 
@@ -62,17 +64,24 @@ class PreviewTab(QWidget):
 
     def _on_tick(self):
         if self.state == PreviewState.Playing: 
-            self.preview_time += 1 / float(Const.FPS)
+            self.preview_time += 1 / float(Const.FPS) # iterate one frame-second
 
-        self.preview_widget.tick(self.preview_time)
+        current_time = self.start_time + self.preview_time
+        self.preview_widget.tick(current_time)
 
     def _toggle_play(self):
         if self.state == PreviewState.Stopped:
             self.state = PreviewState.Playing
-            self.preview_time = 0
+            
+            self.preview_time = 0.0
+            time_min = self.vis_config.get_min_time()
+
+            # TODO I think this would be a lot easier if we just consider the right edge of the screen
+            # as time = 0 instead of the playhead
+            self.start_time = time_min - self.preview_widget.calculate_start_time_offset()
 
             self.preview_widget.reset()
-            self.preview_widget.tick(self.preview_time)
+            self.preview_widget.tick(self.start_time)
             self.preview_widget.set_active(True)
             
             self.timer.start(int(1000 / Const.FPS))
