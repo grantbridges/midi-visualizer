@@ -69,10 +69,15 @@ class PreviewTab(QWidget):
         if not self.initialized:
             # calculate start/end time with visible preview widget size
             self.playing = False
-            self.start_time = self.preview_widget.calculate_start_time()
-            self.end_time = self.preview_widget.calculate_end_time()
+
+            self.preview_widget.on_show()
+
+            self.start_time = self.preview_widget.midi_renderer.get_start_time()
+            self.end_time = self.preview_widget.midi_renderer.get_end_time()
             self.current_time = self.start_time
+            
             self._update_slider_position()
+            
             self.preview_widget.tick(self.current_time)
 
             self.initialized = True

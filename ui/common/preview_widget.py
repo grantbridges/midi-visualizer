@@ -4,6 +4,7 @@ from PySide6.QtGui import QFont, QPainter, QColor, QPen
 from PySide6.QtCore import QRect, QTimer, Qt
 from common import Const, Color
 from models import VisConfig
+from render import MidiRenderer
 from utility import QUtil
 
 class PreviewWidget(QWidget):
@@ -11,22 +12,12 @@ class PreviewWidget(QWidget):
         super().__init__(parent)
         self.vis_config: VisConfig = vis_config
 
-        self.current_time: float = 0.0 # sec
-        self.pitch_min = self.vis_config.get_min_pitch()
-        self.pitch_max = self.vis_config.get_max_pitch()
+        self.midi_renderer: MidiRenderer = MidiRenderer(self.vis_config)
 
-    # function of screen size
-    def calculate_start_time(self):
-        time_min = self.vis_config.get_min_time()
-        min_pps = self.vis_config.get_min_pixels_per_second()
-        return time_min - (self.width() - self._playhead_x()) / min_pps
-    
-    def calculate_end_time(self):
-        return max(
-            note.end + (self._playhead_x() / track.bar_pixels_per_second)
-            for track in self.vis_config.tracks
-            for note in track.notes
-        )
+        self.current_time: float = 0.0 # sec
+
+    def on_show(self):
+        self.midi_renderer.set_dimensions(self.width(), self.height())
     
     def tick(self, current_time):
         self.current_time = current_time
@@ -36,60 +27,7 @@ class PreviewWidget(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
 
-        self._paint_active(painter)
-            
-    def _paint_active(self, painter: QPainter):
-        # background
-        painter.fillRect(self.rect(), QUtil.rgb_to_qcolor(self.vis_config.bg_color))
-
-        # draw midi bars
-        still_has_notes = False
-        for track in self.vis_config.tracks:
-            if not track.visible:
-                continue
-
-            for note in track.notes:
-                # x and width calc
-                x = self._playhead_x() + (note.start - self.current_time) * track.bar_pixels_per_second
-                w = note.duration * track.bar_pixels_per_second
-                x_right = x + w
-
-                if x > self.width():
-                    # note hasn't entered visible area yet - skip rendering
-                    still_has_notes = True
-                    continue
-
-                # y and height calc
-                t = (note.pitch - self.pitch_min) / (self.pitch_max - self.pitch_min)
-                y_min = Const.SCREEN_PADDING
-                y_max = self.height() - Const.SCREEN_PADDING
-                y = (y_max + t * (y_min - y_max)) - track.bar_height / 2
-                h = track.bar_height
-
-                color = track.color
-                alpha = track.alpha
-                if x <= self._playhead_x():
-                    # turn white and start reducing alpha
-                    color = Color.WHITE
-                    alpha = 255 * (x_right / self._playhead_x())
-                    alpha = max(0, min(255, alpha))  # clamp
-
-                if x_right >= 0:
-                    # still visible - draw
-                    color = QUtil.rgb_to_qcolor(color)
-                    color.setAlpha(alpha)
-                    painter.setBrush(color)
-                    painter.setPen(Qt.NoPen)
-                    radius = int(track.bar_height * .5)
-                    painter.drawRoundedRect(x, y, w, h, radius, radius)
-                    still_has_notes = True
-                # else - note has fallen off screen, don't draw
-            
-        # draw playhead line that notes will cross when they "play"
-        pen = QPen(QUtil.rgb_to_qcolor(Color.LIGHT_GRAY))
-        pen.setWidth(2)
-        painter.setPen(pen)
-        painter.drawLine(self._playhead_x(), 0, self._playhead_x(), self.height())
+        self.midi_renderer.draw(painter, self.current_time)
 
         # draw text time display
         color = QUtil.rgb_to_qcolor(Color.WHITE)
@@ -102,9 +40,3 @@ class PreviewWidget(QWidget):
         t_abs = abs(self.current_time)
         m, s = divmod(int(t_abs), 60)
         painter.drawText(QRect(5, 5, 100, 100), f'{sign}{m:02d}:{s:02d}')
-
-        return still_has_notes
-
-    # line where notes cross when they play
-    def _playhead_x(self):
-        return self.width() * self.vis_config.playhead_pos
