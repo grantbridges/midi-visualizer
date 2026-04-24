@@ -20,10 +20,7 @@ class PreviewWidget(QWidget):
         self.active = active
 
     def calculate_start_time_offset(self):
-        time_min = self.vis_config.get_min_time()
-
         min_pps = self.vis_config.get_min_pixels_per_second()
-        #return time_min - ((self.width() - self._playhead_x()) / min_pps)
         return (self.width() - self._playhead_x()) / min_pps
     
     def calculate_end_time(self):
