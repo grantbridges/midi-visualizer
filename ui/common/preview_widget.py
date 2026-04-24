@@ -20,8 +20,18 @@ class PreviewWidget(QWidget):
         self.active = active
 
     def calculate_start_time_offset(self):
+        time_min = self.vis_config.get_min_time()
+
         min_pps = self.vis_config.get_min_pixels_per_second()
+        #return time_min - ((self.width() - self._playhead_x()) / min_pps)
         return (self.width() - self._playhead_x()) / min_pps
+    
+    def calculate_end_time(self):
+        return max(
+            note.end + (self._playhead_x() / track.bar_pixels_per_second)
+            for track in self.vis_config.tracks
+            for note in track.notes
+        )
 
     def reset(self):
         self.pitch_min = self.vis_config.get_min_pitch()
@@ -36,7 +46,9 @@ class PreviewWidget(QWidget):
         painter.setRenderHint(QPainter.Antialiasing)
 
         if self.active:
-            self._paint_active(painter)
+            still_has_notes = self._paint_active(painter)
+            if not still_has_notes:
+                pass # TODO notify
         else:
             self._paint_inactive(painter)
 
@@ -116,6 +128,8 @@ class PreviewWidget(QWidget):
             m, s = divmod(int(self.current_time), 60)
         painter.drawText(QRect(5, 5, 100, 100), f'{m:02d}:{s:02d}')
 
+        return still_has_notes
+
     # line where notes cross when they play
     def _playhead_x(self):
-        return self.width() / 2
+        return self.width() * self.vis_config.playhead_pos
