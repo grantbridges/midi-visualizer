@@ -10,18 +10,16 @@ class PreviewWidget(QWidget):
     def __init__(self, vis_config: VisConfig, parent=None):
         super().__init__(parent)
         self.vis_config: VisConfig = vis_config
-        self.active: bool = False
 
         self.current_time: float = 0.0 # sec
-        self.pitch_min = 0
-        self.pitch_max = 0
+        self.pitch_min = self.vis_config.get_min_pitch()
+        self.pitch_max = self.vis_config.get_max_pitch()
 
-    def set_active(self, active: bool):
-        self.active = active
-
-    def calculate_start_time_offset(self):
+    # function of screen size
+    def calculate_start_time(self):
+        time_min = self.vis_config.get_min_time()
         min_pps = self.vis_config.get_min_pixels_per_second()
-        return (self.width() - self._playhead_x()) / min_pps
+        return time_min - (self.width() - self._playhead_x()) / min_pps
     
     def calculate_end_time(self):
         return max(
@@ -29,11 +27,7 @@ class PreviewWidget(QWidget):
             for track in self.vis_config.tracks
             for note in track.notes
         )
-
-    def reset(self):
-        self.pitch_min = self.vis_config.get_min_pitch()
-        self.pitch_max = self.vis_config.get_max_pitch()
-
+    
     def tick(self, current_time):
         self.current_time = current_time
         self.update() # queues paint event
@@ -42,24 +36,7 @@ class PreviewWidget(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
 
-        if self.active:
-            still_has_notes = self._paint_active(painter)
-            if not still_has_notes:
-                pass # TODO notify
-        else:
-            self._paint_inactive(painter)
-
-    def _paint_inactive(self, painter: QPainter):
-        # background
-        painter.fillRect(self.rect(), QUtil.rgb_to_qcolor(Color.DARKER_GRAY))
-
-        color = QUtil.rgb_to_qcolor(Color.WHITE)
-        color.setAlpha(200)
-        font = QFont(Const.PRIMARY_FONT, 12)
-        font.setItalic(True)
-        painter.setPen(color)
-        painter.setFont(font)
-        painter.drawText(self.rect(), Qt.AlignCenter, "Click \"Play\" to preview visualization")
+        self._paint_active(painter)
             
     def _paint_active(self, painter: QPainter):
         # background
@@ -121,9 +98,10 @@ class PreviewWidget(QWidget):
         painter.setPen(color)
         painter.setFont(font)
         m = s = 0
-        if self.current_time > 0:
-            m, s = divmod(int(self.current_time), 60)
-        painter.drawText(QRect(5, 5, 100, 100), f'{m:02d}:{s:02d}')
+        sign = "-" if self.current_time < 0 else ""
+        t_abs = abs(self.current_time)
+        m, s = divmod(int(t_abs), 60)
+        painter.drawText(QRect(5, 5, 100, 100), f'{sign}{m:02d}:{s:02d}')
 
         return still_has_notes
 

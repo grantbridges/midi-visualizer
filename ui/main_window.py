@@ -72,6 +72,8 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.tracks_tab, "Tracks")
         self.tabs.addTab(self.preview_tab, "Preview")
 
+        self.tabs.currentChanged.connect(self.on_tab_changed)
+
         # Layout
         root = QVBoxLayout(central)
 
@@ -101,6 +103,12 @@ class MainWindow(QMainWindow):
 
     def on_tracks_changed(self):
         pass
+
+    def on_tab_changed(self, index: int):
+        if self.tabs.widget(index) is self.preview_tab:
+            self.preview_tab.on_show()
+        else:
+            self.preview_tab.on_hide()
 
     def save_config(self):
         self.update_model()
