@@ -215,8 +215,9 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# Ignore input files under "input"
+# Ignore input files under "input" and "output"
 input/*
+output/*
 
 # Keep all .keep files
 !.keep

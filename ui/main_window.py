@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
 )
 from models import VisConfig
+from render import VideoGenerator, Resolution
 from ui.tabs import ConfigTab, TracksTab, PreviewTab
 
 # ----
@@ -48,6 +49,10 @@ class MainWindow(QMainWindow):
             self.init_vis_config_editor_view()
         else:
             self.init_default_view()
+
+        # TEMP: Generate output mp4 here
+        #self.gen = VideoGenerator(self.vis_config, Resolution.QuadHD, "output")
+        #self.gen.generate_mp4()
 
     def init_default_view(self):
         pass # TODO
