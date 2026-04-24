@@ -96,13 +96,15 @@ class MainWindow(QMainWindow):
     def update_model(self):
         self.config_tab.update_model()
         self.tracks_tab.update_model()
-        self.preview_tab.update_model()
 
     def on_config_changed(self):
-        pass
+        self.update_model()
+
+        # notify preview tab to redraw
+        self.preview_tab.model_changed()
 
     def on_tracks_changed(self):
-        pass
+        self.update_model()
 
     def on_tab_changed(self, index: int):
         if self.tabs.widget(index) is self.preview_tab:

@@ -22,6 +22,7 @@ class ConfigTab(QWidget):
         self.playhead_pos_input.setRange(0, 100)
         self.playhead_pos_input.setSuffix('%')
         self.playhead_pos_input.setValue(self.vis_config.playhead_pos * 100)
+        self.playhead_pos_input.valueChanged.connect(self.on_changes_callback)
 
         # layout controls
         v_layout = QVBoxLayout(self)

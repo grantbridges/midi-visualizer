@@ -56,6 +56,10 @@ class PreviewTab(QWidget):
 
         v_layout.addWidget(self.preview_widget)
 
+    def model_changed(self):
+        # flip flag and we'll reinitialize on next show
+        self.initialized = False
+
     def on_hide(self):
         self.timer.stop()
 
@@ -64,18 +68,19 @@ class PreviewTab(QWidget):
 
         if not self.initialized:
             # calculate start/end time with visible preview widget size
+            self.playing = False
             self.start_time = self.preview_widget.calculate_start_time()
             self.end_time = self.preview_widget.calculate_end_time()
             self.current_time = self.start_time
+            self._update_slider_position()
             self.preview_widget.tick(self.current_time)
 
             self.initialized = True
 
+        self.refresh_ui()
+
     def refresh_ui(self):
         self.play_btn.setText("▶ Play" if not self.playing else "⏹ Stop")
-    
-    def update_model(self):
-        pass
 
     def _on_tick(self):
         # only update widget if playing and user isn't dragging slider
@@ -85,10 +90,7 @@ class PreviewTab(QWidget):
                 # don't exceed max
                 self.current_time = min(self.current_time, self.end_time)
 
-            # update slider per current time position
             self._update_slider_position()
-
-            # tick preview widget view
             self.preview_widget.tick(self.current_time)
 
     def _toggle_play(self):
