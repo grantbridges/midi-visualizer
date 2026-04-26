@@ -20,7 +20,7 @@ class TracksTab(QWidget):
         self.vis_config = vis_config
 
         # create controls
-        self.track_columns = ["Name", "Visible", "Color", "Alpha", "Bar Height (px)", "Speed (px/sec)"]
+        self.track_columns = ["Name", "Visible", "Color", "Alpha", "Bar Height", "Speed (sec)"]
         self.table = QTableWidget(0, len(self.track_columns))
         self.table.setHorizontalHeaderLabels(self.track_columns)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
@@ -60,16 +60,16 @@ class TracksTab(QWidget):
 
             # bar height
             bar_height = TableSpinbox()
-            bar_height.setRange(1, 500)
-            bar_height.setValue(track.bar_height)
+            bar_height.setRange(1, 100)
+            bar_height.setValue(track.bar_height_ratio * 100)
             self.table.setCellWidget(row, col, bar_height)
             col += 1
 
             # pixels/sec
-            pps = TableSpinbox()
-            pps.setRange(1, 5000)
-            pps.setValue(track.bar_pixels_per_second)
-            self.table.setCellWidget(row, col, pps)
+            sec_across_screen = TableSpinbox()
+            sec_across_screen.setRange(1, 5)
+            sec_across_screen.setValue(track.bar_sec_across_screen)
+            self.table.setCellWidget(row, col, sec_across_screen)
             col += 1
 
     def update_model(self):
@@ -84,12 +84,12 @@ class TracksTab(QWidget):
                 color_btn: ColorButton = self.table.cellWidget(row, 2)
                 alpha = self.table.cellWidget(row, 3)
                 bar_height = self.table.cellWidget(row, 4)
-                pps = self.table.cellWidget(row, 5)
+                sec_across_screen = self.table.cellWidget(row, 5)
 
                 track.visible = visible_checkbox.isChecked()
                 track.color = color_btn.rgb
                 track.alpha = alpha.value()
-                track.bar_height = bar_height.value()
-                track.bar_pixels_per_second = pps.value()
+                track.bar_height_ratio = bar_height.value() / 100
+                track.bar_sec_across_screen = sec_across_screen.value()
             else:
                 print(f"Warning: Unknown track row \"{name}\"")

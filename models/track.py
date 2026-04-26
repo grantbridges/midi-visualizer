@@ -23,8 +23,8 @@ class Track:
     visible: bool = True
     color: RGB = Color.KAYLA_1
     alpha: int = 255
-    bar_height: int = 10
-    bar_pixels_per_second: int = 200 # higher = wider, visually faster
+    bar_height_ratio: float = .05 # 0 - 1, ratio of screen height
+    bar_sec_across_screen: float = 2 # seconds for bar to fully cross screen
 
     @staticmethod
     def create_from_midi_data(inst: pretty_midi.Instrument) -> Track:
@@ -45,8 +45,8 @@ class Track:
         el.set("visible", FileUtil.bool_to_str(self.visible))
         el.set("color", FileUtil.tuple_to_str(self.color))
         el.set("alpha", str(self.alpha))
-        el.set("barHeight", str(self.bar_height))
-        el.set("pps", str(self.bar_pixels_per_second))
+        el.set("barHeightRatio", str(self.bar_height_ratio))
+        el.set("barSecAcrossScreen", str(self.bar_sec_across_screen))
 
         notes_el = ET.SubElement(el, "Notes")
         for note in self.notes:
@@ -61,8 +61,10 @@ class Track:
         track.color=FileUtil.str_to_tuple(track_el.get("color"))
         if schema_version >= 2:
             track.alpha=int(track_el.get("alpha"))
-        track.bar_height=int(track_el.get("barHeight"))
-        track.bar_pixels_per_second=int(track_el.get("pps"))
+        
+        if schema_version >= 4:
+            track.bar_height_ratio = float(track_el.get("barHeightRatio"))
+            track.bar_sec_across_screen = float(track_el.get("barSecAcrossScreen"))
 
         for note_el in track_el.find("Notes").findall("Note"):
             note = Note.load(note_el, schema_version)

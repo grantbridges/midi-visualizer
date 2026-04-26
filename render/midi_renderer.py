@@ -36,16 +36,19 @@ class MidiRenderer:
     # calculated as function of screen width and playhead position
     def get_start_time(self) -> float:
         time_min = self.vis_config.get_min_time()
-        min_pps = self.vis_config.get_min_pixels_per_second()
-        return time_min - (self.width - self.playhead_x) / min_pps
+        max_sec = self.vis_config.get_max_sec_across_screen()
+        return time_min - ((self.width - self.playhead_x) / self.width) * max_sec
     
     # calculated as function of screen width and playhead position
     def get_end_time(self) -> float:
-        return max(
-            note.end + (self.playhead_x / track.bar_pixels_per_second)
+        ratio = self.playhead_x / self.width
+        values = [
+            note.end + ratio * track.bar_sec_across_screen
             for track in self.vis_config.tracks
+            if track.visible and track.notes
             for note in track.notes
-        )
+        ]
+        return max(values) if values else 0.0
     
     def draw(self, painter: QPainter, current_time: float):
         painter.fillRect(self.rect, QUtil.rgb_to_qcolor(self.vis_config.bg_color))
@@ -56,10 +59,12 @@ class MidiRenderer:
             if not track.visible:
                 continue
 
+            pixels_per_sec = self.width / track.bar_sec_across_screen
+
             for note in track.notes:
                 # x and width calc
-                x = self.playhead_x + (note.start - current_time) * track.bar_pixels_per_second
-                w = note.duration * track.bar_pixels_per_second
+                x = self.playhead_x + (note.start - current_time) * pixels_per_sec
+                w = note.duration * pixels_per_sec
                 x_right = x + w
 
                 if x > self.width:
@@ -67,12 +72,15 @@ class MidiRenderer:
                     still_has_notes = True
                     continue
 
+                # convert bar height ratio to pixels
+                bar_height = self.height * track.bar_height_ratio
+
                 # y and height calc
                 t = (note.pitch - self.pitch_min) / (self.pitch_max - self.pitch_min)
                 y_min = Const.SCREEN_PADDING
                 y_max = self.height - Const.SCREEN_PADDING
-                y = (y_max + t * (y_min - y_max)) - track.bar_height / 2
-                h = track.bar_height
+                y = (y_max + t * (y_min - y_max)) - bar_height / 2
+                h = bar_height
 
                 color = track.color
                 alpha = track.alpha
@@ -88,7 +96,7 @@ class MidiRenderer:
                     color.setAlpha(alpha)
                     painter.setBrush(color)
                     painter.setPen(Qt.NoPen)
-                    radius = int(track.bar_height * .5)
+                    radius = int(bar_height * .5)
                     painter.drawRoundedRect(x, y, w, h, radius, radius) # TODO configurable
                     still_has_notes = True
                 # else - note has fallen off screen, don't draw

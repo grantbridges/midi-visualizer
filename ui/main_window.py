@@ -51,7 +51,7 @@ class MainWindow(QMainWindow):
             self.init_default_view()
 
         # TEMP: Generate output mp4 here
-        #self.gen = VideoGenerator(self.vis_config, Resolution.QuadHD, "output")
+        #self.gen = VideoGenerator(self.vis_config, Resolution.FullHD, "output")
         #self.gen.generate_mp4()
 
     def init_default_view(self):

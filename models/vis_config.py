@@ -15,8 +15,9 @@ History
   1 - Initial version
   2 - Added track alphas
   3 - Added playhead position
+  4 - Bar height ratio & seconds to cross screen updates
 '''
-VIS_CONFIG_SCHEMA_VERSION = 3
+VIS_CONFIG_SCHEMA_VERSION = 4
 
 '''
 Top level construct containing all visualizing info
@@ -139,36 +140,45 @@ class VisConfig:
         return next((track for track in self.tracks if track.name == name), None)
     
     def get_min_pitch(self) -> int:
-        return min(
+        values = [
             note.pitch
             for track in self.tracks
+            if track.visible and track.notes
             for note in track.notes
-        )
+        ]
+        return min(values) if values else 0.0
 
     def get_max_pitch(self) -> int:
-        return max(
+        values = [
             note.pitch
             for track in self.tracks
+            if track.visible and track.notes
             for note in track.notes
-        )
+        ]
+        return max(values) if values else 0.0
     
     def get_min_time(self) -> float:
-        return min(
+        values = [
             note.start
             for track in self.tracks
+            if track.visible and track.notes
             for note in track.notes
-        )
+        ]
+        return min(values) if values else 0.0
     
     def get_max_time(self) -> float:
-        return max(
+        values = [
             note.end
             for track in self.tracks
+            if track.visible and track.notes
             for note in track.notes
-        )
+        ]
+        return max(values) if values else 0.0
 
-    def get_min_pixels_per_second(self) -> int:
-        return min(
-            track.bar_pixels_per_second
+    def get_max_sec_across_screen(self) -> float:
+        values = [
+            track.bar_sec_across_screen
             for track in self.tracks
-            if track.notes
-        )
+            if track.visible and track.notes
+        ]
+        return max(values) if values else 0.0
