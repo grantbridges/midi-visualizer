@@ -1,6 +1,9 @@
+import os
+import subprocess
+import sys
+
 import pretty_midi
-from models import VisConfig
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QThread
 from PySide6.QtWidgets import (
     QMainWindow,
     QTabWidget,
@@ -11,8 +14,9 @@ from PySide6.QtWidgets import (
     QMessageBox,
 )
 from models import VisConfig
-from render import VideoGenerator, Resolution
+from render import Resolution, RenderWorker
 from ui.tabs import ConfigTab, TracksTab, PreviewTab
+from ui.dialogs import ExportProgressDialog
 
 # ----
 
@@ -33,6 +37,11 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("MIDI Visualizer Config Editor")
         self.setFixedSize(1200, 900)
 
+        self.render_thread = None
+        self.render_worker = None
+
+        self.progress_dialog: ExportProgressDialog = None
+
         # 1) Check if we already have a .mvc (midi visual config) file for this track
         self.vis_config = VisConfig.load(INPUT_CONFIG_FILE)
 
@@ -50,10 +59,6 @@ class MainWindow(QMainWindow):
         else:
             self.init_default_view()
 
-        # TEMP: Generate output mp4 here
-        #self.gen = VideoGenerator(self.vis_config, Resolution.FullHD, "output")
-        #self.gen.generate_mp4()
-
     def init_default_view(self):
         pass # TODO
 
@@ -67,6 +72,8 @@ class MainWindow(QMainWindow):
         self.load_btn = QPushButton("Load Config")
         self.save_btn = QPushButton("Save")
         self.save_btn.clicked.connect(self.save_config)
+        self.export_btn = QPushButton("Export MP4")
+        self.export_btn.clicked.connect(self.export_mp4)
 
         # tabs
         self.tabs = QTabWidget()
@@ -87,6 +94,7 @@ class MainWindow(QMainWindow):
         top_row.addWidget(self.load_btn)
         top_row.addStretch()
         top_row.addWidget(self.save_btn)
+        top_row.addWidget(self.export_btn)
         root.addLayout(top_row)
 
         root.addWidget(self.tabs)
@@ -124,4 +132,57 @@ class MainWindow(QMainWindow):
             self.vis_config.save(INPUT_CONFIG_FILE)
         except Exception as e:
             QMessageBox.critical(self, "Save failed", str(e))
+
+    def export_mp4(self):
+        self.progress_dialog = ExportProgressDialog(track_title=self.vis_config.track_name, parent=self)
+        self.progress_dialog.show()
+
+        self.render_thread = QThread()
+        self.render_worker = RenderWorker(self.vis_config, Resolution.FullHD, "output")
+
+        self.render_worker.moveToThread(self.render_thread)
+
+        self.render_thread.started.connect(self.render_worker.run)
+
+        # connect ui to thread events
+        self.render_worker.progress.connect(self.progress_dialog.update_progress)
+        self.render_worker.finished.connect(self.on_render_finished)
+        self.render_worker.failed.connect(lambda msg: self.progress_dialog.mark_finished(f"Error: {msg}"))
+        self.render_worker.cancelled.connect(self.on_render_cancelled)
+
+        self.progress_dialog.cancel_clicked.connect(self.render_worker.cancel)
+        self.progress_dialog.cancel_clicked.connect(self.on_render_cancelled)
+
+        # cleanup thread on any result
+        self.render_worker.finished.connect(self.render_thread.quit)
+        self.render_worker.failed.connect(self.render_thread.quit)
+        self.render_worker.cancelled.connect(self.render_thread.quit)
+
+        self.render_thread.start()
+
+    def on_render_cancelled(self):
+        self.progress_dialog.hide()
+        self.progress_dialog = None
+
+    def on_render_finished(self, output_file: str):
+        show_output = self.progress_dialog.get_show_output_folder()
+
+        self.progress_dialog.hide()
+        self.progress_dialog = None
+
+        if show_output:
+            if not output_file:
+                return
+
+            folder = os.path.dirname(output_file)
+
+            if sys.platform == "darwin":
+                subprocess.run(["open", folder])
+            elif sys.platform == "win32":
+                os.startfile(folder)
+            else:  # linux
+                subprocess.run(["xdg-open", folder])
+        else:
+            QMessageBox.information(None, "Success", f"Exported video to '{output_file}'")
+        
 
