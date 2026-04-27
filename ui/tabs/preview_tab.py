@@ -92,8 +92,9 @@ class PreviewTab(QWidget):
         if self.playing and not self.slider.isSliderDown():
             if self.playing == True:
                 self.current_time += 1 / float(Const.FPS) # iterate one frame
-                # don't exceed max
-                self.current_time = min(self.current_time, self.end_time)
+
+                if self.current_time > self.end_time:
+                    self._stop()
 
             self._update_slider_position()
             self.preview_widget.tick(self.current_time)

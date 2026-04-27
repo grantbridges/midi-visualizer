@@ -51,43 +51,55 @@ class MidiRenderer:
         return max(values) if values else 0.0
     
     def draw(self, painter: QPainter, current_time: float):
-        painter.fillRect(self.rect, QUtil.rgb_to_qcolor(self.vis_config.bg_color))
+        return MidiRenderer.draw_frame(
+            painter, 
+            current_time, 
+            self.vis_config, 
+            self.pitch_min, 
+            self.pitch_max,
+            self.width, 
+            self.height
+        )
+    
+    @staticmethod
+    def draw_frame(painter: QPainter, current_time: float, vis_config: VisConfig, pitch_min: int, pitch_max:int, width: int, height: int):
+        painter.fillRect(QRect(0, 0, width, height), QUtil.rgb_to_qcolor(vis_config.bg_color))
+
+        playhead_x = width * vis_config.playhead_pos
 
         # draw midi bars
-        still_has_notes = False
-        for track in self.vis_config.tracks:
+        for track in vis_config.tracks:
             if not track.visible:
                 continue
 
-            pixels_per_sec = self.width / track.bar_sec_across_screen
+            pixels_per_sec = width / track.bar_sec_across_screen
 
             for note in track.notes:
                 # x and width calc
-                x = self.playhead_x + (note.start - current_time) * pixels_per_sec
+                x = playhead_x + (note.start - current_time) * pixels_per_sec
                 w = note.duration * pixels_per_sec
                 x_right = x + w
 
-                if x > self.width:
+                if x > width:
                     # note hasn't entered visible area yet - skip rendering
-                    still_has_notes = True
                     continue
 
                 # convert bar height ratio to pixels
-                bar_height = self.height * track.bar_height_ratio
+                bar_height = height * track.bar_height_ratio
 
                 # y and height calc
-                t = (note.pitch - self.pitch_min) / (self.pitch_max - self.pitch_min)
+                t = (note.pitch - pitch_min) / (pitch_max - pitch_min)
                 y_min = Const.SCREEN_PADDING
-                y_max = self.height - Const.SCREEN_PADDING
+                y_max = height - Const.SCREEN_PADDING
                 y = (y_max + t * (y_min - y_max)) - bar_height / 2
                 h = bar_height
 
                 color = track.color
                 alpha = track.alpha
-                if x <= self.playhead_x:
+                if x <= playhead_x:
                     # turn white and start reducing alpha
                     color = Color.WHITE
-                    alpha = 255 * (x_right / self.playhead_x)
+                    alpha = 255 * (x_right / playhead_x)
                     alpha = max(0, min(255, alpha))  # clamp
 
                 if x_right >= 0:
@@ -105,6 +117,4 @@ class MidiRenderer:
         pen = QPen(QUtil.rgb_to_qcolor(Color.LIGHT_GRAY))
         pen.setWidth(2)
         painter.setPen(pen)
-        painter.drawLine(self.playhead_x, 0, self.playhead_x, self.height)
-
-        return still_has_notes
+        painter.drawLine(playhead_x, 0, playhead_x, height)

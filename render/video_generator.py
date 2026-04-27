@@ -2,13 +2,13 @@ import tempfile
 import shutil
 import subprocess
 import os
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from models import VisConfig
 from render.resolution import Resolution
 from render.midi_renderer import MidiRenderer
-from PySide6.QtGui import QImage, QPainter, QColor, QPen
-from PySide6.QtCore import Qt
-from common import Color, Const
+from PySide6.QtGui import QImage, QPainter
+from common import Const
 
 class VideoGenerator():
     def __init__(self, vis_config: VisConfig, resolution: Resolution, output_dir: str):
@@ -29,29 +29,18 @@ class VideoGenerator():
 
             start_time = midi_renderer.get_start_time()
             end_time = midi_renderer.get_end_time()
-            current_time = start_time
 
-            # generate all frames
-            frame_index = 0
-            while current_time <= end_time:
-                image = QImage(self.width, self.height, QImage.Format_ARGB32)
+            total_frames = int((end_time - start_time) * Const.FPS)
+            jobs = [
+                (i, self.vis_config, midi_renderer.pitch_min, midi_renderer.pitch_max, self.width, self.height, start_time, frames_dir)
+                for i in range(total_frames)
+            ]
 
-                painter = QPainter(image)
-                painter.setRenderHint(QPainter.Antialiasing)
-
-                midi_renderer.draw(painter, current_time)
-
-                painter.end()
-
-                path = Path(frames_dir).joinpath(f"frame_{frame_index:05d}.png")
-                image.save(str(path))
-
-                percent = (current_time - start_time) / (end_time - start_time) * 100
-                print(f"MP4 Generation | Created frame {frame_index} ({percent:0.2f}%)")
-
-                frame_index += 1
-                current_time += 1 / float(Const.FPS) # iterate one frame
-
+            with ProcessPoolExecutor() as executor:
+                for i in executor.map(self.render_frame_job, jobs):
+                    percent = (i / total_frames) * 100
+                    print(f"MP4 Generation | Created frame {i} ({percent:0.2f}%)")
+                
             # encode video
             print(f"MP4 Generation | Creating MP4 file...")
             subprocess.run([
@@ -67,3 +56,22 @@ class VideoGenerator():
             print(f"MP4 Generation | Saved MP4")
         finally:
             shutil.rmtree(frames_dir)
+
+    @staticmethod
+    def render_frame_job(args):
+        frame_index, vis_config, pitch_min, pitch_max, width, height, start_time, frames_dir = args
+
+        current_time = start_time + frame_index / Const.FPS
+
+        image = QImage(width, height, QImage.Format_ARGB32)
+        painter = QPainter(image)
+        painter.setRenderHint(QPainter.Antialiasing)
+
+        MidiRenderer.draw_frame(painter, current_time, vis_config, pitch_min, pitch_max, width, height)
+
+        painter.end()
+
+        path = Path(frames_dir).joinpath(f"frame_{frame_index:05d}.png")
+        image.save(str(path))
+
+        return frame_index
