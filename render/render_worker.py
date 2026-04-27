@@ -45,6 +45,8 @@ class RenderWorker(QObject):
                 cancel_event = manager.Event()
 
                 # create output filepath - delete if already exists
+                # TODO do this to a temp file
+                # TODO extension support
                 self.output_file = Path(self.output_dir).joinpath(f"{self.vis_config.track_name}.mp4")
                 self.output_file.unlink(missing_ok=True)
 
@@ -140,4 +142,39 @@ class RenderWorker(QObject):
             "-c:v", "libx264",
             "-pix_fmt", "yuv420p",
             str(output_file),
+        ], check=True)
+
+    @staticmethod
+    def encode_frames_to_mov(frames_dir: str, output_file: Path):
+        subprocess.run([
+            "ffmpeg",
+            "-y",
+            "-framerate", str(Const.FPS),
+            "-i", os.path.join(frames_dir, "frame_%05d.png"),
+            "-c:v", "prores_ks",
+            "-profile:v", "3",  # 3 = standard ProRes 422
+            str(output_file.with_suffix(".mov")),
+        ], check=True)
+
+    @staticmethod
+    def encode_frames_to_webm(frames_dir: str, output_file: Path):
+        subprocess.run([
+            "ffmpeg",
+            "-y",
+            "-framerate", str(Const.FPS),
+            "-i", os.path.join(frames_dir, "frame_%05d.png"),
+            "-c:v", "libvpx-vp9",
+            "-b:v", "2M",
+            str(output_file.with_suffix(".webm")),
+        ], check=True)
+
+    @staticmethod
+    def encode_frames_to_avi(frames_dir: str, output_file: Path):
+        subprocess.run([
+            "ffmpeg",
+            "-y",
+            "-framerate", str(Const.FPS),
+            "-i", os.path.join(frames_dir, "frame_%05d.png"),
+            "-c:v", "mpeg4",
+            str(output_file.with_suffix(".avi")),
         ], check=True)
