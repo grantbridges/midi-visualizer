@@ -7,6 +7,7 @@ from pathlib import Path
 from PySide6.QtGui import QImage, QPainter
 from render.midi_renderer import MidiRenderer
 from dataclasses import dataclass
+import uuid
 import tempfile
 import shutil
 import os
@@ -35,7 +36,6 @@ class RenderWorker(QObject):
         self.vis_config: VisConfig = vis_config
         (self.width, self.height) = resolution.value
         self.output_dir = output_dir
-        self.output_file = ""
         self._cancel_requested = False
 
     @Slot()
@@ -43,12 +43,6 @@ class RenderWorker(QObject):
         try:
             with Manager() as manager:
                 cancel_event = manager.Event()
-
-                # create output filepath - delete if already exists
-                # TODO do this to a temp file
-                # TODO extension support
-                self.output_file = Path(self.output_dir).joinpath(f"{self.vis_config.track_name}.mp4")
-                self.output_file.unlink(missing_ok=True)
 
                 # build temp directory for storing image frames in
                 frames_dir = tempfile.mkdtemp()
@@ -98,13 +92,31 @@ class RenderWorker(QObject):
                             percent = int((completed / total_frames) * 100)
                             self.progress.emit(percent, f"Rendering frames...")
 
+                    if self._cancel_requested:
+                        return
+
                     self.progress.emit(None, "Encoding MP4...")
-                    audio_delay_ms = int((-start_time) * 1000)
-                    RenderWorker.encode_frames_to_mp4(frames_dir, self.vis_config, audio_delay_ms, self.output_file)
+
+                    # create output filepath - delete if already exists
+                    temp_output_file = Path(tempfile.gettempdir()) / f"midi_render_{uuid.uuid4()}.mp4"
+
+                    audio_delay_ms = max(0, int((-start_time) * 1000))
+                    RenderWorker.encode_frames_to_mp4(frames_dir, self.vis_config, audio_delay_ms, temp_output_file)
+
+                    if self._cancel_requested:
+                        return
+
+                    # define output file path - delete if already exists
+                    output_file = Path(self.output_dir) / f"{self.vis_config.track_name}.mp4"
+                    output_file.unlink(missing_ok=True)
+
+                    # move temp file to output location and rename
+                    Path(temp_output_file).replace(output_file)
+
+                    self.finished.emit(str(output_file))
                 finally:
                     shutil.rmtree(frames_dir)
 
-            self.finished.emit(str(self.output_file))
         except Exception as e:
             self.failed.emit(str(e))
 

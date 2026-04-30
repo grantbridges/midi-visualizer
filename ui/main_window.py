@@ -128,7 +128,7 @@ class MainWindow(QMainWindow):
         self.update_model()
         
         try:
-            self.vis_config.save()
+            self.vis_config.save(INPUT_CONFIG_FILE)
         except Exception as e:
             QMessageBox.critical(self, "Save failed", str(e))
 
@@ -137,7 +137,7 @@ class MainWindow(QMainWindow):
         self.progress_dialog.show()
 
         self.render_thread = QThread()
-        self.render_worker = RenderWorker(self.vis_config, Resolution.FullHD, "output")
+        self.render_worker = RenderWorker(self.vis_config, Resolution.HD, "output")
 
         self.render_worker.moveToThread(self.render_thread)
 
@@ -146,10 +146,8 @@ class MainWindow(QMainWindow):
         # connect ui to thread events
         self.render_worker.progress.connect(self.progress_dialog.update_progress)
         self.render_worker.finished.connect(self.on_render_finished)
-        self.render_worker.failed.connect(lambda msg: self.progress_dialog.mark_finished(f"Error: {msg}"))
-        self.render_worker.cancelled.connect(self.on_render_cancelled)
+        self.render_worker.failed.connect(lambda msg: self.on_render_failed(msg))
 
-        self.progress_dialog.cancel_clicked.connect(self.render_worker.cancel)
         self.progress_dialog.cancel_clicked.connect(self.on_render_cancelled)
 
         # cleanup thread on any result
@@ -160,8 +158,15 @@ class MainWindow(QMainWindow):
         self.render_thread.start()
 
     def on_render_cancelled(self):
+        self.render_worker.cancel()
         self.progress_dialog.hide()
         self.progress_dialog = None
+
+    def on_render_failed(self, error: str):
+        self.progress_dialog.hide()
+        self.progress_dialog = None
+
+        QMessageBox.critical(None, 'Render Failed', error)
 
     def on_render_finished(self, output_file: str):
         show_output = self.progress_dialog.get_show_output_folder()
