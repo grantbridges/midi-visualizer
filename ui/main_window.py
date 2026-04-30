@@ -1,9 +1,8 @@
 import os
 import subprocess
 import sys
-
 import pretty_midi
-from PySide6.QtCore import Qt, QThread
+from PySide6.QtCore import QThread
 from PySide6.QtWidgets import (
     QMainWindow,
     QTabWidget,
@@ -129,7 +128,7 @@ class MainWindow(QMainWindow):
         self.update_model()
         
         try:
-            self.vis_config.save(INPUT_CONFIG_FILE)
+            self.vis_config.save()
         except Exception as e:
             QMessageBox.critical(self, "Save failed", str(e))
 

@@ -16,15 +16,17 @@ History
   2 - Added track alphas
   3 - Added playhead position
   4 - Bar height ratio & seconds to cross screen updates
+  5 - Added audio filepath
 '''
-VIS_CONFIG_SCHEMA_VERSION = 4
+VIS_CONFIG_SCHEMA_VERSION = 5
 
 '''
 Top level construct containing all visualizing info
 '''
 @dataclass
 class VisConfig:
-    # TODO filepaths
+    # filepaths
+    audio_filepath: str = ""
 
     # midi data
     tracks: List[Track] = field(default_factory=list)
@@ -73,6 +75,7 @@ class VisConfig:
 
         root = ET.Element("VisConfig")
         root.set("schemaVersion", str(VIS_CONFIG_SCHEMA_VERSION))
+        root.set("audioFilepath", self.audio_filepath)
         root.set("trackName", self.track_name)
         root.set("bgColor", FileUtil.tuple_to_str(self.bg_color))
         root.set("playAudio", FileUtil.bool_to_str(self.play_audio))
@@ -101,6 +104,10 @@ class VisConfig:
         schema_version = int(root.get("schemaVersion"))
 
         vis_config = VisConfig()
+
+        if schema_version >= 5:
+            vis_config.audio_filepath = root.get("audioFilepath")
+
         vis_config.track_name = root.get("trackName")
         vis_config.bg_color = FileUtil.str_to_tuple(root.get("bgColor"))
         vis_config.play_audio = FileUtil.str_to_bool(root.get("playAudio"))

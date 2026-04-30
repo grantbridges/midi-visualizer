@@ -1,6 +1,6 @@
-from PySide6.QtCore import QObject, QThread, Signal, Slot
+from PySide6.QtCore import QObject, Signal, Slot
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from multiprocessing import Event, Manager
+from multiprocessing import Manager
 from common import Const
 from models import VisConfig
 from pathlib import Path
@@ -99,7 +99,8 @@ class RenderWorker(QObject):
                             self.progress.emit(percent, f"Rendering frames...")
 
                     self.progress.emit(None, "Encoding MP4...")
-                    RenderWorker.encode_frames_to_mp4(frames_dir, self.output_file)
+                    audio_delay_ms = int((-start_time) * 1000)
+                    RenderWorker.encode_frames_to_mp4(frames_dir, self.vis_config, audio_delay_ms, self.output_file)
                 finally:
                     shutil.rmtree(frames_dir)
 
@@ -133,16 +134,37 @@ class RenderWorker(QObject):
         return job.frame_index
     
     @staticmethod
-    def encode_frames_to_mp4(frames_dir: str, output_file: Path):
-        subprocess.run([
+    def encode_frames_to_mp4(frames_dir: str, vis_config: VisConfig, audio_delay_ms: int, output_file: Path):
+        cmd = [
             "ffmpeg",
             "-y",
+            # video frames
             "-framerate", str(Const.FPS),
             "-i", os.path.join(frames_dir, "frame_%05d.png"),
-            "-c:v", "libx264",
-            "-pix_fmt", "yuv420p",
-            str(output_file),
-        ], check=True)
+        ]
+
+        if vis_config.audio_filepath:
+            cmd += [
+                # audio file
+                "-i", str(vis_config.audio_filepath),
+                # delay audio
+                "-filter_complex", f"[1:a]adelay={audio_delay_ms}:all=1[a]",
+                # output mappings
+                "-map", "0:v",
+                "-map", "[a]",
+                "-c:v", "libx264",
+                "-pix_fmt", "yuv420p",
+                "-c:a", "aac",
+                "-shortest",
+            ]
+        else:
+            cmd += [
+                "-c:v", "libx264",
+                "-pix_fmt", "yuv420p",
+            ]
+
+        cmd.append(str(output_file))
+        subprocess.run(cmd, check=True)
 
     @staticmethod
     def encode_frames_to_mov(frames_dir: str, output_file: Path):
