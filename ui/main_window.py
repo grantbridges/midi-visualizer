@@ -11,11 +11,16 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QPushButton,
     QMessageBox,
+    QDialog
 )
-from models import VisConfig
-from render import Resolution, RenderWorker
+from models import VisConfig, Resolution
+from render import RenderWorker
 from ui.tabs import ConfigTab, TracksTab, PreviewTab
-from ui.dialogs import ExportProgressDialog
+from ui.dialogs import (
+    ExportProgressDialog, 
+    ExportOptionsDialog, 
+    ExportOptions
+)
 
 # ----
 
@@ -71,8 +76,8 @@ class MainWindow(QMainWindow):
         self.load_btn = QPushButton("Load Config")
         self.save_btn = QPushButton("Save")
         self.save_btn.clicked.connect(self.save_config)
-        self.export_btn = QPushButton("Export MP4")
-        self.export_btn.clicked.connect(self.export_mp4)
+        self.export_btn = QPushButton("Export")
+        self.export_btn.clicked.connect(self.on_export_clicked)
 
         # tabs
         self.tabs = QTabWidget()
@@ -132,30 +137,40 @@ class MainWindow(QMainWindow):
         except Exception as e:
             QMessageBox.critical(self, "Save failed", str(e))
 
-    def export_mp4(self):
-        self.progress_dialog = ExportProgressDialog(track_title=self.vis_config.track_name, parent=self)
-        self.progress_dialog.show()
+    def on_export_clicked(self):
+        export_dialog = ExportOptionsDialog(vis_config=self.vis_config, parent=self)
 
-        self.render_thread = QThread()
-        self.render_worker = RenderWorker(self.vis_config, Resolution.HD, "output")
+        if export_dialog.exec() == QDialog.Accepted:
+            options = export_dialog.get_options()
+            self.vis_config.export_dir = options.output_dir
+            self.vis_config.export_filename = options.filename
+            self.vis_config.export_format = options.render_format
+            self.vis_config.export_resolution = options.resolution
+            self.save_config()
 
-        self.render_worker.moveToThread(self.render_thread)
+            self.progress_dialog = ExportProgressDialog(track_title=self.vis_config.track_name, parent=self)
+            self.progress_dialog.show()
 
-        self.render_thread.started.connect(self.render_worker.run)
+            self.render_thread = QThread()
+            self.render_worker = RenderWorker(self.vis_config)
 
-        # connect ui to thread events
-        self.render_worker.progress.connect(self.progress_dialog.update_progress)
-        self.render_worker.finished.connect(self.on_render_finished)
-        self.render_worker.failed.connect(lambda msg: self.on_render_failed(msg))
+            self.render_worker.moveToThread(self.render_thread)
 
-        self.progress_dialog.cancel_clicked.connect(self.on_render_cancelled)
+            self.render_thread.started.connect(self.render_worker.run)
 
-        # cleanup thread on any result
-        self.render_worker.finished.connect(self.render_thread.quit)
-        self.render_worker.failed.connect(self.render_thread.quit)
-        self.render_worker.cancelled.connect(self.render_thread.quit)
+            # connect ui to thread events
+            self.render_worker.progress.connect(self.progress_dialog.update_progress)
+            self.render_worker.finished.connect(self.on_render_finished)
+            self.render_worker.failed.connect(lambda msg: self.on_render_failed(msg))
 
-        self.render_thread.start()
+            self.progress_dialog.cancel_clicked.connect(self.on_render_cancelled)
+
+            # cleanup thread on any result
+            self.render_worker.finished.connect(self.render_thread.quit)
+            self.render_worker.failed.connect(self.render_thread.quit)
+            self.render_worker.cancelled.connect(self.render_thread.quit)
+
+            self.render_thread.start()
 
     def on_render_cancelled(self):
         self.render_worker.cancel()
@@ -168,17 +183,14 @@ class MainWindow(QMainWindow):
 
         QMessageBox.critical(None, 'Render Failed', error)
 
-    def on_render_finished(self, output_file: str):
+    def on_render_finished(self):
         show_output = self.progress_dialog.get_show_output_folder()
 
         self.progress_dialog.hide()
         self.progress_dialog = None
 
         if show_output:
-            if not output_file:
-                return
-
-            folder = os.path.dirname(output_file)
+            folder = os.path.dirname(self.vis_config.export_dir)
 
             if sys.platform == "darwin":
                 subprocess.run(["open", folder])
@@ -187,6 +199,6 @@ class MainWindow(QMainWindow):
             else:  # linux
                 subprocess.run(["xdg-open", folder])
         else:
-            QMessageBox.information(None, "Success", f"Exported video to '{output_file}'")
+            QMessageBox.information(None, "Success", f"Exported video to {self.vis_config.export_dir}")
         
 

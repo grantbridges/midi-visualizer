@@ -12,7 +12,7 @@ import tempfile
 import shutil
 import os
 import subprocess
-from render.resolution import Resolution
+from models.resolution import Resolution
 
 @dataclass(frozen=True)
 class RenderFrameJobInput:
@@ -27,15 +27,14 @@ class RenderFrameJobInput:
 
 class RenderWorker(QObject):
     progress = Signal(int, str) # percent, message
-    finished = Signal(str) # output path
+    finished = Signal()
     failed = Signal(str)
     cancelled = Signal()
 
-    def __init__(self, vis_config: VisConfig, resolution: Resolution, output_dir: str):
+    def __init__(self, vis_config: VisConfig):
         super().__init__()
         self.vis_config: VisConfig = vis_config
-        (self.width, self.height) = resolution.value
-        self.output_dir = output_dir
+        (self.width, self.height) = self.vis_config.export_resolution
         self._cancel_requested = False
 
     @Slot()
@@ -101,19 +100,20 @@ class RenderWorker(QObject):
                     temp_output_file = Path(tempfile.gettempdir()) / f"midi_render_{uuid.uuid4()}.mp4"
 
                     audio_delay_ms = max(0, int((-start_time) * 1000))
+                    # TODO handle different output file types
                     RenderWorker.encode_frames_to_mp4(frames_dir, self.vis_config, audio_delay_ms, temp_output_file)
 
                     if self._cancel_requested:
                         return
 
                     # define output file path - delete if already exists
-                    output_file = Path(self.output_dir) / f"{self.vis_config.track_name}.mp4"
+                    output_file = Path(self.vis_config.export_dir) / f"{self.vis_config.export_filename}.mp4"
                     output_file.unlink(missing_ok=True)
 
                     # move temp file to output location and rename
                     Path(temp_output_file).replace(output_file)
 
-                    self.finished.emit(str(output_file))
+                    self.finished.emit()
                 finally:
                     shutil.rmtree(frames_dir)
 
