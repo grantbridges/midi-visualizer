@@ -12,7 +12,7 @@ import tempfile
 import shutil
 import os
 import subprocess
-from models.resolution import Resolution
+from models import RenderFormat
 
 @dataclass(frozen=True)
 class RenderFrameJobInput:
@@ -94,20 +94,19 @@ class RenderWorker(QObject):
                     if self._cancel_requested:
                         return
 
-                    self.progress.emit(None, "Encoding MP4...")
+                    self.progress.emit(None, f"Encoding {self.vis_config.export_format.value} file...")
 
                     # create output filepath - delete if already exists
-                    temp_output_file = Path(tempfile.gettempdir()) / f"midi_render_{uuid.uuid4()}.mp4"
+                    temp_output_file = Path(tempfile.gettempdir()) / f"midi_render_{uuid.uuid4()}.{self.vis_config.export_format.value}"
 
                     audio_delay_ms = max(0, int((-start_time) * 1000))
-                    # TODO handle different output file types
-                    RenderWorker.encode_frames_to_mp4(frames_dir, self.vis_config, audio_delay_ms, temp_output_file)
+                    RenderWorker.encode_frames_to_video(frames_dir, self.vis_config, audio_delay_ms, temp_output_file)
 
                     if self._cancel_requested:
                         return
 
                     # define output file path - delete if already exists
-                    output_file = Path(self.vis_config.export_dir) / f"{self.vis_config.export_filename}.mp4"
+                    output_file = Path(self.vis_config.export_dir) / f"{self.vis_config.export_filename}.{self.vis_config.export_format.value}"
                     output_file.unlink(missing_ok=True)
 
                     # move temp file to output location and rename
@@ -146,69 +145,56 @@ class RenderWorker(QObject):
         return job.frame_index
     
     @staticmethod
-    def encode_frames_to_mp4(frames_dir: str, vis_config: VisConfig, audio_delay_ms: int, output_file: Path):
+    def encode_frames_to_video(frames_dir: str, vis_config: VisConfig, audio_delay_ms: int, output_file: Path):
         cmd = [
             "ffmpeg",
             "-y",
-            # video frames
             "-framerate", str(Const.FPS),
             "-i", os.path.join(frames_dir, "frame_%05d.png"),
         ]
 
-        if vis_config.audio_filepath:
+        # check if audio path is filled in and is a valid file
+        has_audio = (
+            bool(vis_config.audio_filepath)
+            and Path(vis_config.audio_filepath).is_file()
+        )
+
+        if has_audio:
             cmd += [
-                # audio file
                 "-i", str(vis_config.audio_filepath),
-                # delay audio
                 "-filter_complex", f"[1:a]adelay={audio_delay_ms}:all=1[a]",
-                # output mappings
                 "-map", "0:v",
                 "-map", "[a]",
-                "-c:v", "libx264",
-                "-pix_fmt", "yuv420p",
-                "-c:a", "aac",
-                "-shortest",
             ]
-        else:
-            cmd += [
-                "-c:v", "libx264",
-                "-pix_fmt", "yuv420p",
-            ]
+
+        match vis_config.export_format:
+            case RenderFormat.MP4:
+                cmd += [
+                    "-c:v", "libx264",
+                    "-pix_fmt", "yuv420p",
+                ]
+                if has_audio:
+                    cmd += ["-c:a", "aac", "-shortest"]
+
+            case RenderFormat.MOV:
+                cmd += [
+                    "-c:v", "prores_ks",
+                    "-profile:v", "3",
+                ]
+                if has_audio:
+                    cmd += ["-c:a", "aac", "-shortest"]
+
+            case RenderFormat.WEBM:
+                cmd += [
+                    "-c:v", "libvpx-vp9",
+                    "-b:v", "2M",
+                ]
+                if has_audio:
+                    cmd += ["-c:a", "libopus", "-shortest"]
+
+            case _:
+                raise ValueError(f"Unsupported render format: {vis_config.export_format}")
 
         cmd.append(str(output_file))
+
         subprocess.run(cmd, check=True)
-
-    @staticmethod
-    def encode_frames_to_mov(frames_dir: str, output_file: Path):
-        subprocess.run([
-            "ffmpeg",
-            "-y",
-            "-framerate", str(Const.FPS),
-            "-i", os.path.join(frames_dir, "frame_%05d.png"),
-            "-c:v", "prores_ks",
-            "-profile:v", "3",  # 3 = standard ProRes 422
-            str(output_file.with_suffix(".mov")),
-        ], check=True)
-
-    @staticmethod
-    def encode_frames_to_webm(frames_dir: str, output_file: Path):
-        subprocess.run([
-            "ffmpeg",
-            "-y",
-            "-framerate", str(Const.FPS),
-            "-i", os.path.join(frames_dir, "frame_%05d.png"),
-            "-c:v", "libvpx-vp9",
-            "-b:v", "2M",
-            str(output_file.with_suffix(".webm")),
-        ], check=True)
-
-    @staticmethod
-    def encode_frames_to_avi(frames_dir: str, output_file: Path):
-        subprocess.run([
-            "ffmpeg",
-            "-y",
-            "-framerate", str(Const.FPS),
-            "-i", os.path.join(frames_dir, "frame_%05d.png"),
-            "-c:v", "mpeg4",
-            str(output_file.with_suffix(".avi")),
-        ], check=True)

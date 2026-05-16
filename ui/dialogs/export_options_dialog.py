@@ -50,6 +50,8 @@ class ExportOptionsDialog(QDialog):
         filename_row = QHBoxLayout()
         filename_row.addWidget(QLabel("Filename"))
         filename_row.addWidget(self.filename_input)
+        self.filename_ext = QLabel(f".{vis_config.export_format}")
+        filename_row.addWidget(self.filename_ext)
         layout.addLayout(filename_row)
 
         # render format dropdown
@@ -57,7 +59,7 @@ class ExportOptionsDialog(QDialog):
         self.format_combo.addItem("mp4", RenderFormat.MP4)
         self.format_combo.addItem("mov", RenderFormat.MOV)
         self.format_combo.addItem("webm", RenderFormat.WEBM)
-        self.format_combo.addItem("avi", RenderFormat.AVI)
+        self.format_combo.currentIndexChanged.connect(self.on_format_combo_changed)
 
         if vis_config.export_format:
             # initialize if previously set
@@ -107,6 +109,10 @@ class ExportOptionsDialog(QDialog):
         folder = QFileDialog.getExistingDirectory(self, "Choose Output Folder", self.output_dir_input.text())
         if folder:
             self.output_dir_input.setText(folder)
+
+    def on_format_combo_changed(self):
+        rf: RenderFormat = self.format_combo.currentData()
+        self.filename_ext.setText(f".{rf.value}")
     
     def on_export_clicked(self):
         # pull values out of ui
