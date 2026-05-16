@@ -4,6 +4,9 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
+    QPushButton,
+    QFileDialog
 )
 
 from models import VisConfig
@@ -24,20 +27,31 @@ class ConfigTab(QWidget):
         self.playhead_pos_input.setValue(self.vis_config.playhead_pos * 100)
         self.playhead_pos_input.valueChanged.connect(self.on_changes_callback)
 
+        self.audio_file_input = QLineEdit(self.vis_config.audio_filepath)
+        self.audio_file_input.setReadOnly(True)
+        self.audio_file_browse_btn = QPushButton("Browse...")
+        self.audio_file_browse_btn.clicked.connect(self.browse_audio_file)
+
         # layout controls
         v_layout = QVBoxLayout(self)
         h_layout = QHBoxLayout()
         v_left_layout = QVBoxLayout()
 
         background_color_layout = QHBoxLayout()
-        background_color_layout.addWidget(QLabel("Background Color:"))
+        background_color_layout.addWidget(QLabel("Background Color"))
         background_color_layout.addWidget(self.bg_button)
         v_left_layout.addLayout(background_color_layout)
 
         playhead_pos_layout = QHBoxLayout()
-        playhead_pos_layout.addWidget(QLabel("Playhead Position:"))
+        playhead_pos_layout.addWidget(QLabel("Playhead Position"))
         playhead_pos_layout.addWidget(self.playhead_pos_input)
         v_left_layout.addLayout(playhead_pos_layout)
+
+        audio_file_layout = QHBoxLayout()
+        audio_file_layout.addWidget(QLabel("Audio File"))
+        audio_file_layout.addWidget(self.audio_file_input)
+        audio_file_layout.addWidget(self.audio_file_browse_btn)
+        v_left_layout.addLayout(audio_file_layout)
 
         v_left_layout.addStretch()
 
@@ -50,6 +64,21 @@ class ConfigTab(QWidget):
         self.bg_button.rgb = self.vis_config.bg_color
         self.bg_button.refresh()
 
+    def browse_audio_file(self):
+        default_filepath = ""
+        if self.vis_config.audio_filepath:
+            default_filepath = self.vis_config.audio_filepath
+
+        audio_file, _ = QFileDialog.getOpenFileName(
+            self,
+            "Select Audio File",
+            default_filepath,
+            "Audio Files (*.wav *.mp3 *.aiff *.aif *.flac *.m4a *.ogg)"
+        )
+
+        self.audio_file_input.setText(audio_file)
+
     def update_model(self):
         self.vis_config.bg_color = self.bg_button.rgb
         self.vis_config.playhead_pos = self.playhead_pos_input.value() / 100
+        self.vis_config.audio_filepath = self.audio_file_input.text()
