@@ -14,9 +14,10 @@ from PySide6.QtWidgets import (
     QDialog
 )
 from PySide6.QtGui import QAction
+from common import Const
 from models import VisConfig, Resolution
 from render import RenderWorker
-from ui.tabs import ConfigTab, TracksTab, PreviewTab
+from ui.tabs import ConfigTab, TracksTab, PreviewWidget
 from ui.dialogs import (
     ExportProgressDialog, 
     ExportOptionsDialog, 
@@ -40,7 +41,7 @@ class MainWindow(QMainWindow):
         print(f"Starting MIDI Visualizer app")
 
         self.setWindowTitle("MIDI Visualizer Config Editor")
-        self.setFixedSize(1200, 900)
+        self.setFixedSize(Const.SCREEN_WIDTH, Const.SCREEN_HEIGHT)
 
         self.render_thread = None
         self.render_worker = None
@@ -94,31 +95,37 @@ class MainWindow(QMainWindow):
         pass # TODO
 
     def init_vis_config_editor_view(self):
-        # create controls
-        central = QWidget()
-        self.setCentralWidget(central)
-
         # tabs
         self.tabs = QTabWidget()
         self.config_tab = ConfigTab(self.on_config_changed, self.vis_config)
         self.tracks_tab = TracksTab(self.on_tracks_changed, self.vis_config)
-        self.preview_tab = PreviewTab(self.vis_config)
         self.tabs.addTab(self.config_tab, "Config")
         self.tabs.addTab(self.tracks_tab, "Tracks")
-        self.tabs.addTab(self.preview_tab, "Preview")
-
         self.tabs.currentChanged.connect(self.on_tab_changed)
+        
+        # preview area
+        self.preview_widget = PreviewWidget(self.vis_config)
+
+        self.layout_controls()
+
+        self.refresh_ui()
+
+    def layout_controls(self):
+        # create controls
+        central = QWidget()
+        self.setCentralWidget(central)
 
         # Layout
         root = QVBoxLayout(central)
-        root.addWidget(self.tabs)
+        root.addWidget(self.tabs, 1)
+        root.addWidget(self.preview_widget, 1)
 
-        self.refresh_ui()
+        self.preview_widget.layout_controls()
 
     def refresh_ui(self):
         self.config_tab.refresh_ui()
         self.tracks_tab.refresh_ui()
-        self.preview_tab.refresh_ui()
+        self.preview_widget.refresh_ui()
 
     def update_model(self):
         self.config_tab.update_model()
@@ -128,16 +135,16 @@ class MainWindow(QMainWindow):
         self.update_model()
 
         # notify preview tab to redraw
-        self.preview_tab.model_changed()
+        self.preview_widget.model_changed()
 
     def on_tracks_changed(self):
         self.update_model()
 
     def on_tab_changed(self, index: int):
-        if self.tabs.widget(index) is self.preview_tab:
-            self.preview_tab.on_show()
+        if self.tabs.widget(index) is self.preview_widget:
+            self.preview_widget.on_show()
         else:
-            self.preview_tab.on_hide()
+            self.preview_widget.on_hide()
 
     # Action callbacks
 

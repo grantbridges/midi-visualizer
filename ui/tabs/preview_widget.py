@@ -11,11 +11,11 @@ from PySide6.QtWidgets import (
 )
 from common import Const
 from models import VisConfig
-from ui.common import PreviewWidget
+from ui.common import PreviewCanvas
 
-class PreviewTab(QWidget):
-    def __init__(self, vis_config: VisConfig):
-        super().__init__()
+class PreviewWidget(QWidget):
+    def __init__(self, vis_config: VisConfig, parent=None):
+        super().__init__(parent)
 
         self.vis_config = vis_config
 
@@ -38,8 +38,9 @@ class PreviewTab(QWidget):
         self.slider.setValue(0)
         self.slider.valueChanged.connect(self._on_slider_changed)
 
-        self.preview_widget = PreviewWidget(self.vis_config)
+        self.preview_canvas = PreviewCanvas(self.vis_config)
 
+    def layout_controls(self):
         # layout controls
         v_layout = QVBoxLayout(self)
 
@@ -54,7 +55,8 @@ class PreviewTab(QWidget):
         slider_bar_layout.addWidget(self.slider)
         v_layout.addLayout(slider_bar_layout)
 
-        v_layout.addWidget(self.preview_widget)
+        v_layout.addWidget(self.preview_canvas)
+        self.on_show()
 
     def model_changed(self):
         # flip flag and we'll reinitialize on next show
@@ -70,15 +72,15 @@ class PreviewTab(QWidget):
             # calculate start/end time with visible preview widget size
             self.playing = False
 
-            self.preview_widget.on_show()
+            self.preview_canvas.set_dimensions(Const.SCREEN_WIDTH, Const.SCREEN_HEIGHT / 2)
 
-            self.start_time = self.preview_widget.midi_renderer.get_start_time()
-            self.end_time = self.preview_widget.midi_renderer.get_end_time()
+            self.start_time = self.preview_canvas.midi_renderer.get_start_time()
+            self.end_time = self.preview_canvas.midi_renderer.get_end_time()
             self.current_time = self.start_time
             
             self._update_slider_position()
             
-            self.preview_widget.tick(self.current_time)
+            self.preview_canvas.tick(self.current_time)
 
             self.initialized = True
 
@@ -97,7 +99,7 @@ class PreviewTab(QWidget):
                     self._stop()
 
             self._update_slider_position()
-            self.preview_widget.tick(self.current_time)
+            self.preview_canvas.tick(self.current_time)
 
     def _toggle_play(self):
         if self.playing == False:
@@ -108,7 +110,7 @@ class PreviewTab(QWidget):
     def _reset(self):
         self.current_time = self.start_time
         self._update_slider_position()
-        self.preview_widget.tick(self.current_time)
+        self.preview_canvas.tick(self.current_time)
 
         self.refresh_ui()
 
@@ -124,7 +126,7 @@ class PreviewTab(QWidget):
         if self.slider.isSliderDown():
             t_norm = value / 1000
             self.current_time = self.start_time + t_norm * (self.end_time - self.start_time)
-            self.preview_widget.tick(self.current_time)
+            self.preview_canvas.tick(self.current_time)
 
     def _play(self):
         self.playing = True      

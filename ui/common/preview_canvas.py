@@ -7,17 +7,17 @@ from models import VisConfig
 from render import MidiRenderer
 from utility import QUtil
 
-class PreviewWidget(QWidget):
+class PreviewCanvas(QWidget):
     def __init__(self, vis_config: VisConfig, parent=None):
         super().__init__(parent)
         self.vis_config: VisConfig = vis_config
 
         self.midi_renderer: MidiRenderer = MidiRenderer(self.vis_config)
-
+        
         self.current_time: float = 0.0 # sec
 
-    def on_show(self):
-        self.midi_renderer.set_dimensions(self.width(), self.height())
+    def set_dimensions(self, width, height):
+        self.midi_renderer.set_dimensions(width, height)
     
     def tick(self, current_time):
         self.current_time = current_time
