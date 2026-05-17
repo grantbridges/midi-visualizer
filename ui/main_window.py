@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QDialog
 )
+from PySide6.QtGui import QAction
 from models import VisConfig, Resolution
 from render import RenderWorker
 from ui.tabs import ConfigTab, TracksTab, PreviewTab
@@ -46,6 +47,32 @@ class MainWindow(QMainWindow):
 
         self.progress_dialog: ExportProgressDialog = None
 
+        # File menu
+        menu_bar = self.menuBar()
+        file_menu = menu_bar.addMenu("File")
+
+        # Actions
+        self.new_project_action = QAction("New Project...", self)
+        self.new_project_action.triggered.connect(self.on_new_project_action)
+        self.open_action = QAction("Open...", parent=self, shortcut="Ctrl+O")
+        self.open_action.triggered.connect(self.on_open_action)
+        self.save_action = QAction("Save", parent=self, shortcut="Ctrl+S")
+        self.save_action.triggered.connect(self.on_save_action)
+        self.save_as_action = QAction("Save As...", parent=self, shortcut="Ctrl+Shift+S")
+        self.save_as_action.triggered.connect(self.on_save_as_action)
+        self.export_action = QAction("Export...", parent=self, shortcut="Ctrl+Shift+X")
+        self.export_action.triggered.connect(self.on_export_action)
+
+        # Add actions to menu
+        file_menu.addAction(self.new_project_action)
+        file_menu.addSeparator()
+        file_menu.addAction(self.open_action)
+        file_menu.addSeparator()
+        file_menu.addAction(self.save_action)
+        file_menu.addAction(self.save_as_action)
+        file_menu.addSeparator()
+        file_menu.addAction(self.export_action)
+
         # 1) Check if we already have a .mvc (midi visual config) file for this track
         self.vis_config = VisConfig.load(INPUT_CONFIG_FILE)
 
@@ -71,14 +98,6 @@ class MainWindow(QMainWindow):
         central = QWidget()
         self.setCentralWidget(central)
 
-        # top row controls
-        self.create_btn = QPushButton("Create from MIDI")
-        self.load_btn = QPushButton("Load Config")
-        self.save_btn = QPushButton("Save")
-        self.save_btn.clicked.connect(self.save_config)
-        self.export_btn = QPushButton("Export")
-        self.export_btn.clicked.connect(self.on_export_clicked)
-
         # tabs
         self.tabs = QTabWidget()
         self.config_tab = ConfigTab(self.on_config_changed, self.vis_config)
@@ -92,15 +111,6 @@ class MainWindow(QMainWindow):
 
         # Layout
         root = QVBoxLayout(central)
-
-        top_row = QHBoxLayout()
-        top_row.addWidget(self.create_btn)
-        top_row.addWidget(self.load_btn)
-        top_row.addStretch()
-        top_row.addWidget(self.save_btn)
-        top_row.addWidget(self.export_btn)
-        root.addLayout(top_row)
-
         root.addWidget(self.tabs)
 
         self.refresh_ui()
@@ -129,7 +139,17 @@ class MainWindow(QMainWindow):
         else:
             self.preview_tab.on_hide()
 
-    def save_config(self):
+    # Action callbacks
+
+    def on_new_project_action(self):
+        print("Create clicked")
+        pass # TODO
+
+    def on_open_action(self):
+        print("Open clicked")
+        pass # TODO
+
+    def on_save_action(self):
         self.update_model()
         
         try:
@@ -137,7 +157,11 @@ class MainWindow(QMainWindow):
         except Exception as e:
             QMessageBox.critical(self, "Save failed", str(e))
 
-    def on_export_clicked(self):
+    def on_save_as_action(self):
+        print("Save As clicked")
+        pass # TODO
+
+    def on_export_action(self):
         export_dialog = ExportOptionsDialog(vis_config=self.vis_config, parent=self)
 
         if export_dialog.exec() == QDialog.Accepted:
@@ -171,6 +195,8 @@ class MainWindow(QMainWindow):
             self.render_worker.cancelled.connect(self.render_thread.quit)
 
             self.render_thread.start()
+
+    # Render events
 
     def on_render_cancelled(self):
         self.render_worker.cancel()

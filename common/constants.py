@@ -10,4 +10,4 @@ class Const:
     TITLE = "Midi Visualizer"
 
     # visual
-    PRIMARY_FONT = 'freesansbold.ttf'
+    PRIMARY_FONT = 'Arial'
