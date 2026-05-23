@@ -75,9 +75,10 @@ class PreviewWidget(QWidget):
             self.end_time = new_end_time
             self.current_time = self.start_time
             self._update_slider_position()
-            self.preview_canvas.tick(self.current_time)
 
-            self.refresh_ui()
+        # tick to redraw
+        self.preview_canvas.tick(self.current_time)
+        self.refresh_ui()
 
     def refresh_ui(self):
         self.play_btn.setText("▶ Play" if not self.playing else "⏹ Stop")
