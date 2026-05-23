@@ -131,6 +131,14 @@ class MainWindow(QMainWindow):
         self.config_tab.update_model()
         self.tracks_tab.update_model()
 
+    def save_config(self):
+        self.update_model()
+        
+        try:
+            self.vis_config.save(INPUT_CONFIG_FILE)
+        except Exception as e:
+            QMessageBox.critical(self, "Save failed", str(e))
+
     def on_config_changed(self):
         self.update_model()
 
@@ -157,12 +165,7 @@ class MainWindow(QMainWindow):
         pass # TODO
 
     def on_save_action(self):
-        self.update_model()
-        
-        try:
-            self.vis_config.save(INPUT_CONFIG_FILE)
-        except Exception as e:
-            QMessageBox.critical(self, "Save failed", str(e))
+        self.save_config()
 
     def on_save_as_action(self):
         print("Save As clicked")

@@ -50,7 +50,7 @@ class ExportOptionsDialog(QDialog):
         filename_row = QHBoxLayout()
         filename_row.addWidget(QLabel("Filename"))
         filename_row.addWidget(self.filename_input)
-        self.filename_ext = QLabel(f".{vis_config.export_format}")
+        self.filename_ext = QLabel(f".{vis_config.export_format.value}")
         filename_row.addWidget(self.filename_ext)
         layout.addLayout(filename_row)
 
