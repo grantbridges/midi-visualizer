@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QDialog
 )
-from PySide6.QtGui import QAction
+from PySide6.QtGui import QAction, QKeySequence
 from common import Const
 from models import VisConfig, Resolution
 from render import RenderWorker
@@ -73,6 +73,10 @@ class MainWindow(QMainWindow):
         file_menu.addAction(self.save_as_action)
         file_menu.addSeparator()
         file_menu.addAction(self.export_action)
+        
+        # set to True when any model changes occur; reset to False when a save happens
+        # use to notify user before exit that they have unsaved changes
+        self.has_unsaved_changes = False
 
         # 1) Check if we already have a .mvc (midi visual config) file for this track
         self.vis_config = VisConfig.load(INPUT_CONFIG_FILE)
@@ -135,16 +139,24 @@ class MainWindow(QMainWindow):
         self.config_tab.update_model()
         self.tracks_tab.update_model()
 
-    def save_config(self):
+    # returns True on successful save
+    def save_config(self) -> bool:
         self.update_model()
         
         try:
             self.vis_config.save(INPUT_CONFIG_FILE)
+            self.has_unsaved_changes = False
+            return True
         except Exception as e:
             QMessageBox.critical(self, "Save failed", str(e))
+            return False
+
+    # child tab API
 
     def on_config_changed(self):
         self.update_model()
+
+        self.has_unsaved_changes = True
 
         # notify preview tab to redraw
         self.preview_widget.model_changed()
@@ -158,7 +170,34 @@ class MainWindow(QMainWindow):
     def on_tab_changed(self, index: int):
         pass
 
-    # Action callbacks
+    # event overrides
+    def closeEvent(self, event):
+        if not self.has_unsaved_changes:
+            event.accept()
+            return
+
+        result = QMessageBox.question(
+            self,
+            "Unsaved Changes",
+            "You have unsaved changes. Save before closing?",
+            QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel,
+            QMessageBox.Save,
+        )
+
+        if result == QMessageBox.Save:
+            saved = self.save_config()  # return True/False
+            if saved:
+                event.accept()
+            else:
+                event.ignore()
+
+        elif result == QMessageBox.Discard:
+            event.accept()
+
+        else:  # Cancel
+            event.ignore()
+
+    # action callbacks
 
     def on_new_project_action(self):
         print("Create clicked")

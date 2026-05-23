@@ -78,7 +78,9 @@ class ConfigTab(QWidget):
             "Audio Files (*.wav *.mp3 *.aiff *.aif *.flac *.m4a *.ogg)"
         )
 
-        self.audio_file_input.setText(audio_file)
+        if audio_file:
+            self.audio_file_input.setText(audio_file)
+            self.on_changes_callback()
 
     def update_model(self):
         self.vis_config.bg_color = self.bg_button.rgb
