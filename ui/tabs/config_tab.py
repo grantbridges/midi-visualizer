@@ -21,6 +21,8 @@ class ConfigTab(QWidget):
 
         # create controls
         self.bg_button = ColorButton(self.vis_config.bg_color)
+        self.bg_button.valueChanged.connect(self.on_changes_callback)
+
         self.playhead_pos_input = QSpinBox()
         self.playhead_pos_input.setRange(0, 100)
         self.playhead_pos_input.setSuffix('%')

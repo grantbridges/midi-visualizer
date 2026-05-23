@@ -40,6 +40,8 @@ class PreviewWidget(QWidget):
 
         self.preview_canvas = PreviewCanvas(self.vis_config)
 
+        self.timer.start(int(1000 / Const.FPS))
+
     def layout_controls(self):
         # layout controls
         v_layout = QVBoxLayout(self)
@@ -56,35 +58,26 @@ class PreviewWidget(QWidget):
         v_layout.addLayout(slider_bar_layout)
 
         v_layout.addWidget(self.preview_canvas)
-        self.on_show()
+
+        # at the end of layout, initialize preview canvas
+        # TODO be smarter about how we set size here
+        self.preview_canvas.set_dimensions(Const.SCREEN_WIDTH, Const.SCREEN_HEIGHT / 2)
 
     def model_changed(self):
-        # flip flag and we'll reinitialize on next show
-        self.initialized = False
+        # calculate start/end time with visible preview widget size
+        new_start_time = self.preview_canvas.midi_renderer.get_start_time()
+        new_end_time = self.preview_canvas.midi_renderer.get_end_time()
 
-    def on_hide(self):
-        self.timer.stop()
-
-    def on_show(self):
-        self.timer.start(int(1000 / Const.FPS))
-
-        if not self.initialized:
-            # calculate start/end time with visible preview widget size
+        if self.start_time != new_start_time or self.end_time != new_end_time:
+            # if time bounds changed, reset progression
             self.playing = False
-
-            self.preview_canvas.set_dimensions(Const.SCREEN_WIDTH, Const.SCREEN_HEIGHT / 2)
-
-            self.start_time = self.preview_canvas.midi_renderer.get_start_time()
-            self.end_time = self.preview_canvas.midi_renderer.get_end_time()
+            self.start_time = new_start_time
+            self.end_time = new_end_time
             self.current_time = self.start_time
-            
             self._update_slider_position()
-            
             self.preview_canvas.tick(self.current_time)
 
-            self.initialized = True
-
-        self.refresh_ui()
+            self.refresh_ui()
 
     def refresh_ui(self):
         self.play_btn.setText("▶ Play" if not self.playing else "⏹ Stop")
@@ -108,6 +101,7 @@ class PreviewWidget(QWidget):
             self._stop()
 
     def _reset(self):
+        self.playing = False
         self.current_time = self.start_time
         self._update_slider_position()
         self.preview_canvas.tick(self.current_time)

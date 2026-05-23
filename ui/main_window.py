@@ -108,6 +108,9 @@ class MainWindow(QMainWindow):
 
         self.layout_controls()
 
+        # initial model changed call to initialize stuff
+        self.preview_widget.model_changed()
+
         self.refresh_ui()
 
     def layout_controls(self):
@@ -128,6 +131,7 @@ class MainWindow(QMainWindow):
         self.preview_widget.refresh_ui()
 
     def update_model(self):
+        # ask individual tabs to copy their local UI models into the data model
         self.config_tab.update_model()
         self.tracks_tab.update_model()
 
@@ -148,11 +152,11 @@ class MainWindow(QMainWindow):
     def on_tracks_changed(self):
         self.update_model()
 
+        # notify preview tab to redraw
+        self.preview_widget.model_changed()
+
     def on_tab_changed(self, index: int):
-        if self.tabs.widget(index) is self.preview_widget:
-            self.preview_widget.on_show()
-        else:
-            self.preview_widget.on_hide()
+        pass
 
     # Action callbacks
 

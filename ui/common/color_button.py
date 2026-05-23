@@ -1,6 +1,7 @@
 from common import RGB
 from common import Color
 from utility import QUtil
+from PySide6.QtCore import Signal
 
 from PySide6.QtWidgets import (
     QPushButton,
@@ -8,6 +9,8 @@ from PySide6.QtWidgets import (
 )
 
 class ColorButton(QPushButton):
+    valueChanged = Signal(tuple)
+
     def __init__(self, color: RGB, parent=None):
         super().__init__(parent)
         self.rgb = color
@@ -30,4 +33,6 @@ class ColorButton(QPushButton):
         if color.isValid():
             self.rgb = QUtil.qcolor_to_rgb(color)
             self.refresh()
+
+            self.valueChanged.emit(self.rgb)
             
