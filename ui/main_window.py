@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QDialog
 )
-from PySide6.QtGui import QAction, QKeySequence
+from PySide6.QtGui import QAction
 from common import Const
 from models import VisConfig, Resolution
 from render import RenderWorker
@@ -40,13 +40,16 @@ class MainWindow(QMainWindow):
 
         print(f"Starting MIDI Visualizer app")
 
-        self.setWindowTitle("MIDI Visualizer Config Editor")
+        self.setWindowTitle(Const.APP_NAME)
         self.setFixedSize(Const.SCREEN_WIDTH, Const.SCREEN_HEIGHT)
 
         self.render_thread = None
         self.render_worker = None
 
         self.progress_dialog: ExportProgressDialog = None
+
+        # used to notify user before exit that they have unsaved changes
+        self.has_unsaved_changes = False
 
         # File menu
         menu_bar = self.menuBar()
@@ -73,10 +76,6 @@ class MainWindow(QMainWindow):
         file_menu.addAction(self.save_as_action)
         file_menu.addSeparator()
         file_menu.addAction(self.export_action)
-        
-        # set to True when any model changes occur; reset to False when a save happens
-        # use to notify user before exit that they have unsaved changes
-        self.has_unsaved_changes = False
 
         # 1) Check if we already have a .mvc (midi visual config) file for this track
         self.vis_config = VisConfig.load(INPUT_CONFIG_FILE)
@@ -134,6 +133,13 @@ class MainWindow(QMainWindow):
         self.tracks_tab.refresh_ui()
         self.preview_widget.refresh_ui()
 
+    def refresh_window_title(self):
+        title = Const.APP_NAME
+        if self.has_unsaved_changes:
+            title += "*"
+
+        self.setWindowTitle(title)
+
     def update_model(self):
         # ask individual tabs to copy their local UI models into the data model
         self.config_tab.update_model()
@@ -146,6 +152,7 @@ class MainWindow(QMainWindow):
         try:
             self.vis_config.save(INPUT_CONFIG_FILE)
             self.has_unsaved_changes = False
+            self.refresh_window_title()
             return True
         except Exception as e:
             QMessageBox.critical(self, "Save failed", str(e))
@@ -157,6 +164,7 @@ class MainWindow(QMainWindow):
         self.update_model()
 
         self.has_unsaved_changes = True
+        self.refresh_window_title()
 
         # notify preview tab to redraw
         self.preview_widget.model_changed()
@@ -185,7 +193,7 @@ class MainWindow(QMainWindow):
         )
 
         if result == QMessageBox.Save:
-            saved = self.save_config()  # return True/False
+            saved = self.save_config()
             if saved:
                 event.accept()
             else:

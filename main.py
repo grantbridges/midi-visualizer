@@ -4,10 +4,13 @@ from ui import MainWindow
 
 # create main window and start
 def main():
-    q_app = QApplication(sys.argv)
+    app = QApplication(sys.argv)
+    app.setApplicationName("MIDI Visualizer")
+    app.setApplicationDisplayName("MIDI Visualizer")
+    app.setOrganizationName("Grant Bridges")
     editor = MainWindow()
     editor.show()
-    sys.exit(q_app.exec())
+    sys.exit(app.exec())
 
 if __name__ == "__main__":
     main()
