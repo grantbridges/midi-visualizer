@@ -1,11 +1,11 @@
-from PySide6.QtCore import QObject, Signal, Slot
+from PySide6.QtCore import QObject, QRect, Signal, Slot
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from multiprocessing import Manager
 from common import Const
 from models import VisConfig
 from pathlib import Path
 from PySide6.QtGui import QImage, QPainter
-from render.midi_renderer import MidiRenderer
+from render.midi_render_util import MidiRenderUtil
 from dataclasses import dataclass
 import uuid
 import tempfile
@@ -47,11 +47,10 @@ class RenderWorker(QObject):
                 frames_dir = tempfile.mkdtemp()
 
                 try:
-                    midi_renderer = MidiRenderer(self.vis_config)
-                    midi_renderer.set_dimensions(self.width, self.height)
-
-                    start_time = midi_renderer.get_start_time()
-                    end_time = midi_renderer.get_end_time()
+                    start_time = MidiRenderUtil.calc_start_time(self.vis_config, self.width)
+                    end_time = MidiRenderUtil.calc_end_time(self.vis_config, self.width)
+                    pitch_min = self.vis_config.get_min_pitch()
+                    pitch_max = self.vis_config.get_max_pitch()
 
                     # build render frame job for every frame
                     total_frames = int((end_time - start_time) * Const.FPS)
@@ -59,10 +58,10 @@ class RenderWorker(QObject):
                         RenderFrameJobInput(
                             frame_index = i, 
                             vis_config=self.vis_config, 
-                            pitch_min=midi_renderer.pitch_min, 
-                            pitch_max=midi_renderer.pitch_max, 
-                            width=self.width, 
-                            height=self.height, 
+                            pitch_min=pitch_min, 
+                            pitch_max=pitch_max, 
+                            width=self.width,
+                            height=self.height,
                             start_time=start_time,
                             frames_dir=frames_dir
                         )
@@ -132,7 +131,8 @@ class RenderWorker(QObject):
         image = QImage(job.width, job.height, QImage.Format_ARGB32)
         painter = QPainter(image)
         painter.setRenderHint(QPainter.Antialiasing)
-        MidiRenderer.draw_frame(painter, current_time, job.vis_config, job.pitch_min, job.pitch_max, job.width, job.height)
+        rect = QRect(0, 0, job.width, job.height)
+        MidiRenderUtil.draw_frame(painter, current_time, job.vis_config, job.pitch_min, job.pitch_max, rect)
         painter.end()
 
         if cancel_event.is_set():

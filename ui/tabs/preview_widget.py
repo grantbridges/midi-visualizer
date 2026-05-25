@@ -1,6 +1,7 @@
 from enum import Enum
 import time
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import Qt, QTimer, QRect
+from PySide6.QtGui import QFont, QPainter, QColor, QPen
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -9,8 +10,10 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QSlider,
 )
-from common import Const
+from common import Const, Color
 from models import VisConfig
+from render import MidiRenderUtil
+from utility import QUtil
 from ui.common import PreviewCanvas
 
 class PreviewWidget(QWidget):
@@ -27,6 +30,10 @@ class PreviewWidget(QWidget):
         self.timer.timeout.connect(self._on_tick)
         self.initialized = False
 
+        # computed and cached for quick lookup
+        self.pitch_min: int = 0
+        self.pitch_max: int = 0
+
         # create controls
         self.play_btn = QPushButton("Play")
         self.play_btn.clicked.connect(self._toggle_play)
@@ -38,7 +45,7 @@ class PreviewWidget(QWidget):
         self.slider.setValue(0)
         self.slider.valueChanged.connect(self._on_slider_changed)
 
-        self.preview_canvas = PreviewCanvas(self.vis_config)
+        self.preview_canvas = PreviewCanvas(parent=self)
 
         self.timer.start(int(1000 / Const.FPS))
 
@@ -57,27 +64,28 @@ class PreviewWidget(QWidget):
         slider_bar_layout.addWidget(self.slider)
         v_layout.addLayout(slider_bar_layout)
 
+        self.preview_canvas.setFixedWidth(Const.SCREEN_WIDTH)
+        self.preview_canvas.setFixedHeight(Const.SCREEN_HEIGHT / 2)
         v_layout.addWidget(self.preview_canvas)
 
-        # at the end of layout, initialize preview canvas
-        # TODO be smarter about how we set size here
-        self.preview_canvas.set_dimensions(Const.SCREEN_WIDTH, Const.SCREEN_HEIGHT / 2)
-
     def model_changed(self):
-        # calculate start/end time with visible preview widget size
-        new_start_time = self.preview_canvas.midi_renderer.get_start_time()
-        new_end_time = self.preview_canvas.midi_renderer.get_end_time()
+        if self.vis_config is not None:
+            self.pitch_min = self.vis_config.get_min_pitch()
+            self.pitch_max = self.vis_config.get_max_pitch()
 
-        if self.start_time != new_start_time or self.end_time != new_end_time:
-            # if time bounds changed, reset progression
-            self.playing = False
-            self.start_time = new_start_time
-            self.end_time = new_end_time
-            self.current_time = self.start_time
-            self._update_slider_position()
+            # calculate start/end time for preview area
+            new_start_time = MidiRenderUtil.calc_start_time(self.vis_config, self.preview_canvas.width())
+            new_end_time = MidiRenderUtil.calc_end_time(self.vis_config, self.preview_canvas.width())
 
-        # tick to redraw
-        self.preview_canvas.tick(self.current_time)
+            if self.start_time != new_start_time or self.end_time != new_end_time:
+                # if time bounds changed, reset position
+                self.playing = False
+                self.start_time = new_start_time
+                self.end_time = new_end_time
+                self.current_time = self.start_time
+                self._update_slider_position()
+
+        self._refresh_canvas()
         self.refresh_ui()
 
     def refresh_ui(self):
@@ -93,7 +101,15 @@ class PreviewWidget(QWidget):
                     self._stop()
 
             self._update_slider_position()
-            self.preview_canvas.tick(self.current_time)
+            self._refresh_canvas()
+
+    def _refresh_canvas(self):
+        self.preview_canvas.refresh(
+            self.current_time, 
+            self.vis_config, 
+            self.pitch_min, 
+            self.pitch_max
+        )
 
     def _toggle_play(self):
         if self.playing == False:
@@ -105,7 +121,7 @@ class PreviewWidget(QWidget):
         self.playing = False
         self.current_time = self.start_time
         self._update_slider_position()
-        self.preview_canvas.tick(self.current_time)
+        self._refresh_canvas()
 
         self.refresh_ui()
 
@@ -121,7 +137,7 @@ class PreviewWidget(QWidget):
         if self.slider.isSliderDown():
             t_norm = value / 1000
             self.current_time = self.start_time + t_norm * (self.end_time - self.start_time)
-            self.preview_canvas.tick(self.current_time)
+            self._refresh_canvas()
 
     def _play(self):
         self.playing = True      

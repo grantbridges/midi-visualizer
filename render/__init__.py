@@ -1,2 +1,2 @@
-from render.midi_renderer import MidiRenderer
+from render.midi_render_util import MidiRenderUtil
 from render.render_worker import RenderWorker

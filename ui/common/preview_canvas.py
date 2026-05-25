@@ -4,30 +4,39 @@ from PySide6.QtGui import QFont, QPainter, QColor, QPen
 from PySide6.QtCore import QRect, QTimer, Qt
 from common import Const, Color
 from models import VisConfig
-from render import MidiRenderer
+from render import MidiRenderUtil
 from utility import QUtil
 
 class PreviewCanvas(QWidget):
-    def __init__(self, vis_config: VisConfig, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self.vis_config: VisConfig = vis_config
 
-        self.midi_renderer: MidiRenderer = MidiRenderer(self.vis_config)
-        
+        # set on each tick by parent so always up to date
+        self.vis_config: VisConfig = None
         self.current_time: float = 0.0 # sec
+        self.pitch_min: int = 0
+        self.pitch_max: int = 0
 
-    def set_dimensions(self, width, height):
-        self.midi_renderer.set_dimensions(width, height)
-    
-    def tick(self, current_time):
+    def refresh(self, current_time: float, vis_config: VisConfig, pitch_min: int, pitch_max: int):
         self.current_time = current_time
+        self.vis_config = vis_config
+        self.pitch_min = pitch_min
+        self.pitch_max = pitch_max
+
         self.update() # queues paint event
 
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
 
-        self.midi_renderer.draw(painter, self.current_time)
+        MidiRenderUtil.draw_frame(
+            painter, 
+            self.current_time, 
+            self.vis_config,
+            self.pitch_min, 
+            self.pitch_max, 
+            self.rect()
+        )
 
         # draw text time display
         color = QUtil.rgb_to_qcolor(Color.WHITE)

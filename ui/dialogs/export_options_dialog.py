@@ -73,6 +73,8 @@ class ExportOptionsDialog(QDialog):
 
         # resolution combo
         self.resolution_combo = QComboBox()
+        self.resolution_combo.addItem("Low (360p)", Resolution.Low)
+        self.resolution_combo.addItem("SD (480p)", Resolution.SD)
         self.resolution_combo.addItem("HD (720p)", Resolution.HD)
         self.resolution_combo.addItem("Full HD (1080p)", Resolution.FullHD)
         self.resolution_combo.addItem("Quad HD (1440p)", Resolution.QuadHD)
