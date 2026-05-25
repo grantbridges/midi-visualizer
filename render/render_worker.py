@@ -53,7 +53,7 @@ class RenderWorker(QObject):
                     pitch_max = self.vis_config.get_max_pitch()
 
                     # build render frame job for every frame
-                    total_frames = int((end_time - start_time) * Const.FPS)
+                    total_frames = int((end_time - start_time) * self.vis_config.fps)
                     jobs = [
                         RenderFrameJobInput(
                             frame_index = i, 
@@ -126,7 +126,7 @@ class RenderWorker(QObject):
         if cancel_event.is_set():
             return
 
-        current_time = job.start_time + job.frame_index / Const.FPS
+        current_time = job.start_time + job.frame_index / job.vis_config.fps
 
         image = QImage(job.width, job.height, QImage.Format_ARGB32)
         painter = QPainter(image)
@@ -149,7 +149,7 @@ class RenderWorker(QObject):
         cmd = [
             "ffmpeg",
             "-y",
-            "-framerate", str(Const.FPS),
+            "-framerate", str(vis_config.fps),
             "-i", os.path.join(frames_dir, "frame_%05d.png"),
         ]
 

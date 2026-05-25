@@ -6,7 +6,6 @@ class Const:
     APP_NAME = "MIDI Visualizer"
 
     # animation window constants
-    FPS = 60
     SCREEN_WIDTH = 1200
     SCREEN_HEIGHT = 900
     SCREEN_PADDING = 50

@@ -1,4 +1,4 @@
-from PySide6.QtGui import QFont, QPainter, QColor, QPen
+from PySide6.QtGui import QPainter, QPen
 from PySide6.QtCore import QRect, Qt
 from common import Const, Color
 from models import VisConfig

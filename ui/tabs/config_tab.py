@@ -29,6 +29,11 @@ class ConfigTab(QWidget):
         self.playhead_pos_input.setValue(self.vis_config.playhead_pos * 100)
         self.playhead_pos_input.valueChanged.connect(self.on_changes_callback)
 
+        self.fps_input = QSpinBox()
+        self.fps_input.setRange(1, 120)
+        self.fps_input.setValue(self.vis_config.fps)
+        self.fps_input.valueChanged.connect(self.on_changes_callback)
+
         self.audio_file_input = QLineEdit(self.vis_config.audio_filepath)
         self.audio_file_input.setReadOnly(True)
         self.audio_file_browse_btn = QPushButton("Browse...")
@@ -48,6 +53,11 @@ class ConfigTab(QWidget):
         playhead_pos_layout.addWidget(QLabel("Playhead Position"))
         playhead_pos_layout.addWidget(self.playhead_pos_input)
         v_left_layout.addLayout(playhead_pos_layout)
+
+        fps_layout = QHBoxLayout()
+        fps_layout.addWidget(QLabel("FPS"))
+        fps_layout.addWidget(self.fps_input)
+        v_left_layout.addLayout(fps_layout)
 
         audio_file_layout = QHBoxLayout()
         audio_file_layout.addWidget(QLabel("Audio File"))
@@ -85,4 +95,5 @@ class ConfigTab(QWidget):
     def update_model(self):
         self.vis_config.bg_color = self.bg_button.rgb
         self.vis_config.playhead_pos = self.playhead_pos_input.value() / 100
+        self.vis_config.fps = self.fps_input.value()
         self.vis_config.audio_filepath = self.audio_file_input.text()

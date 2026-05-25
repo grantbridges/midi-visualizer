@@ -1,7 +1,6 @@
-import time
 from PySide6.QtWidgets import QWidget
-from PySide6.QtGui import QFont, QPainter, QColor, QPen
-from PySide6.QtCore import QRect, QTimer, Qt
+from PySide6.QtGui import QFont, QPainter, QPen
+from PySide6.QtCore import QRect
 from common import Const, Color
 from models import VisConfig
 from render import MidiRenderUtil
@@ -11,7 +10,8 @@ class PreviewCanvas(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        # set on each tick by parent so always up to date
+        # set on each refresh by parent so always up to date
+        # (cached as members for paintEvent to access)
         self.vis_config: VisConfig = None
         self.current_time: float = 0.0 # sec
         self.pitch_min: int = 0

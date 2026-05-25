@@ -20,8 +20,9 @@ History
   4 - Bar height ratio & seconds to cross screen updates
   5 - Added audio filepath
   6 - Added export details
+  7 - Added FPS
 '''
-VIS_CONFIG_SCHEMA_VERSION = 6
+VIS_CONFIG_SCHEMA_VERSION = 7
 
 '''
 Top level construct containing all visualizing info
@@ -45,6 +46,7 @@ class VisConfig:
     bg_color: RGB = Color.DARKEST_GRAY
     playhead_pos: float = 0.5 # % of screen width playhead's located at - 0 to 1
     play_audio: bool = True
+    fps: int = 60
     
     @staticmethod
     def create_from_midi_data(track_name: str, midi_data: pretty_midi.PrettyMIDI) -> None:
@@ -95,6 +97,7 @@ class VisConfig:
         root.set("bgColor", FileUtil.tuple_to_str(self.bg_color))
         root.set("playAudio", FileUtil.bool_to_str(self.play_audio))
         root.set("playheadPos", str(self.playhead_pos))
+        root.set("fps", str(self.fps))
 
         tracks_el = ET.SubElement(root, "Tracks")
         for track in self.tracks:
@@ -139,6 +142,9 @@ class VisConfig:
 
         if schema_version >= 3:
             vis_config.playhead_pos = float(root.get("playheadPos"))
+
+        if schema_version >= 7:
+            vis_config.fps = int(root.get("fps"))
 
         for track_el in root.find("Tracks").findall("Track"):
             track = Track.load(track_el, schema_version)

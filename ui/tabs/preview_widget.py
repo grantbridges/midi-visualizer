@@ -21,6 +21,9 @@ class PreviewWidget(QWidget):
         super().__init__(parent)
 
         self.vis_config = vis_config
+        self.current_fps = 60
+        if self.vis_config is not None:
+            self.current_fps = self.vis_config.fps
 
         self.playing = False
         self.start_time = 0.0
@@ -28,7 +31,7 @@ class PreviewWidget(QWidget):
         self.current_time = 0.0
         self.timer = QTimer(self)
         self.timer.timeout.connect(self._on_tick)
-        self.initialized = False
+        self.timer.start(int(1000 / self.current_fps))
 
         # computed and cached for quick lookup
         self.pitch_min: int = 0
@@ -46,8 +49,6 @@ class PreviewWidget(QWidget):
         self.slider.valueChanged.connect(self._on_slider_changed)
 
         self.preview_canvas = PreviewCanvas(parent=self)
-
-        self.timer.start(int(1000 / Const.FPS))
 
     def layout_controls(self):
         # layout controls
@@ -70,6 +71,12 @@ class PreviewWidget(QWidget):
 
     def model_changed(self):
         if self.vis_config is not None:
+            if self.current_fps != self.vis_config.fps:
+                # reset timer with new fps
+                self.current_fps = self.vis_config.fps
+                self.timer.stop()
+                self.timer.start(int(1000 / self.current_fps))
+
             self.pitch_min = self.vis_config.get_min_pitch()
             self.pitch_max = self.vis_config.get_max_pitch()
 
@@ -95,7 +102,7 @@ class PreviewWidget(QWidget):
         # only update widget if playing and user isn't dragging slider
         if self.playing and not self.slider.isSliderDown():
             if self.playing == True:
-                self.current_time += 1 / float(Const.FPS) # iterate one frame
+                self.current_time += 1 / float(self.vis_config.fps) # iterate one frame
 
                 if self.current_time > self.end_time:
                     self._stop()
