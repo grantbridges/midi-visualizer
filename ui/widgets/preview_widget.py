@@ -15,7 +15,7 @@ from common import Const, Color
 from models import VisConfig, user_settings
 from render import MidiRenderUtil
 from utility import QUtil
-from ui.common import PreviewCanvas
+from ui.widgets.preview_canvas import PreviewCanvas
 
 class PreviewWidget(QWidget):
     def __init__(self, vis_config: VisConfig, parent=None):

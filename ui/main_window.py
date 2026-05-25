@@ -17,7 +17,8 @@ from PySide6.QtGui import QAction
 from common import Const
 from models import VisConfig, Resolution
 from render import RenderWorker
-from ui.tabs import ConfigTab, TracksTab, PreviewWidget
+from ui.tabs import ConfigTab, TracksTab
+from ui.widgets import PreviewWidget
 from ui.dialogs import (
     ExportProgressDialog, 
     ExportOptionsDialog, 
