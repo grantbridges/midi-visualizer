@@ -1,4 +1,5 @@
 import xml.etree.ElementTree as ET
+from PySide6.QtCore import QStandardPaths
 
 class FileUtil:
     def __new__(cls):
@@ -34,3 +35,9 @@ class FileUtil:
                 child.tail = i
         if level and (not elem.tail or not elem.tail.strip()):
             elem.tail = i
+
+    @staticmethod
+    def get_app_data_dir():
+        return QStandardPaths.writableLocation(
+            QStandardPaths.AppDataLocation
+        )

@@ -10,7 +10,7 @@ class MidiUtil:
     def print_midi_data(midi_data: pretty_midi.PrettyMIDI) -> None:
         instruments: List[pretty_midi.Instrument] = midi_data.instruments
 
-        print(f"Loaded MIDI with {len(instruments)} instrument track(s)\n")
+        print(f"MainWindow | Loaded MIDI with {len(instruments)} instrument track(s)\n")
 
         tempo_times, tempi = midi_data.get_tempo_changes()
         print("Tempo changes:")

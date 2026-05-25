@@ -29,7 +29,6 @@ from ui.dialogs import (
 TRACK_NAME = 'Puppet Master'
 #TRACK_NAME = 'MIDI Test'
 INPUT_MIDI_FILE = f'input/{TRACK_NAME}.midi'
-INPUT_MP3_FILE = f'input/{TRACK_NAME}.mp3'
 INPUT_CONFIG_FILE = f'input/{TRACK_NAME}.mvc'
 
 START_TIME_OFFSET = 0 # seconds
@@ -38,7 +37,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        print(f"Starting MIDI Visualizer app")
+        print(f"MainWindow | Starting MIDI Visualizer app")
 
         self.setWindowTitle(Const.APP_NAME)
         self.setFixedSize(Const.SCREEN_WIDTH, Const.SCREEN_HEIGHT)
@@ -82,7 +81,7 @@ class MainWindow(QMainWindow):
 
         if self.vis_config is None:
             # 2) Generate new vis_config from midi file
-            print(f"Generating new config for \"{TRACK_NAME}\"")
+            print(f"MainWindow | Generating new config for \"{TRACK_NAME}\"")
             midi_data = pretty_midi.PrettyMIDI(INPUT_MIDI_FILE)
             self.vis_config = VisConfig.create_from_midi_data(TRACK_NAME, midi_data)
 
@@ -208,18 +207,18 @@ class MainWindow(QMainWindow):
     # action callbacks
 
     def on_new_project_action(self):
-        print("Create clicked")
+        print("MainWindow | Create clicked")
         pass # TODO
 
     def on_open_action(self):
-        print("Open clicked")
+        print("MainWindow | Open clicked")
         pass # TODO
 
     def on_save_action(self):
         self.save_config()
 
     def on_save_as_action(self):
-        print("Save As clicked")
+        print("MainWindow | Save As clicked")
         pass # TODO
 
     def on_export_action(self):

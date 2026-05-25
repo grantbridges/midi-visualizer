@@ -57,11 +57,11 @@ class VisConfig:
         inst_names = set()
         for inst in instruments:
             if not inst.name:
-                print("Warning: Loaded instrument from MIDI data with no name - skipping")
+                print("VisConfig | Warning: Loaded instrument from MIDI data with no name - skipping")
                 continue
 
             if inst.name in inst_names:
-                print(f"Warning: Loaded instrument with duplicate name \"{inst.name}\" - skipping")
+                print(f"VisConfig | Warning: Loaded instrument with duplicate name \"{inst.name}\" - skipping")
                 continue
 
             track = Track.create_from_midi_data(inst)
@@ -82,7 +82,7 @@ class VisConfig:
         pass
     
     def save(self, path: str) -> None:
-        print(f"Saving config at \"{path}\"")
+        print(f"VisConfig | Saving config at \"{path}\"")
 
         root = ET.Element("VisConfig")
         root.set("schemaVersion", str(VIS_CONFIG_SCHEMA_VERSION))
@@ -111,10 +111,10 @@ class VisConfig:
     @staticmethod
     def load(path: str) -> VisConfig:
         if not Path(path).is_file():
-            print(f"No existing config file found at \"{path}\"")
+            print(f"VisConfig | No existing config file found at \"{path}\"")
             return None
         
-        print(f"Loading config from \"{path}\"")
+        print(f"VisConfig | Loading config from \"{path}\"")
         
         tree = ET.parse(path)
         root = tree.getroot()
@@ -159,13 +159,13 @@ class VisConfig:
         for inst in instruments:
             # ensure loaded instrument has a name - we use it for track indexing
             if not inst.name:
-                print("Warning: Loaded instrument from MIDI data with no name - skipping")
+                print("VisConfig | Warning: Loaded instrument from MIDI data with no name - skipping")
                 continue
 
             # get corresponding track by instrument name
             track = self.get_track_by_name(inst.name)
             if track == None:
-                print(f"Warning: Loaded instrument {inst.name} from MIDI data with no match in VisConfig tracks - skipping")
+                print(f"VisConfig | Warning: Loaded instrument {inst.name} from MIDI data with no match in VisConfig tracks - skipping")
                 continue
 
             track.notes = []

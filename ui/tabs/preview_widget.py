@@ -1,8 +1,9 @@
 from enum import Enum
 import time
 from PySide6.QtCore import Qt, QTimer, QRect
-from PySide6.QtGui import QFont, QPainter, QColor, QPen
+from PySide6.QtGui import QAction, QFont, QPainter, QColor, QPen
 from PySide6.QtWidgets import (
+    QMenu,
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
@@ -11,7 +12,7 @@ from PySide6.QtWidgets import (
     QSlider,
 )
 from common import Const, Color
-from models import VisConfig
+from models import VisConfig, user_settings
 from render import MidiRenderUtil
 from utility import QUtil
 from ui.common import PreviewCanvas
@@ -43,6 +44,27 @@ class PreviewWidget(QWidget):
         self.reset_btn = QPushButton("Reset")
         self.reset_btn.clicked.connect(self._reset)
         self.mute_checkbox = QCheckBox("Mute")
+
+        # create button
+        self.settings_btn = QPushButton("⚙")
+        self.settings_btn.setFixedWidth(32)
+
+        # create settings menu
+        self.settings_menu = QMenu(self)
+        self.show_time_action = QAction("Show Time Display", self)
+        self.show_time_action.setCheckable(True)
+        self.show_time_action.setChecked(user_settings.show_time_display)
+        self.show_time_action.triggered.connect(self._on_show_time_display_toggled)
+
+        self.show_track_names_action = QAction("Show Track Names", self)
+        self.show_track_names_action.setCheckable(True)
+        self.show_track_names_action.setChecked(user_settings.show_track_names)
+        self.show_track_names_action.triggered.connect(self._on_show_track_names_toggled)
+
+        self.settings_menu.addAction(self.show_time_action)
+        self.settings_menu.addAction(self.show_track_names_action)
+        self.settings_btn.setMenu(self.settings_menu)
+
         self.slider = QSlider(Qt.Horizontal)
         self.slider.setRange(0, 1000)
         self.slider.setValue(0)
@@ -59,6 +81,7 @@ class PreviewWidget(QWidget):
         top_row_layout.addWidget(self.reset_btn)
         top_row_layout.addWidget(self.mute_checkbox)
         top_row_layout.addStretch()
+        top_row_layout.addWidget(self.settings_btn)
         v_layout.addLayout(top_row_layout)
 
         slider_bar_layout = QHBoxLayout()
@@ -138,6 +161,16 @@ class PreviewWidget(QWidget):
         slider_value = int(t_norm * 1000)
         slider_value = max(0, min(1000, slider_value)) # clamp
         self.slider.setValue(slider_value)
+
+    def _on_show_time_display_toggled(self, checked: bool):
+        user_settings.show_time_display = checked
+        user_settings.save()
+        self._refresh_canvas()
+
+    def _on_show_track_names_toggled(self, checked: bool):
+        user_settings.show_track_names = checked
+        user_settings.save()
+        self._refresh_canvas()
 
     def _on_slider_changed(self, value):
         # only apply if this is a user-driven movement
