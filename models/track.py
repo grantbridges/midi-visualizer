@@ -3,9 +3,6 @@ from dataclasses import dataclass, field
 import pretty_midi
 from common import Color, RGB
 from models.note import Note
-import xml.etree.ElementTree as ET
-
-from utility.file_util import FileUtil
 
 # ----
 
@@ -37,37 +34,36 @@ class Track:
             track.notes.append(note)
 
         return track
-    
-    def save(self, tracks_el: ET.SubElement) -> None:
-        el = ET.SubElement(tracks_el, "Track")
 
-        el.set("name", self.name)
-        el.set("visible", FileUtil.bool_to_str(self.visible))
-        el.set("color", FileUtil.tuple_to_str(self.color))
-        el.set("alpha", str(self.alpha))
-        el.set("barHeightRatio", str(self.bar_height_ratio))
-        el.set("barSecAcrossScreen", str(self.bar_sec_across_screen))
+    def save(self) -> dict:
+        return {
+            "name": self.name,
+            "visible": self.visible,
+            "color": list(self.color),
+            "alpha": self.alpha,
+            "barHeightRatio": self.bar_height_ratio,
+            "barSecAcrossScreen": self.bar_sec_across_screen,
 
-        notes_el = ET.SubElement(el, "Notes")
-        for note in self.notes:
-            note.save(notes_el)
+            "notes": [
+                note.save()
+                for note in self.notes
+            ]
+        }
     
     @staticmethod
-    def load(track_el: ET.Element[str], schema_version: int) -> Track:
+    def load(data: dict) -> Track:
         track = Track()
 
-        track.name=track_el.get("name")
-        track.visible=FileUtil.str_to_bool(track_el.get("visible"))
-        track.color=FileUtil.str_to_tuple(track_el.get("color"))
-        if schema_version >= 2:
-            track.alpha=int(track_el.get("alpha"))
-        
-        if schema_version >= 4:
-            track.bar_height_ratio = float(track_el.get("barHeightRatio"))
-            track.bar_sec_across_screen = float(track_el.get("barSecAcrossScreen"))
+        track.name = data.get("name", "Track")
+        track.visible = data.get("visible", True)
+        track.color = tuple(data.get("color", [255, 255, 255]))
+        track.alpha = data.get("alpha", 255)
+        track.bar_height_ratio = data.get("barHeightRatio", 0.02)
+        track.bar_sec_across_screen = data.get("barSecAcrossScreen", 8.0)
 
-        for note_el in track_el.find("Notes").findall("Note"):
-            note = Note.load(note_el, schema_version)
-            track.notes.append(note)
+        track.notes = [
+            Note.load(note_data)
+            for note_data in data.get("notes", [])
+        ]
 
         return track

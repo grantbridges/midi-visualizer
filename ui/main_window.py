@@ -30,7 +30,7 @@ from ui.dialogs import (
 TRACK_NAME = 'Puppet Master'
 #TRACK_NAME = 'MIDI Test'
 INPUT_MIDI_FILE = f'input/{TRACK_NAME}.midi'
-INPUT_CONFIG_FILE = f'input/{TRACK_NAME}.mvc'
+INPUT_CONFIG_FILE = f'input/{TRACK_NAME}.json'
 
 START_TIME_OFFSET = 0 # seconds
 
@@ -77,7 +77,7 @@ class MainWindow(QMainWindow):
         file_menu.addSeparator()
         file_menu.addAction(self.export_action)
 
-        # 1) Check if we already have a .mvc (midi visual config) file for this track
+        # 1) Check if we already have a .json file for this track
         self.vis_config = VisConfig.load(INPUT_CONFIG_FILE)
 
         if self.vis_config is None:

@@ -1,8 +1,5 @@
 from dataclasses import dataclass
 import pretty_midi
-import xml.etree.ElementTree as ET
-
-from utility.file_util import FileUtil
 
 # ----
 
@@ -15,8 +12,8 @@ class Note:
     # midi data
     pitch: int = 50
     velocity: int = 70 # 0-127
-    start: float = 0 # note start in seconds
-    end: float = 1 # note end in seconds
+    start: float = 0.0 # note start in seconds
+    end: float = 1.0 # note end in seconds
 
     # properties
     # (none)
@@ -35,22 +32,22 @@ class Note:
         note.end = data.end
 
         return note
-    
-    def save(self, notes_el: ET.SubElement) -> None:
-        el = ET.SubElement(notes_el, "Note")
 
-        el.set("pitch", str(self.pitch))
-        el.set("velocity", str(self.velocity))
-        el.set("start", str(self.start))
-        el.set("end", str(self.end))
+    def save(self) -> dict:
+        return {
+            "pitch": self.pitch,
+            "velocity": self.velocity,
+            "start": self.start,
+            "end": self.end,
+        }
     
     @staticmethod
-    def load(note_el: ET.Element[str], schema_version: int) -> Note:
+    def load(data: dict) -> Note:
         note = Note()
 
-        note.pitch=int(note_el.get("pitch"))
-        note.velocity=int(note_el.get("velocity"))
-        note.start=float(note_el.get("start"))
-        note.end=float(note_el.get("end"))
+        note.pitch = data.get("pitch", 50)
+        note.velocity = data.get("velocity", 70)
+        note.start = data.get("start", 0.0)
+        note.end = data.get("end", 1.0)
 
         return note

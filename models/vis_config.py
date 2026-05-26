@@ -1,5 +1,4 @@
-from pathlib import Path
-import xml.etree.ElementTree as ET
+import json
 from typing import List
 from dataclasses import dataclass, field
 import pretty_midi
@@ -8,22 +7,14 @@ from models.track import Track
 from models.note import Note
 from models.render_format import RenderFormat
 from models.resolution import Resolution
-from utility import FileUtil
 
 # ----
 
 '''
 History
   1 - Initial version
-  2 - Added track alphas
-  3 - Added playhead position
-  4 - Bar height ratio & seconds to cross screen updates
-  5 - Added audio filepath
-  6 - Added export details
-  7 - Added FPS
-  8 - Added vertical padding and offset ratios; removed play audio
 '''
-VIS_CONFIG_SCHEMA_VERSION = 8
+VIS_CONFIG_SCHEMA_VERSION = 1
 
 '''
 Top level construct containing all visualizing info
@@ -82,82 +73,69 @@ class VisConfig:
         # 2) Add any new tracks that only exist in update
         # 3) Update existing tracks that still exist with refreshed note data
         pass
-    
+
     def save(self, path: str) -> None:
-        print(f"VisConfig | Saving config at \"{path}\"")
+        print(f'VisConfig | Saving config at "{path}"')
 
-        root = ET.Element("VisConfig")
-        root.set("schemaVersion", str(VIS_CONFIG_SCHEMA_VERSION))
-        root.set("audioFilepath", self.audio_filepath)
+        data = {
+            "schemaVersion": VIS_CONFIG_SCHEMA_VERSION,
+            "audioFilepath": self.audio_filepath,
 
-        root.set("exportDir", self.export_dir)
-        root.set("exportFilename", self.export_filename)
-        root.set("exportFormat", self.export_format.name if self.export_format else "")
-        root.set("exportResolution", self.export_resolution.name if self.export_resolution else "")
+            "exportDir": self.export_dir,
+            "exportFilename": self.export_filename,
+            "exportFormat": self.export_format.name if self.export_format else None,
+            "exportResolution": self.export_resolution.name if self.export_resolution else None,
 
-        root.set("trackName", self.track_name)
-        root.set("bgColor", FileUtil.tuple_to_str(self.bg_color))
-        root.set("verticalPaddingRatio", str(self.vertical_padding_ratio))
-        root.set("verticalOffsetRatio", str(self.vertical_offset_ratio))
-        root.set("playheadPos", str(self.playhead_pos))
-        root.set("fps", str(self.fps))
+            "trackName": self.track_name,
+            "bgColor": list(self.bg_color),
+            "verticalPaddingRatio": self.vertical_padding_ratio,
+            "verticalOffsetRatio": self.vertical_offset_ratio,
+            "playheadPos": self.playhead_pos,
+            "fps": self.fps,
 
-        tracks_el = ET.SubElement(root, "Tracks")
-        for track in self.tracks:
-            track.save(tracks_el)
+            "tracks": [
+                track.save()
+                for track in self.tracks
+            ]
+        }
 
-        FileUtil.xml_indent(root)
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
 
-        tree = ET.ElementTree(root)
-        tree.write(path, encoding="utf-8", xml_declaration=True)
-    
     @staticmethod
     def load(path: str) -> VisConfig:
-        if not Path(path).is_file():
-            print(f"VisConfig | No existing config file found at \"{path}\"")
-            return None
-        
-        print(f"VisConfig | Loading config from \"{path}\"")
-        
-        tree = ET.parse(path)
-        root = tree.getroot()
+        print(f'VisConfig | Loading config at "{path}"')
 
-        schema_version = int(root.get("schemaVersion"))
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
 
-        vis_config = VisConfig()
+        schema_version = data.get("schemaVersion", 1)
 
-        if schema_version >= 5:
-            vis_config.audio_filepath = root.get("audioFilepath")
+        config = VisConfig()
 
-        if schema_version >= 6:
-            vis_config.export_dir = root.get("exportDir")
-            vis_config.export_filename = root.get("exportFilename")
+        config.audio_filepath = data.get("audioFilepath", "")
+        config.export_dir = data.get("exportDir", "")
+        config.export_filename = data.get("exportFilename", "")
 
-            export_format = root.get("exportFormat")
-            vis_config.export_format = RenderFormat[export_format] if export_format else None
+        export_format = data.get("exportFormat")
+        config.export_format = (RenderFormat[export_format] if export_format else None)
 
-            export_resolultion = root.get("exportResolution")
-            vis_config.export_resolution = Resolution[export_resolultion] if export_resolultion else None
+        export_resolution = data.get("exportResolution")
+        config.export_resolution = (Resolution[export_resolution] if export_resolution else None )
 
-        vis_config.track_name = root.get("trackName")
-        vis_config.bg_color = FileUtil.str_to_tuple(root.get("bgColor"))
-        vis_config.play_audio = FileUtil.str_to_bool(root.get("playAudio"))
+        config.track_name = data.get("trackName", "")
+        config.bg_color = tuple(data.get("bgColor", [0, 0, 0]))
+        config.vertical_padding_ratio = data.get("verticalPaddingRatio", 0.0)
+        config.vertical_offset_ratio = data.get("verticalOffsetRatio", 0.0)
+        config.playhead_pos = data.get("playheadPos", 0.5)
+        config.fps = data.get("fps", 60)
 
-        if schema_version >= 3:
-            vis_config.playhead_pos = float(root.get("playheadPos"))
+        config.tracks = [
+            Track.load(track_data)
+            for track_data in data.get("tracks", [])
+        ]
 
-        if schema_version >= 7:
-            vis_config.fps = int(root.get("fps"))
-            
-        if schema_version >= 8:
-            vis_config.vertical_padding_ratio = float(root.get("verticalPaddingRatio"))
-            vis_config.vertical_offset_ratio = float(root.get("verticalOffsetRatio"))
-
-        for track_el in root.find("Tracks").findall("Track"):
-            track = Track.load(track_el, schema_version)
-            vis_config.tracks.append(track)
-
-        return vis_config
+        return config
 
     # Loads in all note data from midi (assumes tracks are already defined)
     def populate_notes_from_midi_data(self, midi_data: pretty_midi.PrettyMIDI):
