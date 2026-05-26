@@ -13,7 +13,6 @@ from PySide6.QtWidgets import (
 
 from models import VisConfig
 from ui.common import ColorButton
-from models.user_settings import user_settings
 
 class ConfigTab(QWidget):
     def __init__(self, on_changes_callback: object, vis_config: VisConfig):
