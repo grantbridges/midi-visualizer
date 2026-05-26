@@ -45,17 +45,26 @@ class PreviewCanvas(QWidget):
 
     def _draw_guides(self, painter: QPainter):
         vert_padding = self.vis_config.vertical_padding_ratio * self.rect().height() / 2
-        y_min = vert_padding
-        y_center = self.rect().height() / 2
-        y_max = self.rect().height() - vert_padding
+        vert_offset = self.vis_config.vertical_offset_ratio * self.rect().height() / 2
+
+        # positions
+        y_center = self.rect().height() / 2 + vert_offset
+        y_min = vert_padding + vert_offset
+        y_max = self.rect().height() - vert_padding + vert_offset
+
+        # color
         color = QUtil.rgb_to_qcolor(Util.invert_color(self.vis_config.bg_color))
         color.setAlpha(200)
         pen = QPen(color)
+
+        # draw vertical padding guides
         pen.setStyle(Qt.SolidLine)
         pen.setWidth(1)
         painter.setPen(pen)
         painter.drawLine(0, y_min, self.rect().width(), y_min)
         painter.drawLine(0, y_max, self.rect().width(), y_max)
+
+        # draw center line
         pen.setStyle(Qt.DashLine)
         pen.setDashPattern([4, 8])  # 4px dash, 8px gap
         painter.setPen(pen)
