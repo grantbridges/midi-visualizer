@@ -1,10 +1,10 @@
 from PySide6.QtWidgets import QWidget
 from PySide6.QtGui import QFont, QPainter, QPen
-from PySide6.QtCore import QRect
+from PySide6.QtCore import QRect, Qt
 from common import Const, Color
 from models import VisConfig, user_settings
 from render import MidiRenderUtil
-from utility import QUtil
+from utility import QUtil, Util
 
 class PreviewCanvas(QWidget):
     def __init__(self, parent=None):
@@ -38,6 +38,30 @@ class PreviewCanvas(QWidget):
             self.rect()
         )
 
+        if user_settings.show_guides:
+            self._draw_guides(painter)
+
+        self._draw_text(painter)
+
+    def _draw_guides(self, painter: QPainter):
+        vert_padding = self.vis_config.vertical_padding_ratio * self.rect().height() / 2
+        y_min = vert_padding
+        y_center = self.rect().height() / 2
+        y_max = self.rect().height() - vert_padding
+        color = QUtil.rgb_to_qcolor(Util.invert_color(self.vis_config.bg_color))
+        color.setAlpha(200)
+        pen = QPen(color)
+        pen.setStyle(Qt.SolidLine)
+        pen.setWidth(1)
+        painter.setPen(pen)
+        painter.drawLine(0, y_min, self.rect().width(), y_min)
+        painter.drawLine(0, y_max, self.rect().width(), y_max)
+        pen.setStyle(Qt.DashLine)
+        pen.setDashPattern([4, 8])  # 4px dash, 8px gap
+        painter.setPen(pen)
+        painter.drawLine(0, y_center, self.rect().width(), y_center)
+
+    def _draw_text(self, painter: QPainter):
         text_padding = 5
         text_top = text_padding
 
@@ -70,5 +94,3 @@ class PreviewCanvas(QWidget):
                 painter.setFont(font)
                 painter.drawText(QRect(text_padding, text_top, 200, track_font_size), f'{track.name}')
                 text_top += track_font_size + text_padding
-
-

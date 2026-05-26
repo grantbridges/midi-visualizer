@@ -11,8 +11,9 @@ from utility.file_util import FileUtil
 '''
 History
   1 - Initial version
+  2 - Added "show guides" and "mute audio"
 '''
-USER_SETTINGS_SCHEMA_VERSION = 1
+USER_SETTINGS_SCHEMA_VERSION = 2
 USER_SETTINGS_FILENAME = "user_settings.json"
 
 '''
@@ -25,6 +26,8 @@ class UserSettings:
     # preview area displays
     show_time_display: bool = True
     show_track_names: bool = True
+    show_guides: bool = True
+    mute_audio: bool = True
 
     @staticmethod
     def _settings_path() -> Path:
@@ -58,15 +61,12 @@ class UserSettings:
 
         schema_version = data.get("schema_version", 1)
 
-        self.show_time_display = data.get(
-            "show_time_display",
-            self.show_time_display
-        )
+        self.show_time_display = data.get("show_time_display", True)
+        self.show_track_names = data.get("show_track_names", True)
 
-        self.show_track_names = data.get(
-            "show_track_names",
-            self.show_track_names
-        )
+        if schema_version >= 2:
+            self.show_guides = data.get("show_guides", True)
+            self.mute_audio = data.get("mute_audio", True)
 
 
 # module-level singleton instance

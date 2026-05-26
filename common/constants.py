@@ -8,7 +8,6 @@ class Const:
     # animation window constants
     SCREEN_WIDTH = 1200
     SCREEN_HEIGHT = 900
-    SCREEN_PADDING = 50
 
     # visual
     PRIMARY_FONT = 'Arial'

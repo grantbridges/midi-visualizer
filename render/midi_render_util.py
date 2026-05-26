@@ -39,6 +39,8 @@ class MidiRenderUtil:
 
         playhead_x = rect.width() * vis_config.playhead_pos
 
+        vert_padding = vis_config.vertical_padding_ratio * rect.height() / 2
+
         # draw midi bars
         for track in vis_config.tracks:
             if not track.visible:
@@ -61,8 +63,8 @@ class MidiRenderUtil:
 
                 # y and height calc
                 t = (note.pitch - pitch_min) / (pitch_max - pitch_min)
-                y_min = Const.SCREEN_PADDING
-                y_max = rect.height() - Const.SCREEN_PADDING
+                y_min = vert_padding
+                y_max = rect.height() - vert_padding
                 y = (y_max + t * (y_min - y_max)) - bar_height / 2
                 h = bar_height
 

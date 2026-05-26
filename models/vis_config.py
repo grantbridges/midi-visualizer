@@ -21,8 +21,9 @@ History
   5 - Added audio filepath
   6 - Added export details
   7 - Added FPS
+  8 - Added vertical padding and offset ratios; removed play audio
 '''
-VIS_CONFIG_SCHEMA_VERSION = 7
+VIS_CONFIG_SCHEMA_VERSION = 8
 
 '''
 Top level construct containing all visualizing info
@@ -45,7 +46,8 @@ class VisConfig:
     track_name: str = ""
     bg_color: RGB = Color.DARKEST_GRAY
     playhead_pos: float = 0.5 # % of screen width playhead's located at - 0 to 1
-    play_audio: bool = True
+    vertical_padding_ratio = 0.15 # ratio of vertical compression of midi area - 0 to 1 (1 is maximally crunched)
+    vertical_offset_ratio = 0 # ratio of vertical offset positioning - -1 to 1 (-1 is top, 0 center, 1 bottom)
     fps: int = 60
     
     @staticmethod
@@ -95,7 +97,8 @@ class VisConfig:
 
         root.set("trackName", self.track_name)
         root.set("bgColor", FileUtil.tuple_to_str(self.bg_color))
-        root.set("playAudio", FileUtil.bool_to_str(self.play_audio))
+        root.set("verticalPaddingRatio", str(self.vertical_padding_ratio))
+        root.set("verticalOffsetRatio", str(self.vertical_offset_ratio))
         root.set("playheadPos", str(self.playhead_pos))
         root.set("fps", str(self.fps))
 
@@ -145,6 +148,10 @@ class VisConfig:
 
         if schema_version >= 7:
             vis_config.fps = int(root.get("fps"))
+            
+        if schema_version >= 8:
+            vis_config.vertical_padding_ratio = float(root.get("verticalPaddingRatio"))
+            vis_config.vertical_offset_ratio = float(root.get("verticalOffsetRatio"))
 
         for track_el in root.find("Tracks").findall("Track"):
             track = Track.load(track_el, schema_version)

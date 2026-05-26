@@ -44,6 +44,8 @@ class PreviewWidget(QWidget):
         self.reset_btn = QPushButton("Reset")
         self.reset_btn.clicked.connect(self._reset)
         self.mute_checkbox = QCheckBox("Mute")
+        self.mute_checkbox.setChecked(user_settings.mute_audio)
+        self.mute_checkbox.toggled.connect(self._on_mute_toggled)
 
         # create button
         self.settings_btn = QPushButton("⚙")
@@ -112,6 +114,8 @@ class PreviewWidget(QWidget):
                 self.playing = False
                 self.start_time = new_start_time
                 self.end_time = new_end_time
+                if self.start_time == self.end_time:
+                    self.end_time += 1 # prevent divide by 0
                 self.current_time = self.start_time
                 self._update_slider_position()
 
@@ -161,6 +165,10 @@ class PreviewWidget(QWidget):
         slider_value = int(t_norm * 1000)
         slider_value = max(0, min(1000, slider_value)) # clamp
         self.slider.setValue(slider_value)
+
+    def _on_mute_toggled(self, checked: bool):
+        user_settings.mute_audio = checked
+        user_settings.save()
 
     def _on_show_time_display_toggled(self, checked: bool):
         user_settings.show_time_display = checked
