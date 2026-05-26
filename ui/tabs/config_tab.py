@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import (
     QSpinBox,
+    QDoubleSpinBox,
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
@@ -30,6 +31,20 @@ class ConfigTab(QWidget):
         self.playhead_pos_input.setValue(self.vis_config.playhead_pos * 100)
         self.playhead_pos_input.valueChanged.connect(self.on_changes_callback)
 
+        self.vertical_padding_input = QDoubleSpinBox()
+        self.vertical_padding_input.setDecimals(2)
+        self.vertical_padding_input.setRange(0.00, 1.00)
+        self.vertical_padding_input.setSingleStep(.01)
+        self.vertical_padding_input.setValue(self.vis_config.vertical_padding_ratio)
+        self.vertical_padding_input.valueChanged.connect(self.on_changes_callback)
+
+        self.vertical_offset_input = QDoubleSpinBox()
+        self.vertical_offset_input.setDecimals(2)
+        self.vertical_offset_input.setRange(-1.00, 1.00)
+        self.vertical_offset_input.setSingleStep(.01)
+        self.vertical_offset_input.setValue(self.vis_config.vertical_offset_ratio)
+        self.vertical_offset_input.valueChanged.connect(self.on_changes_callback)
+
         self.fps_input = QSpinBox()
         self.fps_input.setRange(1, 120)
         self.fps_input.setValue(self.vis_config.fps)
@@ -54,6 +69,16 @@ class ConfigTab(QWidget):
         playhead_pos_layout.addWidget(QLabel("Playhead Position"))
         playhead_pos_layout.addWidget(self.playhead_pos_input)
         v_left_layout.addLayout(playhead_pos_layout)
+
+        vertical_padding_layout = QHBoxLayout()
+        vertical_padding_layout.addWidget(QLabel("Vertical Padding"))
+        vertical_padding_layout.addWidget(self.vertical_padding_input)
+        v_left_layout.addLayout(vertical_padding_layout)
+
+        vertifcal_offset_layout = QHBoxLayout()
+        vertifcal_offset_layout.addWidget(QLabel("Vertical Offset"))
+        vertifcal_offset_layout.addWidget(self.vertical_offset_input)
+        v_left_layout.addLayout(vertifcal_offset_layout)
 
         fps_layout = QHBoxLayout()
         fps_layout.addWidget(QLabel("FPS"))
@@ -96,5 +121,7 @@ class ConfigTab(QWidget):
     def update_model(self):
         self.vis_config.bg_color = self.bg_button.rgb
         self.vis_config.playhead_pos = self.playhead_pos_input.value() / 100
+        self.vis_config.vertical_padding_ratio = self.vertical_padding_input.value()
+        self.vis_config.vertical_offset_ratio = self.vertical_offset_input.value()
         self.vis_config.fps = self.fps_input.value()
         self.vis_config.audio_filepath = self.audio_file_input.text()

@@ -63,8 +63,14 @@ class PreviewWidget(QWidget):
         self.show_track_names_action.setChecked(user_settings.show_track_names)
         self.show_track_names_action.triggered.connect(self._on_show_track_names_toggled)
 
+        self.show_guides_action = QAction("Show Guides", self)
+        self.show_guides_action.setCheckable(True)
+        self.show_guides_action.setChecked(user_settings.show_guides)
+        self.show_guides_action.triggered.connect(self._on_show_guides_toggled)
+
         self.settings_menu.addAction(self.show_time_action)
         self.settings_menu.addAction(self.show_track_names_action)
+        self.settings_menu.addAction(self.show_guides_action)
         self.settings_btn.setMenu(self.settings_menu)
 
         self.slider = QSlider(Qt.Horizontal)
@@ -177,6 +183,11 @@ class PreviewWidget(QWidget):
 
     def _on_show_track_names_toggled(self, checked: bool):
         user_settings.show_track_names = checked
+        user_settings.save()
+        self._refresh_canvas()
+
+    def _on_show_guides_toggled(self, checked: bool):
+        user_settings.show_guides = checked
         user_settings.save()
         self._refresh_canvas()
 
