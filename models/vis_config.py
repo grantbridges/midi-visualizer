@@ -14,8 +14,9 @@ from models.resolution import Resolution
 History
   1 - Initial version
   2 - Playhead props
+  3 - Note playing props
 '''
-VIS_CONFIG_SCHEMA_VERSION = 2
+VIS_CONFIG_SCHEMA_VERSION = 3
 
 '''
 Top level construct containing all visualizing info
@@ -38,11 +39,20 @@ class VisConfig:
     track_name: str = ""
     bg_color: RGB = Color.DARKEST_GRAY
     show_playhead: bool = True
-    playhead_pos_ratio: float = 0.5 # ratio of view area width playhead's located at - 0 to 1 (0 is far left, 1 is far right)
+    # ratio of view area width playhead's located at - 0 to 1 (0 is far left, 1 is far right)
+    playhead_pos_ratio: float = 0.5 
     playhead_color: RGB = Color.LIGHT_GRAY
-    vertical_padding_ratio = 0.15 # ratio of vertical compression of midi area - 0 to 1 (1 is maximally crunched)
-    vertical_offset_ratio = 0 # ratio of vertical offset positioning - -1 to 1 (-1 is top, 0 center, 1 bottom)
+    # ratio of vertical compression of midi area - 0 to 1 (1 is maximally crunched)
+    vertical_padding_ratio = 0.15 
+    # ratio of vertical offset positioning - -1 to 1 (-1 is top, 0 center, 1 bottom)
+    vertical_offset_ratio = 0
     fps: int = 60
+
+    # Ratio of distance from playhead to left edge that note will fade out over - 0.01 to 1
+    # 1 means fade out over full distance to left edge, 0.5 means fade out to 
+    # halfway from playhead to left edge, etc. It makes sense, trust me.
+    note_fadeout_ratio: float = 0.5
+    note_play_color: RGB = Color.WHITE
     
     @staticmethod
     def create_from_midi_data(track_name: str, midi_data: pretty_midi.PrettyMIDI) -> None:
@@ -96,6 +106,8 @@ class VisConfig:
             "showPlayhead": self.show_playhead,
             "playheadPosRatio": self.playhead_pos_ratio,
             "playheadColor": list(self.playhead_color),
+            "noteFadeoutRatio": self.note_fadeout_ratio,
+            "notePlayColor": list(self.note_play_color),
             "fps": self.fps,
 
             "tracks": [
@@ -138,6 +150,10 @@ class VisConfig:
         if schema_version >= 2:
             config.show_playhead = data.get("showPlayhead", True)
             config.playhead_color = data.get("playheadColor", [100, 100, 100])
+
+        if schema_version >= 3:
+            config.note_fadeout_ratio = data.get("noteFadeoutRatio", 1.0)
+            config.note_play_color = data.get("notePlayColor", [255, 255, 255])
 
         config.tracks = [
             Track.load(track_data)

@@ -35,12 +35,21 @@ class MidiRenderUtil:
     
     @staticmethod
     def draw_frame(painter: QPainter, current_time: float, vis_config: VisConfig, pitch_min: int, pitch_max:int, rect: QRect):
+        # fill in bg color
         painter.fillRect(rect, QUtil.rgb_to_qcolor(vis_config.bg_color))
 
+        # convert ratios to pixel values
         playhead_x = rect.width() * vis_config.playhead_pos_ratio
-
         vert_padding = vis_config.vertical_padding_ratio * rect.height() / 2
         vert_offset = vis_config.vertical_offset_ratio * rect.height() / 2
+        note_fade_distance = playhead_x * vis_config.note_fadeout_ratio
+
+        # draw playhead line that notes will cross when they "play"
+        if vis_config.show_playhead:
+            pen = QPen(QUtil.rgb_to_qcolor(vis_config.playhead_color))
+            pen.setWidth(2)
+            painter.setPen(pen)
+            painter.drawLine(playhead_x, 0, playhead_x, rect.height())
 
         # draw midi bars
         for track in vis_config.tracks:
@@ -71,25 +80,36 @@ class MidiRenderUtil:
 
                 color = track.color
                 alpha = track.alpha
-                if x <= playhead_x:
-                    # turn white and start reducing alpha
-                    color = Color.WHITE
-                    alpha = 255 * (x_right / playhead_x)
-                    alpha = max(0, min(255, alpha))  # clamp
 
                 if x_right >= 0:
-                    # still visible - draw
-                    color = QUtil.rgb_to_qcolor(color)
-                    color.setAlpha(alpha)
-                    painter.setBrush(color)
-                    painter.setPen(Qt.NoPen)
-                    radius = int(bar_height * .5)
-                    painter.drawRoundedRect(x, y, w, h, radius, radius) # TODO configurable
-                # else - note has fallen off screen, don't draw
-            
-        # draw playhead line that notes will cross when they "play"
-        if vis_config.show_playhead:
-            pen = QPen(QUtil.rgb_to_qcolor(vis_config.playhead_color))
-            pen.setWidth(2)
-            painter.setPen(pen)
-            painter.drawLine(playhead_x, 0, playhead_x, rect.height())
+                    radius = int(bar_height * 0)
+
+                    # start fading out only after the whole note has passed the playhead
+                    if x_right <= playhead_x:
+                        fade_start_x = playhead_x - note_fade_distance
+                        alpha = 255 * ((x_right - fade_start_x) / note_fade_distance)
+                        alpha = max(0, min(255, alpha))
+
+                    # left side of playhead - show play color
+                    if x < playhead_x:
+                        played_x = x
+                        played_w = min(x_right, playhead_x) - x
+
+                        if played_w > 0:
+                            qcolor = QUtil.rgb_to_qcolor(vis_config.note_play_color)
+                            qcolor.setAlpha(alpha)
+                            painter.setBrush(qcolor)
+                            painter.setPen(Qt.NoPen)
+                            painter.drawRoundedRect(played_x, y, played_w, h, radius, radius)
+
+                    # right side of playhead - show track color
+                    if x_right > playhead_x:
+                        color_x = max(x, playhead_x)
+                        color_w = x_right - color_x
+
+                        if color_w > 0:
+                            qcolor = QUtil.rgb_to_qcolor(color)
+                            qcolor.setAlpha(alpha)
+                            painter.setBrush(qcolor)
+                            painter.setPen(Qt.NoPen)
+                            painter.drawRoundedRect(color_x, y, color_w, h, radius, radius)
