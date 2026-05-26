@@ -15,7 +15,7 @@ class MidiRenderUtil:
     def calc_start_time(vis_config: VisConfig, view_width: int) -> float:
         time_min = vis_config.get_min_time()
         max_sec = vis_config.get_max_sec_across_screen()
-        playhead_x = view_width * vis_config.playhead_pos
+        playhead_x = view_width * vis_config.playhead_pos_ratio
         return time_min - ((view_width - playhead_x) / view_width) * max_sec
     
     # calculated as function of view area width and playhead position such
@@ -23,7 +23,7 @@ class MidiRenderUtil:
     # the view area
     @staticmethod
     def calc_end_time(vis_config: VisConfig, view_width: int) -> float:
-        playhead_x = view_width * vis_config.playhead_pos
+        playhead_x = view_width * vis_config.playhead_pos_ratio
         ratio = playhead_x / view_width
         values = [
             note.end + ratio * track.bar_sec_across_screen
@@ -37,7 +37,7 @@ class MidiRenderUtil:
     def draw_frame(painter: QPainter, current_time: float, vis_config: VisConfig, pitch_min: int, pitch_max:int, rect: QRect):
         painter.fillRect(rect, QUtil.rgb_to_qcolor(vis_config.bg_color))
 
-        playhead_x = rect.width() * vis_config.playhead_pos
+        playhead_x = rect.width() * vis_config.playhead_pos_ratio
 
         vert_padding = vis_config.vertical_padding_ratio * rect.height() / 2
         vert_offset = vis_config.vertical_offset_ratio * rect.height() / 2
@@ -88,7 +88,8 @@ class MidiRenderUtil:
                 # else - note has fallen off screen, don't draw
             
         # draw playhead line that notes will cross when they "play"
-        pen = QPen(QUtil.rgb_to_qcolor(Color.LIGHT_GRAY))
-        pen.setWidth(2)
-        painter.setPen(pen)
-        painter.drawLine(playhead_x, 0, playhead_x, rect.height())
+        if vis_config.show_playhead:
+            pen = QPen(QUtil.rgb_to_qcolor(vis_config.playhead_color))
+            pen.setWidth(2)
+            painter.setPen(pen)
+            painter.drawLine(playhead_x, 0, playhead_x, rect.height())

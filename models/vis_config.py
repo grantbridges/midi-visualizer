@@ -13,8 +13,9 @@ from models.resolution import Resolution
 '''
 History
   1 - Initial version
+  2 - Playhead props
 '''
-VIS_CONFIG_SCHEMA_VERSION = 1
+VIS_CONFIG_SCHEMA_VERSION = 2
 
 '''
 Top level construct containing all visualizing info
@@ -36,7 +37,9 @@ class VisConfig:
     # properties
     track_name: str = ""
     bg_color: RGB = Color.DARKEST_GRAY
-    playhead_pos: float = 0.5 # % of screen width playhead's located at - 0 to 1
+    show_playhead: bool = True
+    playhead_pos_ratio: float = 0.5 # ratio of view area width playhead's located at - 0 to 1 (0 is far left, 1 is far right)
+    playhead_color: RGB = Color.LIGHT_GRAY
     vertical_padding_ratio = 0.15 # ratio of vertical compression of midi area - 0 to 1 (1 is maximally crunched)
     vertical_offset_ratio = 0 # ratio of vertical offset positioning - -1 to 1 (-1 is top, 0 center, 1 bottom)
     fps: int = 60
@@ -90,7 +93,9 @@ class VisConfig:
             "bgColor": list(self.bg_color),
             "verticalPaddingRatio": self.vertical_padding_ratio,
             "verticalOffsetRatio": self.vertical_offset_ratio,
-            "playheadPos": self.playhead_pos,
+            "showPlayhead": self.show_playhead,
+            "playheadPosRatio": self.playhead_pos_ratio,
+            "playheadColor": list(self.playhead_color),
             "fps": self.fps,
 
             "tracks": [
@@ -127,8 +132,12 @@ class VisConfig:
         config.bg_color = tuple(data.get("bgColor", [0, 0, 0]))
         config.vertical_padding_ratio = data.get("verticalPaddingRatio", 0.0)
         config.vertical_offset_ratio = data.get("verticalOffsetRatio", 0.0)
-        config.playhead_pos = data.get("playheadPos", 0.5)
+        config.playhead_pos_ratio = data.get("playheadPosRatio", 0.5)
         config.fps = data.get("fps", 60)
+
+        if schema_version >= 2:
+            config.show_playhead = data.get("showPlayhead", True)
+            config.playhead_color = data.get("playheadColor", [100, 100, 100])
 
         config.tracks = [
             Track.load(track_data)

@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import (
     QSpinBox,
     QDoubleSpinBox,
+    QCheckBox,
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
@@ -25,10 +26,18 @@ class ConfigTab(QWidget):
         self.bg_button = ColorButton(self.vis_config.bg_color)
         self.bg_button.valueChanged.connect(self.on_changes_callback)
 
-        self.playhead_pos_input = QSpinBox()
-        self.playhead_pos_input.setRange(0, 100)
-        self.playhead_pos_input.setSuffix('%')
-        self.playhead_pos_input.setValue(self.vis_config.playhead_pos * 100)
+        self.show_playhead_checkbox = QCheckBox()
+        self.show_playhead_checkbox.setChecked(self.vis_config.show_playhead)
+        self.show_playhead_checkbox.toggled.connect(self.on_changes_callback)
+
+        self.playhead_color_button = ColorButton(self.vis_config.playhead_color)
+        self.playhead_color_button.valueChanged.connect(self.on_changes_callback)
+
+        self.playhead_pos_input = QDoubleSpinBox()
+        self.playhead_pos_input.setDecimals(2)
+        self.playhead_pos_input.setRange(0.00, 1.00)
+        self.playhead_pos_input.setSingleStep(0.01)
+        self.playhead_pos_input.setValue(self.vis_config.playhead_pos_ratio)
         self.playhead_pos_input.valueChanged.connect(self.on_changes_callback)
 
         self.vertical_padding_input = QDoubleSpinBox()
@@ -64,6 +73,16 @@ class ConfigTab(QWidget):
         background_color_layout.addWidget(QLabel("Background Color"))
         background_color_layout.addWidget(self.bg_button)
         v_left_layout.addLayout(background_color_layout)
+
+        show_playhead_layout = QHBoxLayout()
+        show_playhead_layout.addWidget(QLabel("Show Playhead"))
+        show_playhead_layout.addWidget(self.show_playhead_checkbox)
+        v_left_layout.addLayout(show_playhead_layout)
+
+        playhead_color_layout = QHBoxLayout()
+        playhead_color_layout.addWidget(QLabel("Playhead Color"))
+        playhead_color_layout.addWidget(self.playhead_color_button)
+        v_left_layout.addLayout(playhead_color_layout)
 
         playhead_pos_layout = QHBoxLayout()
         playhead_pos_layout.addWidget(QLabel("Playhead Position"))
@@ -119,8 +138,11 @@ class ConfigTab(QWidget):
             self.on_changes_callback()
 
     def update_model(self):
+        # pull UI values out of controls and set on model
         self.vis_config.bg_color = self.bg_button.rgb
-        self.vis_config.playhead_pos = self.playhead_pos_input.value() / 100
+        self.vis_config.show_playhead = self.show_playhead_checkbox.isChecked()
+        self.vis_config.playhead_color = self.playhead_color_button.rgb
+        self.vis_config.playhead_pos_ratio = self.playhead_pos_input.value()
         self.vis_config.vertical_padding_ratio = self.vertical_padding_input.value()
         self.vis_config.vertical_offset_ratio = self.vertical_offset_input.value()
         self.vis_config.fps = self.fps_input.value()
