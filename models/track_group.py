@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from uuid import UUID, uuid4
 from common import Color, RGB
 
@@ -9,7 +9,7 @@ A Track Group holds a group of midi tracks for bulk formatting.
 '''
 @dataclass
 class TrackGroup:
-    group_id: UUID = uuid4()
+    group_id: UUID = field(default_factory=uuid4)
     name: str = 'Group 1'
     visible: bool = True
     color: RGB = Color.KAYLA_1

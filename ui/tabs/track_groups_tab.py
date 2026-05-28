@@ -198,7 +198,7 @@ class TrackGroupsTab(QWidget):
 
         track_group = self.track_groups[row]
 
-        if col == 1:
+        if col == 2:
             # name
             track_group.name = item.text()
         else:

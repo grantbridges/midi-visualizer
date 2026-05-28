@@ -18,9 +18,16 @@ class ColorButton(QPushButton):
         self.clicked.connect(self.pick_color)
         self.refresh()
 
+    def setDisabled(self, disabled: bool):
+        super().setDisabled(disabled)
+        self.refresh()
+
     def refresh(self):
         r, g, b = self.rgb
         self.setText(f"{r}, {g}, {b}")
+
+        if not self.isEnabled():
+            r, g, b = Color.DARK_GRAY
 
         # color bg + text by color
         self.setStyleSheet(

@@ -180,7 +180,12 @@ class MainWindow(QMainWindow):
         self.preview_widget.model_changed()
 
     def on_tab_changed(self, index: int):
-        pass
+        if index == 0:
+            self.config_tab.refresh_ui()
+        elif index == 1:
+            self.track_groups_tab.refresh_ui()
+        elif index == 2:
+            self.tracks_tab.refresh_ui()
 
     # event overrides
     def closeEvent(self, event):

@@ -201,8 +201,8 @@ class VisConfig:
 
     # Getters
 
-    def get_track_group_by_id(self, id: UUID) -> TrackGroup | None:
-        return next((track_group for track_group in self.track_groups if track_group.id == id), None)
+    def get_track_group_by_id(self, group_id: UUID) -> TrackGroup | None:
+        return next((track_group for track_group in self.track_groups if track_group.group_id == group_id), None)
 
     def get_track_by_name(self, name: str) -> Track:
         return next((track for track in self.tracks if track.name == name), None)

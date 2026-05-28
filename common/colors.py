@@ -6,6 +6,7 @@ class Color(tuple, Enum):
     WHITE = (255, 255, 255)
     BLACK = (0, 0, 0)
     LIGHT_GRAY = (180, 180, 180)
+    DARK_GRAY = (52, 52, 52)
     DARKER_GRAY = (30, 30, 30)
     DARKEST_GRAY = (20, 20, 20)
     RED = (255, 0, 0)
