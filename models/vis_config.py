@@ -57,6 +57,9 @@ class VisConfig:
     # children
     tracks: List[Track] = field(default_factory=list)
     track_groups: List[TrackGroup] = field(default_factory=list)
+
+    # cache of track groups for quick lookup
+    _track_groups_dict: dict[UUID, TrackGroup] = field(default_factory=dict)
     
     @staticmethod
     def create_from_midi_data(track_name: str, midi_data: pretty_midi.PrettyMIDI) -> None:
@@ -173,6 +176,7 @@ class VisConfig:
                     TrackGroup.load(track_data, schema_version)
                     for track_data in data["trackGroups"]
                 ]
+                config._build_track_groups_cache()
 
             return config
         except Exception as ex:
@@ -199,10 +203,23 @@ class VisConfig:
             for note in inst.notes:
                 track.notes.append(Note(note.pitch, note.velocity, note.start, note.end))
 
+
+    def update_track_groups(self, new_groups: List[TrackGroup]):
+        # copy our ui model back to vis config
+        self.track_groups = new_groups
+
+        self._build_track_groups_cache()
+
+        # if any tracks are using removed group ids, clear them out
+        for t in self.tracks:
+            if t.group_id is not None:
+                group = self.get_track_group_by_id(t.group_id)
+                if group is None:
+                    t.group_id = None
     # Getters
 
     def get_track_group_by_id(self, group_id: UUID) -> TrackGroup | None:
-        return next((track_group for track_group in self.track_groups if track_group.group_id == group_id), None)
+        return self._track_groups_dict.get(group_id)
 
     def get_track_by_name(self, name: str) -> Track:
         return next((track for track in self.tracks if track.name == name), None)
@@ -250,3 +267,11 @@ class VisConfig:
             if track.visible and track.notes
         ]
         return max(values) if values else 0.0
+
+    # Helpers
+
+    def _build_track_groups_cache(self):
+        self._track_groups_dict = {
+            group.group_id: group
+            for group in self.track_groups
+        }

@@ -40,8 +40,6 @@ class MidiRenderUtil:
 
         # convert ratios to pixel values
         playhead_x = rect.width() * vis_config.playhead_pos_ratio
-        vert_padding = vis_config.vertical_padding_ratio * rect.height() / 2
-        vert_offset = vis_config.vertical_offset_ratio * rect.height() / 2
         note_fade_distance = playhead_x * vis_config.note_fadeout_ratio
 
         # draw playhead line that notes will cross when they "play"
@@ -53,10 +51,24 @@ class MidiRenderUtil:
 
         # draw midi bars
         for track in vis_config.tracks:
-            if not track.visible:
+            track_group = vis_config.get_track_group_by_id(track.group_id) if track.group_id is not None else None
+
+            visible = track_group.visible if track_group is not None else track.visible
+            if not visible:
                 continue
 
-            pixels_per_sec = rect.width() / track.bar_sec_across_screen
+            # coalesce fields with track group
+            track_color = track_group.color if track_group is not None else track.color
+            track_alpha = track_group.alpha if track_group is not None else track.alpha
+            bar_sec_across_screen = track_group.bar_sec_across_screen if track_group is not None else track.bar_sec_across_screen
+            bar_height_ratio = track_group.bar_height_ratio if track_group is not None else track.bar_height_ratio
+            vert_padding_ratio = track_group.vertical_padding_ratio if track_group is not None else vis_config.vertical_padding_ratio
+            vert_offset_ratio = track_group.vertical_offset_ratio if track_group is not None else vis_config.vertical_offset_ratio
+
+            vert_padding = vert_padding_ratio * rect.height() / 2
+            vert_offset = vert_offset_ratio * rect.height() / 2
+
+            pixels_per_sec = rect.width() / bar_sec_across_screen
 
             for note in track.notes:
                 # x and width calc
@@ -69,7 +81,7 @@ class MidiRenderUtil:
                     continue
 
                 # convert bar height ratio to pixels
-                bar_height = rect.height() * track.bar_height_ratio
+                bar_height = rect.height() * bar_height_ratio
 
                 # y and height calc
                 t = (note.pitch - pitch_min) / (pitch_max - pitch_min)
@@ -78,8 +90,8 @@ class MidiRenderUtil:
                 y = (y_max + t * (y_min - y_max)) - bar_height / 2
                 h = bar_height
 
-                color = track.color
-                alpha = track.alpha
+                color = track_color
+                alpha = track_alpha
 
                 if x_right >= 0:
                     radius = int(bar_height * 0)

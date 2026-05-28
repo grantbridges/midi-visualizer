@@ -152,14 +152,8 @@ class TrackGroupsTab(QWidget):
 
     def update_model(self):
         # copy our ui model back to vis config
-        self.vis_config.track_groups = copy.deepcopy(self.track_groups)
-
-        # if any tracks are using removed group ids, clear them out
-        for t in self.vis_config.tracks:
-            if t.group_id is not None:
-                group = self.vis_config.get_track_group_by_id(t.group_id)
-                if group is None:
-                    t.group_id = None
+        groups = copy.deepcopy(self.track_groups)
+        self.vis_config.update_track_groups(groups)
 
     # Callbacks
     def _on_add_group(self):
