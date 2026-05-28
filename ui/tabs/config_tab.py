@@ -78,6 +78,8 @@ class ConfigTab(QWidget):
         h_layout = QHBoxLayout()
         v_left_layout = QVBoxLayout()
         v_right_layout = QVBoxLayout()
+        v_left_layout.setSpacing(2)
+        v_right_layout.setSpacing(2)
 
         # Left Column
         audio_file_layout = QHBoxLayout()

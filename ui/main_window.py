@@ -17,7 +17,7 @@ from PySide6.QtGui import QAction
 from common import Const
 from models import VisConfig, Resolution
 from render import RenderWorker
-from ui.tabs import ConfigTab, TracksTab
+from ui.tabs import ConfigTab, TrackGroupsTab, TracksTab
 from ui.widgets import PreviewWidget
 from ui.dialogs import (
     ExportProgressDialog, 
@@ -101,8 +101,10 @@ class MainWindow(QMainWindow):
         # tabs
         self.tabs = QTabWidget()
         self.config_tab = ConfigTab(self.on_config_changed, self.vis_config)
+        self.track_groups_tab = TrackGroupsTab(self.on_config_changed, self.vis_config)
         self.tracks_tab = TracksTab(self.on_tracks_changed, self.vis_config)
         self.tabs.addTab(self.config_tab, "Config")
+        self.tabs.addTab(self.track_groups_tab, "Track Groups")
         self.tabs.addTab(self.tracks_tab, "Tracks")
         self.tabs.currentChanged.connect(self.on_tab_changed)
         
@@ -130,6 +132,7 @@ class MainWindow(QMainWindow):
 
     def refresh_ui(self):
         self.config_tab.refresh_ui()
+        self.track_groups_tab.refresh_ui()
         self.tracks_tab.refresh_ui()
         self.preview_widget.refresh_ui()
 
@@ -143,6 +146,7 @@ class MainWindow(QMainWindow):
     def update_model(self):
         # ask individual tabs to copy their local UI models into the data model
         self.config_tab.update_model()
+        self.track_groups_tab.update_model()
         self.tracks_tab.update_model()
 
     # returns True on successful save

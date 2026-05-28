@@ -1,6 +1,7 @@
 import json
 from typing import List
 from dataclasses import dataclass, field
+from uuid import UUID
 import pretty_midi
 from common import Color, RGB
 from models.track_group import TrackGroup
@@ -199,6 +200,9 @@ class VisConfig:
                 track.notes.append(Note(note.pitch, note.velocity, note.start, note.end))
 
     # Getters
+
+    def get_track_group_by_id(self, id: UUID) -> TrackGroup | None:
+        return next((track_group for track_group in self.track_groups if track_group.id == id), None)
 
     def get_track_by_name(self, name: str) -> Track:
         return next((track for track in self.tracks if track.name == name), None)
