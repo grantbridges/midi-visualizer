@@ -3,6 +3,7 @@ from typing import List
 from dataclasses import dataclass, field
 import pretty_midi
 from common import Color, RGB
+from models.track_group import TrackGroup
 from models.track import Track
 from models.note import Note
 from models.render_format import RenderFormat
@@ -15,8 +16,9 @@ History
   1 - Initial version
   2 - Playhead props
   3 - Note playing props
+  4 - Track groups
 '''
-VIS_CONFIG_SCHEMA_VERSION = 3
+VIS_CONFIG_SCHEMA_VERSION = 4
 
 '''
 Top level construct containing all visualizing info
@@ -31,9 +33,6 @@ class VisConfig:
     export_filename: str = ""
     export_format: RenderFormat | None = None
     export_resolution: Resolution | None = None
-
-    # midi data
-    tracks: List[Track] = field(default_factory=list)
 
     # properties
     track_name: str = ""
@@ -53,12 +52,18 @@ class VisConfig:
     # halfway from playhead to left edge, etc. It makes sense, trust me.
     note_fadeout_ratio: float = 0.5
     note_play_color: RGB = Color.WHITE
+
+    # children
+    tracks: List[Track] = field(default_factory=list)
+    track_groups: List[TrackGroup] = field(default_factory=list)
     
     @staticmethod
     def create_from_midi_data(track_name: str, midi_data: pretty_midi.PrettyMIDI) -> None:
         vis_config = VisConfig(track_name=track_name)
 
         instruments: List[pretty_midi.Instrument] = midi_data.instruments
+
+        vis_config.track_groups = []
 
         inst_names = set()
         for inst in instruments:
@@ -110,6 +115,11 @@ class VisConfig:
             "notePlayColor": list(self.note_play_color),
             "fps": self.fps,
 
+            "trackGroups": [
+                track_group.save()
+                for track_group in self.track_groups
+            ],
+
             "tracks": [
                 track.save()
                 for track in self.tracks
@@ -121,46 +131,52 @@ class VisConfig:
 
     @staticmethod
     def load(path: str) -> VisConfig:
-        print(f'VisConfig | Loading config at "{path}"')
+        try:
+            print(f'VisConfig | Loading config at "{path}"')
 
-        with open(path, "r", encoding="utf-8") as f:
-            data = json.load(f)
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
 
-        schema_version = data.get("schemaVersion", 1)
+            schema_version = data["schemaVersion"]
 
-        config = VisConfig()
+            config = VisConfig()
 
-        config.audio_filepath = data.get("audioFilepath", "")
-        config.export_dir = data.get("exportDir", "")
-        config.export_filename = data.get("exportFilename", "")
+            config.audio_filepath = data["audioFilepath"]
+            config.export_dir = data["exportDir"]
+            config.export_filename = data["exportFilename"]
+            config.export_format = RenderFormat[data["exportFormat"]]
+            config.export_resolution = Resolution[data["exportResolution"]]
 
-        export_format = data.get("exportFormat")
-        config.export_format = (RenderFormat[export_format] if export_format else None)
+            config.track_name = data["trackName"]
+            config.bg_color = tuple(data["bgColor"])
+            config.vertical_padding_ratio = data["verticalPaddingRatio"]
+            config.vertical_offset_ratio = data["verticalOffsetRatio"]
+            config.playhead_pos_ratio = data["playheadPosRatio"]
+            config.fps = data["fps"]
 
-        export_resolution = data.get("exportResolution")
-        config.export_resolution = (Resolution[export_resolution] if export_resolution else None )
+            config.tracks = [
+                Track.load(track_data, schema_version)
+                for track_data in data["tracks"]
+            ]
 
-        config.track_name = data.get("trackName", "")
-        config.bg_color = tuple(data.get("bgColor", [0, 0, 0]))
-        config.vertical_padding_ratio = data.get("verticalPaddingRatio", 0.0)
-        config.vertical_offset_ratio = data.get("verticalOffsetRatio", 0.0)
-        config.playhead_pos_ratio = data.get("playheadPosRatio", 0.5)
-        config.fps = data.get("fps", 60)
+            if schema_version >= 2:
+                config.show_playhead = data["showPlayhead"]
+                config.playhead_color = data["playheadColor"]
 
-        if schema_version >= 2:
-            config.show_playhead = data.get("showPlayhead", True)
-            config.playhead_color = data.get("playheadColor", [100, 100, 100])
+            if schema_version >= 3:
+                config.note_fadeout_ratio = data["noteFadeoutRatio"]
+                config.note_play_color = data["notePlayColor"]
 
-        if schema_version >= 3:
-            config.note_fadeout_ratio = data.get("noteFadeoutRatio", 1.0)
-            config.note_play_color = data.get("notePlayColor", [255, 255, 255])
+            if schema_version >= 4:
+                config.track_groups = [
+                    TrackGroup.load(track_data, schema_version)
+                    for track_data in data["trackGroups"]
+                ]
 
-        config.tracks = [
-            Track.load(track_data)
-            for track_data in data.get("tracks", [])
-        ]
-
-        return config
+            return config
+        except Exception as ex:
+            print(f"VisConfig | Error while loading config: {str(ex)}")
+            return None
 
     # Loads in all note data from midi (assumes tracks are already defined)
     def populate_notes_from_midi_data(self, midi_data: pretty_midi.PrettyMIDI):

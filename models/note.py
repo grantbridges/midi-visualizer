@@ -42,12 +42,12 @@ class Note:
         }
     
     @staticmethod
-    def load(data: dict) -> Note:
+    def load(data: dict, schema_version: int) -> Note:
         note = Note()
 
-        note.pitch = data.get("pitch", 50)
-        note.velocity = data.get("velocity", 70)
-        note.start = data.get("start", 0.0)
-        note.end = data.get("end", 1.0)
+        note.pitch = data["pitch"]
+        note.velocity = data["velocity"]
+        note.start = data["start"]
+        note.end = data["end"]
 
         return note

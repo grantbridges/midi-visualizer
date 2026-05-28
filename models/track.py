@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 import pretty_midi
 from common import Color, RGB
 from models.note import Note
+from uuid import UUID
 
 # ----
 
@@ -16,6 +17,9 @@ class Track:
     name: str = 'Track'
     notes: List[Note] = field(default_factory=list)
     
+    # group reference
+    group_id: UUID | None = None
+
     # properties
     visible: bool = True
     color: RGB = Color.KAYLA_1
@@ -38,6 +42,7 @@ class Track:
     def save(self) -> dict:
         return {
             "name": self.name,
+            "groupId": str(self.group_id) if self.group_id else None,
             "visible": self.visible,
             "color": list(self.color),
             "alpha": self.alpha,
@@ -51,19 +56,23 @@ class Track:
         }
     
     @staticmethod
-    def load(data: dict) -> Track:
+    def load(data: dict, schema_version: int) -> Track:
         track = Track()
 
-        track.name = data.get("name", "Track")
-        track.visible = data.get("visible", True)
-        track.color = tuple(data.get("color", [255, 255, 255]))
-        track.alpha = data.get("alpha", 255)
-        track.bar_height_ratio = data.get("barHeightRatio", 0.02)
-        track.bar_sec_across_screen = data.get("barSecAcrossScreen", 8.0)
+        track.name = data["name"]
+        track.visible = data["visible"]
+        track.color = tuple(data["color"])
+        track.alpha = data["alpha"]
+        track.bar_height_ratio = data["barHeightRatio"]
+        track.bar_sec_across_screen = data["barSecAcrossScreen"]
 
         track.notes = [
-            Note.load(note_data)
-            for note_data in data.get("notes", [])
+            Note.load(note_data, schema_version)
+            for note_data in data["notes"]
         ]
+
+        if schema_version >= 4:
+            group_id = data["groupId"]
+            track.group_id = UUID(group_id) if group_id else None
 
         return track
