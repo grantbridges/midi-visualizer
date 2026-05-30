@@ -17,7 +17,7 @@ class TrackGroup:
     # 0 - 1, ratio of screen height
     bar_height_ratio: float = .05 
     # seconds for bar to fully cross screen
-    bar_sec_across_screen: float = 2 
+    bar_sec_across_screen: float = 2.0 
     # ratio of vertical compression of midi area - 0 to 1 (1 is maximally crunched)
     vertical_padding_ratio: float = 0.15 
     # ratio of vertical offset positioning - -1 to 1 (-1 is top, 0 center, 1 bottom)

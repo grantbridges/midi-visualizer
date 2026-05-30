@@ -123,7 +123,8 @@ class TracksTab(QWidget):
                 bar_height = self.table.cellWidget(row, 5)
                 sec_across_screen = self.table.cellWidget(row, 6)
 
-                track.group_id = UUID(group_combo.currentData())
+                group = group_combo.currentData()
+                track.group_id = UUID(group) if group is not None else None
                 track.visible = visible_checkbox.isChecked()
                 track.color = color_btn.rgb
                 track.alpha = alpha.value()

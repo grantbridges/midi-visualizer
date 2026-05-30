@@ -220,6 +220,9 @@ class VisConfig:
 
     def get_track_group_by_id(self, group_id: UUID) -> TrackGroup | None:
         return self._track_groups_dict.get(group_id)
+    
+    def get_tracks_by_group_id(self, group_id: UUID) -> List[Track]:
+        return [track for track in self.tracks if track.group_id == group_id]
 
     def get_track_by_name(self, name: str) -> Track:
         return next((track for track in self.tracks if track.name == name), None)

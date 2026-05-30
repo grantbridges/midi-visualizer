@@ -1,8 +1,22 @@
+from dataclasses import dataclass, field
+from typing import List
 from PySide6.QtGui import QPainter, QPen
 from PySide6.QtCore import QRect, Qt
 from common import Const, Color
+from common.types import RGB
 from models import VisConfig
+from models.note import Note
 from utility import QUtil
+
+@dataclass
+class RenderTrack:
+    color: RGB = Color.KAYLA_1
+    alpha: int = 255
+    bar_height_ratio: float = .05
+    bar_sec_across_screen: float = 2.0
+    vertical_padding_ratio: float = 0.0
+    vertical_offset_ratio: float = 0.0
+    notes: List[Note] = field(default_factory=list)
 
 class MidiRenderUtil:
     def __new__(cls):
@@ -49,26 +63,31 @@ class MidiRenderUtil:
             painter.setPen(pen)
             painter.drawLine(playhead_x, 0, playhead_x, rect.height())
 
-        # draw midi bars
-        for track in vis_config.tracks:
-            track_group = vis_config.get_track_group_by_id(track.group_id) if track.group_id is not None else None
-
-            visible = track_group.visible if track_group is not None else track.visible
-            if not visible:
+        # build render tracks
+        tracks: List[RenderTrack] = []
+        track_groups = vis_config.track_groups[::-1]
+        for tg in track_groups:
+            if not tg.visible:
                 continue
 
-            # coalesce fields with track group
-            track_color = track_group.color if track_group is not None else track.color
-            track_alpha = track_group.alpha if track_group is not None else track.alpha
-            bar_sec_across_screen = track_group.bar_sec_across_screen if track_group is not None else track.bar_sec_across_screen
-            bar_height_ratio = track_group.bar_height_ratio if track_group is not None else track.bar_height_ratio
-            vert_padding_ratio = track_group.vertical_padding_ratio if track_group is not None else vis_config.vertical_padding_ratio
-            vert_offset_ratio = track_group.vertical_offset_ratio if track_group is not None else vis_config.vertical_offset_ratio
+            group_tracks = vis_config.get_tracks_by_group_id(tg.group_id)
+            for t in group_tracks:
+                tracks.append(RenderTrack(
+                    color = tg.color,
+                    alpha = tg.alpha,
+                    bar_height_ratio = tg.bar_height_ratio,
+                    bar_sec_across_screen = tg.bar_sec_across_screen,
+                    vertical_padding_ratio = tg.vertical_padding_ratio,
+                    vertical_offset_ratio = tg.vertical_offset_ratio,
+                    notes = t.notes
+                ))
 
-            vert_padding = vert_padding_ratio * rect.height() / 2
-            vert_offset = vert_offset_ratio * rect.height() / 2
+        # draw midi bars
+        for track in tracks:
+            vert_padding = track.vertical_padding_ratio * rect.height() / 2
+            vert_offset = track.vertical_offset_ratio * rect.height() / 2
 
-            pixels_per_sec = rect.width() / bar_sec_across_screen
+            pixels_per_sec = rect.width() / track.bar_sec_across_screen
 
             for note in track.notes:
                 # x and width calc
@@ -81,7 +100,7 @@ class MidiRenderUtil:
                     continue
 
                 # convert bar height ratio to pixels
-                bar_height = rect.height() * bar_height_ratio
+                bar_height = rect.height() * track.bar_height_ratio
 
                 # y and height calc
                 t = (note.pitch - pitch_min) / (pitch_max - pitch_min)
@@ -90,8 +109,8 @@ class MidiRenderUtil:
                 y = (y_max + t * (y_min - y_max)) - bar_height / 2
                 h = bar_height
 
-                color = track_color
-                alpha = track_alpha
+                color = track.color
+                alpha = track.alpha
 
                 if x_right >= 0:
                     radius = int(bar_height * 0)
