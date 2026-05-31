@@ -51,3 +51,6 @@ class Note:
         note.end = data["end"]
 
         return note
+    
+    def init(self):
+        pass

@@ -27,6 +27,12 @@ class Track:
     bar_height_ratio: float = .05 # 0 - 1, ratio of screen height
     bar_sec_across_screen: float = 2 # seconds for bar to fully cross screen
 
+    # computed props
+    pitch_min: int = 0
+    pitch_max: int = 1
+    time_min: float = 0.0
+    time_max: float = 1.0
+
     @staticmethod
     def create_from_midi_data(inst: pretty_midi.Instrument) -> Track:
         track = Track()
@@ -76,3 +82,15 @@ class Track:
             track.group_id = UUID(group_id) if group_id else None
 
         return track
+    
+    def init(self):
+        # (note: shouldn't actually have empty notes here - track would be
+        # deleted before being initialized if so)
+        note_pitches = [note.pitch for note in self.notes]
+        self.pitch_min = min(note_pitches) if note_pitches else 0
+        self.pitch_max = max(note_pitches) if note_pitches else 1
+        
+        note_starts = [note.start for note in self.notes]
+        self.time_min = min(note_starts) if note_starts else 0.0
+        note_ends = [note.end for note in self.notes]
+        self.time_max = max(note_ends) if note_ends else 1.0

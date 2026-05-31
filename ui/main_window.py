@@ -88,6 +88,8 @@ class MainWindow(QMainWindow):
 
             # 2.1) Save out as initial generated file
             self.vis_config.save(INPUT_CONFIG_FILE)
+        
+        self.vis_config.init()
 
         if self.vis_config is not None:
             self.init_vis_config_editor_view()

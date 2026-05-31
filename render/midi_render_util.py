@@ -39,12 +39,14 @@ class MidiRenderUtil:
     def calc_end_time(vis_config: VisConfig, view_width: int) -> float:
         playhead_x = view_width * vis_config.playhead_pos_ratio
         ratio = playhead_x / view_width
-        values = [
-            note.end + ratio * track.bar_sec_across_screen
-            for track in vis_config.tracks
-            if track.visible and track.notes
-            for note in track.notes
-        ]
+
+        values = []
+        for track in vis_config.get_visible_tracks():
+            group = vis_config.get_track_group_by_id(track.group_id)
+            values.append(
+                track.time_max + ratio * group.bar_sec_across_screen
+            )
+
         return max(values) if values else 0.0
     
     @staticmethod

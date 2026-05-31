@@ -176,12 +176,27 @@ class VisConfig:
                     TrackGroup.load(track_data, schema_version)
                     for track_data in data["trackGroups"]
                 ]
-                config._build_track_groups_cache()
 
             return config
         except Exception as ex:
             print(f"VisConfig | Error while loading config: {str(ex)}")
             return None
+        
+    def init(self):
+        for tg in self.track_groups:
+            tg.init()
+
+        self._build_track_groups_cache()
+
+        # remove loaded tracks that have no notes
+        for i in reversed(range(len(self.tracks))):
+            track = self.tracks[i]
+            if len(track.notes) == 0:
+                print(f"VisConfig | Init | Track \"{track.name}\" has no notes - removing from config")
+                self.tracks.pop(i)
+        
+        for t in self.tracks:
+            t.init()
 
     # Loads in all note data from midi (assumes tracks are already defined)
     def populate_notes_from_midi_data(self, midi_data: pretty_midi.PrettyMIDI):
@@ -227,47 +242,49 @@ class VisConfig:
     def get_track_by_name(self, name: str) -> Track:
         return next((track for track in self.tracks if track.name == name), None)
     
+    def get_visible_tracks(self) -> List[Track]:
+        tracks = []
+        for tg in self.track_groups:
+            if tg.visible:
+                tracks.extend(
+                    self.get_tracks_by_group_id(tg.group_id)
+                )
+
+        return tracks
+    
     def get_min_pitch(self) -> int:
         values = [
-            note.pitch
-            for track in self.tracks
-            if track.visible and track.notes
-            for note in track.notes
+            track.pitch_min
+            for track in self.get_visible_tracks()
         ]
         return min(values) if values else 0.0
 
     def get_max_pitch(self) -> int:
         values = [
-            note.pitch
-            for track in self.tracks
-            if track.visible and track.notes
-            for note in track.notes
+            track.pitch_max
+            for track in self.get_visible_tracks()
         ]
-        return max(values) if values else 0.0
+        return max(values) if values else 0
     
     def get_min_time(self) -> float:
         values = [
-            note.start
-            for track in self.tracks
-            if track.visible and track.notes
-            for note in track.notes
+            track.time_min
+            for track in self.get_visible_tracks()
         ]
         return min(values) if values else 0.0
     
     def get_max_time(self) -> float:
         values = [
-            note.end
-            for track in self.tracks
-            if track.visible and track.notes
-            for note in track.notes
+            track.time_max
+            for track in self.get_visible_tracks()
         ]
-        return max(values) if values else 0.0
+        return max(values) if values else 1.0
 
     def get_max_sec_across_screen(self) -> float:
         values = [
-            track.bar_sec_across_screen
-            for track in self.tracks
-            if track.visible and track.notes
+            tg.bar_sec_across_screen
+            for tg in self.track_groups
+            if tg.visible
         ]
         return max(values) if values else 0.0
 

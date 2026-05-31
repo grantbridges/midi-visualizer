@@ -51,3 +51,6 @@ class TrackGroup:
         track_group.vertical_offset_ratio = data["verticalOffsetRatio"]
 
         return track_group
+    
+    def init(self):
+        pass
