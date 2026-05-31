@@ -10,7 +10,7 @@ It contains relevant MIDI note data.
 @dataclass
 class Note:
     # midi data
-    pitch: int = 50
+    pitch: int = 50 # 0-127
     velocity: int = 70 # 0-127
     start: float = 0.0 # note start in seconds
     end: float = 1.0 # note end in seconds
@@ -32,25 +32,3 @@ class Note:
         note.end = data.end
 
         return note
-
-    def save(self) -> dict:
-        return {
-            "pitch": self.pitch,
-            "velocity": self.velocity,
-            "start": self.start,
-            "end": self.end,
-        }
-    
-    @staticmethod
-    def load(data: dict, schema_version: int) -> Note:
-        note = Note()
-
-        note.pitch = data["pitch"]
-        note.velocity = data["velocity"]
-        note.start = data["start"]
-        note.end = data["end"]
-
-        return note
-    
-    def init(self):
-        pass

@@ -42,11 +42,13 @@ class Track:
         return {
             "name": self.name,
             "groupId": str(self.group_id) if self.group_id else None,
-
-            "notes": [
-                note.save()
-                for note in self.notes
-            ]
+            "notes": {
+                # break down note data into comma separated strings for tighter storage
+                "pitches": ",".join(str(note.pitch) for note in self.notes),
+                "velocities": ",".join(str(note.velocity) for note in self.notes),
+                "starts": ",".join(str(note.start) for note in self.notes),
+                "ends": ",".join(str(note.end) for note in self.notes)
+            }
         }
     
     @staticmethod
@@ -55,9 +57,27 @@ class Track:
 
         track.name = data["name"]
 
+        # deserialize comma separated string data into Note objects
+        notes_data = data["notes"]
+        pitches = notes_data["pitches"].split(",")
+        velocities = notes_data["velocities"].split(",")
+        starts = notes_data["starts"].split(",")
+        ends = notes_data["ends"].split(",")
+
         track.notes = [
-            Note.load(note_data, schema_version)
-            for note_data in data["notes"]
+            Note(
+                pitch=int(pitch),
+                velocity=int(velocity),
+                start=float(start),
+                end=float(end),
+            )
+            for pitch, velocity, start, end in zip(
+                pitches,
+                velocities,
+                starts,
+                ends,
+                strict=True,
+            )
         ]
 
         if schema_version >= 4:
@@ -67,13 +87,16 @@ class Track:
         return track
     
     def init(self):
-        # (note: shouldn't actually have empty notes here - track would be
-        # deleted before being initialized if so)
+        if len(self.notes) == 0:
+            # shouldn't actually get here - track should've been removed already
+            print(f"Track | Init | Warning: Attempted initialization on track \"{self.name}\" with no notes")
+            return
+        
         note_pitches = [note.pitch for note in self.notes]
-        self.pitch_min = min(note_pitches) if note_pitches else 0
-        self.pitch_max = max(note_pitches) if note_pitches else 1
+        self.pitch_min = min(note_pitches)
+        self.pitch_max = max(note_pitches)
         
         note_starts = [note.start for note in self.notes]
-        self.time_min = min(note_starts) if note_starts else 0.0
+        self.time_min = min(note_starts)
         note_ends = [note.end for note in self.notes]
-        self.time_max = max(note_ends) if note_ends else 1.0
+        self.time_max = max(note_ends)
