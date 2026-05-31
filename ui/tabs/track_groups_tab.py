@@ -18,10 +18,11 @@ from ui.common import ColorButton, TableCheckbox, TableSpinbox, TableDoubleSpinb
 import copy
 
 class TrackGroupsTab(QWidget):
-    def __init__(self, on_changes_callback: object, vis_config: VisConfig):
-        super().__init__()
+    def __init__(self, vis_config: VisConfig, on_changes_callback: object, on_track_group_selected_callback: object, parent=None):
+        super().__init__(parent)
 
         self.on_changes_callback = on_changes_callback
+        self.on_track_group_selected_callback = on_track_group_selected_callback
         self.vis_config = vis_config
 
         # working ui model
@@ -32,6 +33,10 @@ class TrackGroupsTab(QWidget):
         self.add_row_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         self.add_row_btn.clicked.connect(self._on_add_group)
 
+        self.clear_selection_btn = QPushButton("Clear Selection")
+        self.clear_selection_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+        self.clear_selection_btn.clicked.connect(self._on_clear_selection)
+
         self.track_columns = ["", "", "Name", "Visible", "Color", "Alpha", "Bar Height", "Speed (sec)", "Pitch Offset", ""]
         self.table = QTableWidget(0, len(self.track_columns))
         self.table.setHorizontalHeaderLabels(self.track_columns)
@@ -40,14 +45,21 @@ class TrackGroupsTab(QWidget):
         for col in [0, 1, len(self.track_columns) - 1]:
             self.table.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeToContents)
         self.table.itemChanged.connect(self._on_item_changed)
+        self.table.currentCellChanged.connect(self._on_cell_changed)
 
         # layout controls
         v_layout = QVBoxLayout(self)
-        v_layout.addWidget(self.add_row_btn)
+        btns_layout = QHBoxLayout()
+        btns_layout.addWidget(self.add_row_btn)
+        btns_layout.addWidget(self.clear_selection_btn)
+        btns_layout.addStretch()
+        v_layout.addLayout(btns_layout)
         v_layout.addWidget(self.table)
 
     def refresh_ui(self):
-        # prevent callbacks while populating
+        self._refresh_clear_selection_btn()
+
+        # prevent callbacks while populating table
         self.table.blockSignals(True)
 
         self.table.setRowCount(len(self.track_groups))
@@ -147,6 +159,10 @@ class TrackGroupsTab(QWidget):
         groups = copy.deepcopy(self.track_groups)
         self.vis_config.update_track_groups(groups)
 
+    def _refresh_clear_selection_btn(self):
+        row = self.table.currentRow()
+        self.clear_selection_btn.setDisabled(row == -1)
+
     # Callbacks
     def _on_add_group(self):
         track_group = TrackGroup(name = f"Group {len(self.track_groups)+1}")
@@ -154,6 +170,12 @@ class TrackGroupsTab(QWidget):
         self.refresh_ui()
 
         self.on_changes_callback()
+
+    def _on_clear_selection(self):
+        self.table.clearSelection()
+        self.table.setCurrentCell(-1, -1)
+
+        self._refresh_clear_selection_btn()
 
     def _on_remove_group(self, row: int):
         if 0 <= row < len(self.track_groups):
@@ -191,6 +213,15 @@ class TrackGroupsTab(QWidget):
             print(f"TrackGroupsTab | Warning: OnItemChanged for unhandled column: {self.track_columns[col]} (index: {col})")
 
         self.on_changes_callback()
+
+    def _on_cell_changed(self, row: int, col: int, prev_row: int, prev_col: int):
+        if row >= 0 and row < len(self.track_groups):
+            track_group = self.track_groups[row]
+            self.on_track_group_selected_callback(track_group.group_id)
+        else:
+            self.on_track_group_selected_callback(None)
+
+        self._refresh_clear_selection_btn()
         
     def _on_visible_changed(self, row: int, checked: bool):
         if self.table.signalsBlocked():

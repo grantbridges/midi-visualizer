@@ -1,5 +1,6 @@
 from enum import Enum
 import time
+from uuid import UUID
 from PySide6.QtCore import Qt, QTimer, QRect
 from PySide6.QtGui import QAction, QFont, QPainter, QColor, QPen
 from PySide6.QtWidgets import (
@@ -55,10 +56,10 @@ class PreviewWidget(QWidget):
         # (I did this in extreme shorthand to keep it easy to add configs here)
         settings_menu = QMenu(self)
         for action in [
-            self.create_settings_action("Show Time Display", "show_time_display"),
-            self.create_settings_action("Show Track Names", "show_track_names"),
-            self.create_settings_action("Show Guides", "show_guides"),
-            self.create_settings_action("Show Pitches", "show_pitches")
+            self._create_settings_action("Show Time Display", "show_time_display"),
+            self._create_settings_action("Show Track Names", "show_track_names"),
+            self._create_settings_action("Show Guides", "show_guides"),
+            self._create_settings_action("Show Pitches", "show_pitches")
         ]:
             settings_menu.addAction(action)
 
@@ -122,6 +123,11 @@ class PreviewWidget(QWidget):
     def refresh_ui(self):
         self.play_btn.setText("▶ Play" if not self.playing else "⏹ Stop")
 
+    def set_selected_group_id(self, group_id: UUID | None):
+        self.preview_canvas.set_selected_group_id(group_id)
+
+    # private methods
+
     def _on_tick(self):
         # only update widget if playing and user isn't dragging slider
         if self.playing and not self.slider.isSliderDown():
@@ -167,7 +173,7 @@ class PreviewWidget(QWidget):
         user_settings.mute_audio = checked
         user_settings.save()
 
-    def create_settings_action(self, label: str, property_name: str) -> QAction:
+    def _create_settings_action(self, label: str, property_name: str) -> QAction:
         action = QAction(label, self)
         action.setCheckable(True)
         action.setChecked(getattr(user_settings, property_name))

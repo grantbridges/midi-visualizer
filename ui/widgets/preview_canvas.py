@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from PySide6.QtWidgets import QWidget
 from PySide6.QtGui import QFont, QPainter, QPen
 from PySide6.QtCore import QRect, Qt
@@ -17,12 +19,18 @@ class PreviewCanvas(QWidget):
         self.pitch_min: int = 0
         self.pitch_max: int = 0
 
+        self.selected_group_id: UUID | None = None
+
     def refresh(self, current_time: float, vis_config: VisConfig, pitch_min: int, pitch_max: int):
         self.current_time = current_time
         self.vis_config = vis_config
         self.pitch_min = pitch_min
         self.pitch_max = pitch_max
 
+        self.update() # queues paint event
+
+    def set_selected_group_id(self, group_id: UUID | None):
+        self.selected_group_id = group_id
         self.update() # queues paint event
 
     def paintEvent(self, event):
@@ -113,9 +121,13 @@ class PreviewCanvas(QWidget):
 
                 color = QUtil.rgb_to_qcolor(track_group.color)
                 color.setAlpha(200)
+                pen_width = 1
+                if self.selected_group_id == track_group.group_id:
+                    pen_width = 4
+                    color.setAlpha(255)
                 pen = QPen(color)
                 pen.setStyle(Qt.SolidLine)
-                pen.setWidth(1)
+                pen.setWidth(pen_width)
                 painter.setPen(pen)     
 
                 group_pmin = self.vis_config.get_min_pitch_for_track_group(track_group.group_id)
@@ -132,7 +144,7 @@ class PreviewCanvas(QWidget):
                     track_group_font_size = 8
                     track_font_size = 6
                     text_padding = 5
-                    text_top = pitch_max_y + text_padding
+                    text_top = pitch_max_y + pen_width
 
                     color = QUtil.rgb_to_qcolor(track_group.color)
                     color.setAlpha(200)

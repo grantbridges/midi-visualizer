@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+from uuid import UUID
 import pretty_midi
 from PySide6.QtCore import QThread
 from PySide6.QtWidgets import (
@@ -102,9 +103,9 @@ class MainWindow(QMainWindow):
     def init_vis_config_editor_view(self):
         # tabs
         self.tabs = QTabWidget()
-        self.config_tab = ConfigTab(self.on_config_changed, self.vis_config)
-        self.track_groups_tab = TrackGroupsTab(self.on_config_changed, self.vis_config)
-        self.tracks_tab = TracksTab(self.on_tracks_changed, self.vis_config)
+        self.config_tab = ConfigTab(self.vis_config, self.on_config_changed)
+        self.track_groups_tab = TrackGroupsTab(self.vis_config, self.on_config_changed, self.on_track_group_selected)
+        self.tracks_tab = TracksTab(self.vis_config, self.on_config_changed)
         self.tabs.addTab(self.config_tab, "Config")
         self.tabs.addTab(self.track_groups_tab, "Track Groups")
         self.tabs.addTab(self.tracks_tab, "Tracks")
@@ -188,6 +189,9 @@ class MainWindow(QMainWindow):
             self.track_groups_tab.refresh_ui()
         elif index == 2:
             self.tracks_tab.refresh_ui()
+
+    def on_track_group_selected(self, group_id: UUID | None):
+        self.preview_widget.set_selected_group_id(group_id)
 
     # event overrides
     def closeEvent(self, event):

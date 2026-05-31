@@ -19,8 +19,8 @@ from ui.common import ColorButton, TableCheckbox, TableSpinbox
 import copy
 
 class TracksTab(QWidget):
-    def __init__(self, on_changes_callback: object, vis_config: VisConfig):
-        super().__init__()
+    def __init__(self, vis_config: VisConfig, on_changes_callback: object, parent=None):
+        super().__init__(parent)
 
         self.on_changes_callback = on_changes_callback
         self.vis_config = vis_config

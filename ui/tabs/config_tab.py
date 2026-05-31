@@ -15,8 +15,8 @@ from models import VisConfig
 from ui.common import ColorButton
 
 class ConfigTab(QWidget):
-    def __init__(self, on_changes_callback: object, vis_config: VisConfig):
-        super().__init__()
+    def __init__(self, vis_config: VisConfig, on_changes_callback: object, parent=None):
+        super().__init__(parent)
 
         self.on_changes_callback = on_changes_callback
         self.vis_config = vis_config
@@ -177,6 +177,9 @@ class ConfigTab(QWidget):
     def refresh_ui(self):
         self.bg_button.rgb = self.vis_config.bg_color
         self.bg_button.refresh()
+
+        self.pitch_min_input.setValue(self.vis_config.get_min_pitch() if self.vis_config.auto_calc_pitch_bounds else self.vis_config.manual_pitch_min)
+        self.pitch_max_input.setValue(self.vis_config.get_max_pitch() if self.vis_config.auto_calc_pitch_bounds else self.vis_config.manual_pitch_max)  
 
     def browse_audio_file(self):
         default_filepath = ""
