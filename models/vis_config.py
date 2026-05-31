@@ -271,6 +271,14 @@ class VisConfig:
                 values.append(track.pitch_min + group.pitch_offset)
 
         return min(values) if values else 0
+    
+    def get_min_pitch_for_track_group(self, group_id: UUID) -> int:
+        group = self.get_track_group_by_id(group_id)
+        values = [
+            track.pitch_min + group.pitch_offset
+            for track in self.get_tracks_by_group_id(group_id)
+        ]
+        return min(values) if values else 0
 
     def get_max_pitch(self) -> int:
         values = []
@@ -282,6 +290,14 @@ class VisConfig:
             for track in self.get_tracks_by_group_id(group.group_id):
                 values.append(track.pitch_max + group.pitch_offset)
 
+        return max(values) if values else 0
+    
+    def get_max_pitch_for_track_group(self, group_id: UUID) -> int:
+        group = self.get_track_group_by_id(group_id)
+        values = [
+            track.pitch_max + group.pitch_offset
+            for track in self.get_tracks_by_group_id(group_id)
+        ]
         return max(values) if values else 0
     
     def get_min_time(self) -> float:

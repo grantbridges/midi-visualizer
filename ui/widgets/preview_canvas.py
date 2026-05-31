@@ -37,6 +37,7 @@ class PreviewCanvas(QWidget):
         )
 
         self._draw_guides(painter)
+        self._draw_pitches(painter)
         self._draw_text(painter)
 
         MidiRenderUtil.draw_notes(
@@ -49,6 +50,9 @@ class PreviewCanvas(QWidget):
         )
 
     def _draw_guides(self, painter: QPainter):
+        if not user_settings.show_guides:
+            return
+
         vert_padding = self.vis_config.vertical_padding_ratio * self.rect().height() / 2
         vert_offset = self.vis_config.vertical_offset_ratio * self.rect().height() / 2
         rect = self.rect()
@@ -60,43 +64,70 @@ class PreviewCanvas(QWidget):
 
         # draw pitches
         color = QUtil.rgb_to_qcolor(Util.invert_color(self.vis_config.bg_color))
+        color.setAlpha(200)
+
+        # draw vertical padding guides
+        pen = QPen(color)
+        pen.setStyle(Qt.SolidLine)
+        pen.setWidth(2)
+        painter.setPen(pen)
+        painter.drawLine(0, y_min, rect.width(), y_min)
+        painter.drawLine(0, y_max, rect.width(), y_max)
+
+        # draw center line
+        pen.setStyle(Qt.DashLine)
+        pen.setWidth(1)
+        pen.setDashPattern([4, 8])  # 4px dash, 8px gap
+        painter.setPen(pen)
+        painter.drawLine(0, y_center, rect.width(), y_center)
+
+    def _draw_pitches(self, painter: QPainter):
+        if not user_settings.show_pitches:
+            return
+        
+        # shorthand a few vars
+        rect = self.rect()
+        vpr = self.vis_config.vertical_padding_ratio
+        vor = self.vis_config.vertical_offset_ratio
+        pmin = self.pitch_min
+        pmax = self.pitch_max
+
+        # draw pitches
+        color = QUtil.rgb_to_qcolor(Util.invert_color(self.vis_config.bg_color))
         color.setAlpha(30)
         pen = QPen(color)
         pen.setStyle(Qt.SolidLine)
         pen.setWidth(1)
         painter.setPen(pen)        
+        
+        pitch_range = pmax - pmin
+        if pitch_range > 0:
+            for pitch in range(pmin, pmax + 1):
+                y = MidiRenderUtil.pitch_to_y(pitch, pmin, pmax, rect, vpr, vor)
+                painter.drawLine(0, y, rect.width(), y)
 
-        if user_settings.show_pitches:
-            pitch_range = self.pitch_max - self.pitch_min
-            if pitch_range > 0:
-                for pitch in range(self.pitch_min, self.pitch_max + 1):
-                    y = MidiRenderUtil.pitch_to_y(
-                        pitch,
-                        self.pitch_min,
-                        self.pitch_max,
-                        rect,
-                        self.vis_config.vertical_padding_ratio,
-                        self.vis_config.vertical_offset_ratio,
-                    )
+            # draw pitch guide lines for each track group
+            for tg in self.vis_config.track_groups:
+                if not tg.visible:
+                    continue
 
-                    painter.drawLine(0, y, rect.width(), y)
+                color = QUtil.rgb_to_qcolor(tg.color)
+                color.setAlpha(200)
+                pen = QPen(color)
+                pen.setStyle(Qt.SolidLine)
+                pen.setWidth(1)
+                painter.setPen(pen)     
 
-        if user_settings.show_guides:
-            # draw vertical padding guides
-            color.setAlpha(200)
-            pen = QPen(color)
-            pen.setStyle(Qt.SolidLine)
-            pen.setWidth(2)
-            painter.setPen(pen)
-            painter.drawLine(0, y_min, rect.width(), y_min)
-            painter.drawLine(0, y_max, rect.width(), y_max)
+                group_pmin = self.vis_config.get_min_pitch_for_track_group(tg.group_id)
+                group_pmax = self.vis_config.get_max_pitch_for_track_group(tg.group_id)
 
-            # draw center line
-            pen.setStyle(Qt.DashLine)
-            pen.setWidth(1)
-            pen.setDashPattern([4, 8])  # 4px dash, 8px gap
-            painter.setPen(pen)
-            painter.drawLine(0, y_center, rect.width(), y_center)
+                pitch_min_y = MidiRenderUtil.pitch_to_y(group_pmin, pmin, pmax, rect, vpr, vor)
+                pitch_max_y = MidiRenderUtil.pitch_to_y(group_pmax, pmin, pmax, rect, vpr, vor)
+
+                painter.drawLine(0, pitch_min_y, rect.width(), pitch_min_y)
+                painter.drawLine(0, pitch_max_y, rect.width(), pitch_max_y)
+
+
 
     def _draw_text(self, painter: QPainter):
         text_padding = 5
