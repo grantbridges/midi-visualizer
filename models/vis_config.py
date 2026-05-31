@@ -277,6 +277,9 @@ class VisConfig:
         if not self.auto_calc_pitch_bounds:
             return self.manual_pitch_min
 
+        return self.get_calculated_min_pitch()
+
+    def get_calculated_min_pitch(self) -> int:
         values = []
 
         for group in self.track_groups:
@@ -299,7 +302,10 @@ class VisConfig:
     def get_max_pitch(self) -> int:
         if not self.auto_calc_pitch_bounds:
             return self.manual_pitch_max
+        
+        return self.get_calculated_max_pitch()
 
+    def get_calculated_max_pitch(self) -> int:
         values = []
 
         for group in self.track_groups:

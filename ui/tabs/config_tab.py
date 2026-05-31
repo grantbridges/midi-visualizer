@@ -73,6 +73,22 @@ class ConfigTab(QWidget):
         self.note_play_color_button = ColorButton(self.vis_config.note_play_color)
         self.note_play_color_button.valueChanged.connect(self.on_changes_callback)
 
+        self.auto_calc_pitch_bounds_checkbox = QCheckBox()
+        self.auto_calc_pitch_bounds_checkbox.setChecked(self.vis_config.auto_calc_pitch_bounds)
+        self.auto_calc_pitch_bounds_checkbox.toggled.connect(self._on_auto_calc_toggled)
+
+        self.pitch_min_input = QSpinBox()
+        self.pitch_min_input.setDisabled(self.vis_config.auto_calc_pitch_bounds)
+        self.pitch_min_input.setRange(0, self.vis_config.manual_pitch_max)
+        self.pitch_min_input.setValue(self.vis_config.get_min_pitch() if self.vis_config.auto_calc_pitch_bounds else self.vis_config.manual_pitch_min)
+        self.pitch_min_input.valueChanged.connect(self._on_pitch_min_changed)
+
+        self.pitch_max_input = QSpinBox()
+        self.pitch_max_input.setDisabled(self.vis_config.auto_calc_pitch_bounds)
+        self.pitch_max_input.setRange(self.vis_config.manual_pitch_min, 127)
+        self.pitch_max_input.setValue(self.vis_config.get_max_pitch() if self.vis_config.auto_calc_pitch_bounds else self.vis_config.manual_pitch_max)        
+        self.pitch_max_input.valueChanged.connect(self._on_pitch_max_changed)
+
         # layout controls
         v_layout = QVBoxLayout(self)
         h_layout = QHBoxLayout()
@@ -136,6 +152,21 @@ class ConfigTab(QWidget):
         note_play_color_layout.addWidget(self.note_play_color_button)
         v_right_layout.addLayout(note_play_color_layout)
 
+        auto_calc_pitch_bounds_layout = QHBoxLayout()
+        auto_calc_pitch_bounds_layout.addWidget(QLabel("Auto-Calc Pitch Min/Max"))
+        auto_calc_pitch_bounds_layout.addWidget(self.auto_calc_pitch_bounds_checkbox)
+        v_right_layout.addLayout(auto_calc_pitch_bounds_layout)
+
+        pitch_min_layout = QHBoxLayout()
+        pitch_min_layout.addWidget(QLabel("Manual Pitch Min"))
+        pitch_min_layout.addWidget(self.pitch_min_input)
+        v_right_layout.addLayout(pitch_min_layout)
+
+        pitch_max_layout = QHBoxLayout()
+        pitch_max_layout.addWidget(QLabel("Manual Pitch Max"))
+        pitch_max_layout.addWidget(self.pitch_max_input)
+        v_right_layout.addLayout(pitch_max_layout)
+
         v_right_layout.addStretch()
 
         h_layout.addLayout(v_left_layout, 1)
@@ -178,3 +209,38 @@ class ConfigTab(QWidget):
 
         self.vis_config.note_fadeout_ratio = self.note_fadeout_input.value()
         self.vis_config.note_play_color = self.note_play_color_button.rgb
+
+        self.vis_config.auto_calc_pitch_bounds = self.auto_calc_pitch_bounds_checkbox.isChecked()
+
+        if not self.vis_config.auto_calc_pitch_bounds:
+            self.vis_config.manual_pitch_min = self.pitch_min_input.value()
+            self.vis_config.manual_pitch_max = self.pitch_max_input.value()
+
+    def _on_auto_calc_toggled(self, checked: bool):
+        self.pitch_min_input.setDisabled(checked)
+        self.pitch_max_input.setDisabled(checked)
+        
+        self.pitch_min_input.setValue(
+            self.vis_config.get_calculated_min_pitch() 
+            if checked 
+            else self.vis_config.manual_pitch_min
+        )
+        self.pitch_max_input.setValue(
+            self.vis_config.get_calculated_max_pitch() 
+            if checked 
+            else self.vis_config.manual_pitch_max
+        )
+
+        self.on_changes_callback()
+
+    def _on_pitch_min_changed(self, value: int):
+        # ignore changes to this input unless user entered
+        if not self.vis_config.auto_calc_pitch_bounds:
+            self.pitch_max_input.setRange(value, 127)
+            self.on_changes_callback()
+
+    def _on_pitch_max_changed(self, value: int):
+         # ignore changes to this input unless user entered
+        if not self.vis_config.auto_calc_pitch_bounds:
+            self.pitch_min_input.setRange(0, value)
+            self.on_changes_callback()
