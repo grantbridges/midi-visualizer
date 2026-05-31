@@ -44,3 +44,19 @@ class MidiUtil:
                 )
 
             print()
+
+    @staticmethod
+    def midi_pitch_to_note(pitch: int) -> str:
+        if not 0 <= pitch <= 127:
+            print(f"MIDIUtil | Pitch to Note | Warning: Invalid MIDI pitch \"{pitch}\"")
+            return ""
+        
+        NOTE_NAMES = [
+            "C", "C#", "D", "D#", "E", "F",
+            "F#", "G", "G#", "A", "A#", "B"
+        ]
+
+        note = NOTE_NAMES[pitch % 12]
+        octave = (pitch // 12) - 1
+
+        return f"{note}{octave}"

@@ -32,7 +32,7 @@ class TrackGroupsTab(QWidget):
         self.add_row_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         self.add_row_btn.clicked.connect(self._on_add_group)
 
-        self.track_columns = ["", "", "Name", "Visible", "Color", "Alpha", "Bar Height", "Speed (sec)", "Vert. Padding", "Vert. Offset", ""]
+        self.track_columns = ["", "", "Name", "Visible", "Color", "Alpha", "Bar Height", "Speed (sec)", "Pitch Offset", ""]
         self.table = QTableWidget(0, len(self.track_columns))
         self.table.setHorizontalHeaderLabels(self.track_columns)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
@@ -117,24 +117,12 @@ class TrackGroupsTab(QWidget):
             self.table.setCellWidget(row, col, sec_across_screen)
             col += 1
 
-            # vertical padding
-            vertical_padding = TableDoubleSpinbox()
-            vertical_padding.setDecimals(2)
-            vertical_padding.setRange(0.00, 1.00)
-            vertical_padding.setSingleStep(.01)
-            vertical_padding.setValue(track_group.vertical_padding_ratio)
-            vertical_padding.valueChanged.connect(lambda pad, row=row: self._on_vert_padding_changed(row, pad))
-            self.table.setCellWidget(row, col, vertical_padding)
-            col += 1
-
-            # vertical offset
-            vertical_offset = TableDoubleSpinbox()
-            vertical_offset.setDecimals(2)
-            vertical_offset.setRange(-1.00, 1.00)
-            vertical_offset.setSingleStep(.01)
-            vertical_offset.setValue(track_group.vertical_offset_ratio)
-            vertical_offset.valueChanged.connect(lambda offset, row=row: self._on_vert_offset_changed(row, offset))
-            self.table.setCellWidget(row, col, vertical_offset)
+            # pitch offset
+            pitch_offset = TableSpinbox()
+            pitch_offset.setRange(-127, 127)
+            pitch_offset.setValue(track_group.pitch_offset)
+            pitch_offset.valueChanged.connect(lambda pad, row=row: self._on_pitch_offset_changed(row, pad))
+            self.table.setCellWidget(row, col, pitch_offset)
             col += 1
 
             # delete button
@@ -240,18 +228,10 @@ class TrackGroupsTab(QWidget):
         track_group.bar_sec_across_screen = value
         self.on_changes_callback()
 
-    def _on_vert_padding_changed(self, row: int, value: float):
+    def _on_pitch_offset_changed(self, row: int, value: int):
         if self.table.signalsBlocked():
             return
         
         track_group = self.track_groups[row]
-        track_group.vertical_padding_ratio = value
-        self.on_changes_callback()
-
-    def _on_vert_offset_changed(self, row: int, value: float):
-        if self.table.signalsBlocked():
-            return
-        
-        track_group = self.track_groups[row]
-        track_group.vertical_offset_ratio = value
+        track_group.pitch_offset = value
         self.on_changes_callback()

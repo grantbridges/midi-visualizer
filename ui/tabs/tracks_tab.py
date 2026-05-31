@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 
 from common.types import RGB
 from models import VisConfig
+from utility import MidiUtil
 from ui.common import ColorButton, TableCheckbox, TableSpinbox
 import copy
 
@@ -56,7 +57,7 @@ class TracksTab(QWidget):
                 combo.addItem(group.name, str(group.group_id))
 
             if track.group_id is not None:
-                index = combo.findData(str(track.group_id))
+                index = combo.findData(str(track.group_id)) 
                 if index >= 0:
                     combo.setCurrentIndex(index)
             combo.currentIndexChanged.connect(self._on_group_changed)
@@ -64,14 +65,14 @@ class TracksTab(QWidget):
             col += 1
 
             # pitch min
-            pitch_min_item = QTableWidgetItem(f"{track.pitch_min}")
+            pitch_min_item = QTableWidgetItem(f"{track.pitch_min} ({MidiUtil.midi_pitch_to_note(track.pitch_min)})")
             pitch_min_item.setFlags(pitch_min_item.flags() & ~Qt.ItemIsEditable)
             pitch_min_item.setTextAlignment(Qt.AlignCenter)
             self.table.setItem(row, col, pitch_min_item)
             col += 1
 
             # pitch max
-            pitch_max_item = QTableWidgetItem(f"{track.pitch_max}")
+            pitch_max_item = QTableWidgetItem(f"{track.pitch_max} ({MidiUtil.midi_pitch_to_note(track.pitch_max)})")
             pitch_max_item.setFlags(pitch_max_item.flags() & ~Qt.ItemIsEditable)
             pitch_max_item.setTextAlignment(Qt.AlignCenter)
             self.table.setItem(row, col, pitch_max_item)

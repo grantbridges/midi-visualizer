@@ -14,6 +14,7 @@ class RenderTrack:
     alpha: int = 255
     bar_height_ratio: float = .05
     bar_sec_across_screen: float = 2.0
+    pitch_offset: int = 0
     notes: List[Note] = field(default_factory=list)
 
 class MidiRenderUtil:
@@ -95,6 +96,7 @@ class MidiRenderUtil:
                     alpha = tg.alpha,
                     bar_height_ratio = tg.bar_height_ratio,
                     bar_sec_across_screen = tg.bar_sec_across_screen,
+                    pitch_offset=tg.pitch_offset,
                     notes = t.notes
                 ))
 
@@ -118,7 +120,7 @@ class MidiRenderUtil:
 
                 # y and height calc
                 center_y = MidiRenderUtil.pitch_to_y(
-                    note.pitch,
+                    note.pitch + track.pitch_offset,
                     pitch_min,
                     pitch_max,
                     rect,
@@ -137,7 +139,7 @@ class MidiRenderUtil:
                     # start fading out only after the whole note has passed the playhead
                     if x_right <= playhead_x:
                         fade_start_x = playhead_x - note_fade_distance
-                        alpha = 255 * ((x_right - fade_start_x) / note_fade_distance)
+                        alpha = alpha * ((x_right - fade_start_x) / note_fade_distance)
                         alpha = max(0, min(255, alpha))
 
                     # left side of playhead - show play color

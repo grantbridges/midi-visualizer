@@ -18,8 +18,9 @@ History
   2 - Playhead props
   3 - Note playing props
   4 - Track groups
+  5 - Track group pitch offsets
 '''
-VIS_CONFIG_SCHEMA_VERSION = 4
+VIS_CONFIG_SCHEMA_VERSION = 5
 
 '''
 Top level construct containing all visualizing info
@@ -260,17 +261,27 @@ class VisConfig:
         return tracks
     
     def get_min_pitch(self) -> int:
-        values = [
-            track.pitch_min
-            for track in self.get_visible_tracks()
-        ]
-        return min(values) if values else 0.0
+        values = []
+
+        for group in self.track_groups:
+            if not group.visible:
+                continue
+
+            for track in self.get_tracks_by_group_id(group.group_id):
+                values.append(track.pitch_min + group.pitch_offset)
+
+        return min(values) if values else 0
 
     def get_max_pitch(self) -> int:
-        values = [
-            track.pitch_max
-            for track in self.get_visible_tracks()
-        ]
+        values = []
+
+        for group in self.track_groups:
+            if not group.visible:
+                continue
+
+            for track in self.get_tracks_by_group_id(group.group_id):
+                values.append(track.pitch_max + group.pitch_offset)
+
         return max(values) if values else 0
     
     def get_min_time(self) -> float:
