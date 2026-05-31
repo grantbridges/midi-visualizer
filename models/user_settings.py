@@ -13,8 +13,9 @@ History
   1 - Initial version
   2 - Added "show guides" and "mute audio"
   3 - Added "show pitches"
+  4 - Renamed to "show_track_groups"
 '''
-USER_SETTINGS_SCHEMA_VERSION = 2
+USER_SETTINGS_SCHEMA_VERSION = 4
 USER_SETTINGS_FILENAME = "user_settings.json"
 
 '''
@@ -26,7 +27,7 @@ class UserSettings:
 
     # preview area displays
     show_time_display: bool = True
-    show_track_names: bool = True
+    show_track_groups: bool = True
     show_guides: bool = True
     show_pitches: bool = True
     mute_audio: bool = True
@@ -63,15 +64,19 @@ class UserSettings:
 
         schema_version = data.get("schema_version", 1)
 
-        self.show_time_display = data.get("show_time_display", True)
-        self.show_track_names = data.get("show_track_names", True)
+        self.show_time_display = data["show_time_display"]
 
         if schema_version >= 2:
-            self.show_guides = data.get("show_guides", True)
-            self.mute_audio = data.get("mute_audio", True)
+            self.show_guides = data["show_guides"]
+            self.mute_audio = data["mute_audio"]
 
         if schema_version >= 3:
-            self.show_pitches = data.get("show_pitches", True)
+            self.show_pitches = data["show_pitches"]
+
+        if schema_version >= 4:
+            self.show_track_groups = data["show_track_groups"]
+        else:
+            self.show_track_groups = data["show_track_names"]
 
 
 # module-level singleton instance

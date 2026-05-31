@@ -85,13 +85,11 @@ class PreviewCanvas(QWidget):
         # draw center line
         pen.setStyle(Qt.DashLine)
         pen.setWidth(1)
-        pen.setDashPattern([4, 8])  # 4px dash, 8px gap
+        pen.setDashPattern([4, 8])  # 4px dash,8px gap
         painter.setPen(pen)
         painter.drawLine(0, y_center, rect.width(), y_center)
 
     def _draw_pitches(self, painter: QPainter):
-        if not user_settings.show_pitches:
-            return
         
         # shorthand a few vars
         rect = self.rect()
@@ -106,40 +104,42 @@ class PreviewCanvas(QWidget):
         pen = QPen(color)
         pen.setStyle(Qt.SolidLine)
         pen.setWidth(1)
-        painter.setPen(pen)        
+        painter.setPen(pen)
         
         pitch_range = pmax - pmin
         if pitch_range > 0:
-            for pitch in range(pmin, pmax + 1):
-                y = MidiRenderUtil.pitch_to_y(pitch, pmin, pmax, rect, vpr, vor)
-                painter.drawLine(0, y, rect.width(), y)
+            if user_settings.show_pitches:
+                for pitch in range(pmin, pmax + 1):
+                    y = MidiRenderUtil.pitch_to_y(pitch, pmin, pmax, rect, vpr, vor)
+                    painter.drawLine(0, y, rect.width(), y)
 
             # draw pitch guide lines for each track group
-            for track_group in self.vis_config.track_groups:
-                if not track_group.visible:
-                    continue
+            if user_settings.show_track_groups:
+                for track_group in self.vis_config.track_groups:
+                    if not track_group.visible:
+                        continue
 
-                color = QUtil.rgb_to_qcolor(track_group.color)
-                color.setAlpha(200)
-                pen_width = 1
-                if self.selected_group_id == track_group.group_id:
-                    pen_width = 4
-                    color.setAlpha(255)
-                pen = QPen(color)
-                pen.setStyle(Qt.SolidLine)
-                pen.setWidth(pen_width)
-                painter.setPen(pen)     
+                    color = QUtil.rgb_to_qcolor(track_group.color)
+                    color.setAlpha(200)
+                    pen_width = 1
+                    if self.selected_group_id == track_group.group_id:
+                        pen_width = 4
+                        color.setAlpha(255)
+                    pen = QPen(color)
+                    pen.setStyle(Qt.SolidLine)
+                    pen.setWidth(pen_width)
+                    painter.setPen(pen)     
 
-                group_pmin = self.vis_config.get_min_pitch_for_track_group(track_group.group_id)
-                group_pmax = self.vis_config.get_max_pitch_for_track_group(track_group.group_id)
+                    group_pmin = self.vis_config.get_min_pitch_for_track_group(track_group.group_id)
+                    group_pmax = self.vis_config.get_max_pitch_for_track_group(track_group.group_id)
 
-                pitch_min_y = MidiRenderUtil.pitch_to_y(group_pmin, pmin, pmax, rect, vpr, vor)
-                pitch_max_y = MidiRenderUtil.pitch_to_y(group_pmax, pmin, pmax, rect, vpr, vor)
+                    pitch_min_y = MidiRenderUtil.pitch_to_y(group_pmin, pmin, pmax, rect, vpr, vor)
+                    pitch_max_y = MidiRenderUtil.pitch_to_y(group_pmax, pmin, pmax, rect, vpr, vor)
 
-                painter.drawLine(0, pitch_min_y, rect.width(), pitch_min_y)
-                painter.drawLine(0, pitch_max_y, rect.width(), pitch_max_y)
+                    painter.drawLine(0, pitch_min_y, rect.width(), pitch_min_y)
+                    painter.drawLine(0, pitch_max_y, rect.width(), pitch_max_y)
 
-                if user_settings.show_track_names:
+                    # list track names
                     # list track names
                     track_group_font_size = 8
                     track_font_size = 6

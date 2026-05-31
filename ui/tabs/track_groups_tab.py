@@ -122,7 +122,7 @@ class TrackGroupsTab(QWidget):
             # pixels/sec
             sec_across_screen = TableDoubleSpinbox()
             sec_across_screen.setDecimals(1)
-            sec_across_screen.setRange(0.1, 5.0)
+            sec_across_screen.setRange(0.1, 10.0)
             sec_across_screen.setSingleStep(.1)
             sec_across_screen.setValue(track_group.bar_sec_across_screen)
             sec_across_screen.valueChanged.connect(lambda speed, row=row: self._on_bar_speed_changed(row, speed))
