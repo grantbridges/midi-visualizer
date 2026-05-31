@@ -20,13 +20,6 @@ class Track:
     # group reference
     group_id: UUID | None = None
 
-    # properties
-    visible: bool = True
-    color: RGB = Color.KAYLA_1
-    alpha: int = 255
-    bar_height_ratio: float = .05 # 0 - 1, ratio of screen height
-    bar_sec_across_screen: float = 2 # seconds for bar to fully cross screen
-
     # computed props
     pitch_min: int = 0
     pitch_max: int = 1
@@ -49,11 +42,6 @@ class Track:
         return {
             "name": self.name,
             "groupId": str(self.group_id) if self.group_id else None,
-            "visible": self.visible,
-            "color": list(self.color),
-            "alpha": self.alpha,
-            "barHeightRatio": self.bar_height_ratio,
-            "barSecAcrossScreen": self.bar_sec_across_screen,
 
             "notes": [
                 note.save()
@@ -66,11 +54,6 @@ class Track:
         track = Track()
 
         track.name = data["name"]
-        track.visible = data["visible"]
-        track.color = tuple(data["color"])
-        track.alpha = data["alpha"]
-        track.bar_height_ratio = data["barHeightRatio"]
-        track.bar_sec_across_screen = data["barSecAcrossScreen"]
 
         track.notes = [
             Note.load(note_data, schema_version)

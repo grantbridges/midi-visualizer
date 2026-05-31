@@ -92,14 +92,15 @@ class PreviewCanvas(QWidget):
         if user_settings.show_track_names:
             # list track names
             track_font_size = 8
-            for track in self.vis_config.tracks:
-                if not track.visible:
+            for track_group in self.vis_config.track_groups:
+                if not track_group.visible:
                     continue
-                
-                color = QUtil.rgb_to_qcolor(track.color)
-                color.setAlpha(200)
-                font = QFont(Const.PRIMARY_FONT, track_font_size)
-                painter.setPen(color)
-                painter.setFont(font)
-                painter.drawText(QRect(text_padding, text_top, 200, track_font_size), f'{track.name}')
-                text_top += track_font_size + text_padding
+
+                for track in self.vis_config.get_tracks_by_group_id(track_group.group_id):
+                    color = QUtil.rgb_to_qcolor(track_group.color)
+                    color.setAlpha(200)
+                    font = QFont(Const.PRIMARY_FONT, track_font_size)
+                    painter.setPen(color)
+                    painter.setFont(font)
+                    painter.drawText(QRect(text_padding, text_top, 200, track_font_size), f'{track.name}')
+                    text_top += track_font_size + text_padding

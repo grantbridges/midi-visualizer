@@ -67,19 +67,26 @@ class VisConfig:
 
         instruments: List[pretty_midi.Instrument] = midi_data.instruments
 
-        vis_config.track_groups = []
+        # seed initial track group
+        track_group = TrackGroup()
+        vis_config.track_groups = [track_group]
 
         inst_names = set()
         for inst in instruments:
             if not inst.name:
-                print("VisConfig | Warning: Loaded instrument from MIDI data with no name - skipping")
+                print("VisConfig | Warning: Loaded track from MIDI data with no name - skipping")
                 continue
 
             if inst.name in inst_names:
-                print(f"VisConfig | Warning: Loaded instrument with duplicate name \"{inst.name}\" - skipping")
+                print(f"VisConfig | Warning: Loaded track with duplicate name \"{inst.name}\" - skipping")
                 continue
 
             track = Track.create_from_midi_data(inst)
+            if len(track.notes) == 0:
+                print(f"VisConfig | Warning: Loaded track with no notes \"{inst.name}\" - skipping")
+                continue
+
+            track.group_id = track_group.group_id
             vis_config.tracks.append(track)
             inst_names.add(inst.name)
 

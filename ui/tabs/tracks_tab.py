@@ -25,7 +25,7 @@ class TracksTab(QWidget):
         self.vis_config = vis_config
 
         # create controls
-        self.track_columns = ["Name", "Group", "Visible", "Color", "Alpha", "Bar Height", "Speed (sec)"]
+        self.track_columns = ["Name", "Group", "Pitch Min", "Pitch Max", "Start (sec)", "End (sec)"]
         self.table = QTableWidget(0, len(self.track_columns))
         self.table.setHorizontalHeaderLabels(self.track_columns)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
@@ -55,8 +55,7 @@ class TracksTab(QWidget):
             for group in self.vis_config.track_groups:
                 combo.addItem(group.name, str(group.group_id))
 
-            in_group = track.group_id is not None
-            if in_group:
+            if track.group_id is not None:
                 index = combo.findData(str(track.group_id))
                 if index >= 0:
                     combo.setCurrentIndex(index)
@@ -64,45 +63,32 @@ class TracksTab(QWidget):
             self.table.setCellWidget(row, col, combo)
             col += 1
 
-            # visible
-            checkbox = TableCheckbox(track.visible)
-            checkbox.setDisabled(in_group)
-            checkbox.valueChanged.connect(self.on_changes_callback)
-            self.table.setCellWidget(row, col, checkbox)
+            # pitch min
+            pitch_min_item = QTableWidgetItem(f"{track.pitch_min}")
+            pitch_min_item.setFlags(pitch_min_item.flags() & ~Qt.ItemIsEditable)
+            pitch_min_item.setTextAlignment(Qt.AlignCenter)
+            self.table.setItem(row, col, pitch_min_item)
             col += 1
 
-            # color button
-            color_btn = ColorButton(track.color)
-            color_btn.setDisabled(in_group)
-            color_btn.valueChanged.connect(self.on_changes_callback)
-            self.table.setCellWidget(row, col, color_btn)
+            # pitch max
+            pitch_max_item = QTableWidgetItem(f"{track.pitch_max}")
+            pitch_max_item.setFlags(pitch_max_item.flags() & ~Qt.ItemIsEditable)
+            pitch_max_item.setTextAlignment(Qt.AlignCenter)
+            self.table.setItem(row, col, pitch_max_item)
             col += 1
 
-            # alpha
-            alpha = TableSpinbox()
-            alpha.setDisabled(in_group)
-            alpha.setRange(0, 255)
-            alpha.setValue(track.alpha)
-            alpha.valueChanged.connect(self.on_changes_callback)
-            self.table.setCellWidget(row, col, alpha)
+            # time min
+            time_min_item = QTableWidgetItem(f"{track.time_min:.2f}")
+            time_min_item.setFlags(time_min_item.flags() & ~Qt.ItemIsEditable)
+            time_min_item.setTextAlignment(Qt.AlignCenter)
+            self.table.setItem(row, col, time_min_item)
             col += 1
 
-            # bar height
-            bar_height = TableSpinbox()
-            bar_height.setDisabled(in_group)
-            bar_height.setRange(1, 100)
-            bar_height.setValue(track.bar_height_ratio * 100)
-            bar_height.valueChanged.connect(self.on_changes_callback)
-            self.table.setCellWidget(row, col, bar_height)
-            col += 1
-
-            # pixels/sec
-            sec_across_screen = TableSpinbox()
-            sec_across_screen.setDisabled(in_group)
-            sec_across_screen.setRange(1, 5)
-            sec_across_screen.setValue(track.bar_sec_across_screen)
-            sec_across_screen.valueChanged.connect(self.on_changes_callback)
-            self.table.setCellWidget(row, col, sec_across_screen)
+            # time max
+            time_max_item = QTableWidgetItem(f"{track.time_max:.2f}")
+            time_max_item.setFlags(time_max_item.flags() & ~Qt.ItemIsEditable)
+            time_max_item.setTextAlignment(Qt.AlignCenter)
+            self.table.setItem(row, col, time_max_item)
             col += 1
 
         # resume callbacks
@@ -117,19 +103,8 @@ class TracksTab(QWidget):
             track = self.vis_config.get_track_by_name(name)
             if track is not None:
                 group_combo: QComboBox = self.table.cellWidget(row, 1)
-                visible_checkbox: TableCheckbox = self.table.cellWidget(row, 2)
-                color_btn: ColorButton = self.table.cellWidget(row, 3)
-                alpha = self.table.cellWidget(row, 4)
-                bar_height = self.table.cellWidget(row, 5)
-                sec_across_screen = self.table.cellWidget(row, 6)
-
                 group = group_combo.currentData()
                 track.group_id = UUID(group) if group is not None else None
-                track.visible = visible_checkbox.isChecked()
-                track.color = color_btn.rgb
-                track.alpha = alpha.value()
-                track.bar_height_ratio = bar_height.value() / 100
-                track.bar_sec_across_screen = sec_across_screen.value()
             else:
                 print(f"Warning: Unknown track row \"{name}\"")
 
