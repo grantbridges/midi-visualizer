@@ -118,8 +118,12 @@ class TrackGroupsTab(QWidget):
             col += 1
 
             # pitch offset
+            group_pitch_min = self.vis_config.get_min_pitch_for_track_group(track_group.group_id, True)
+            group_pitch_max = self.vis_config.get_max_pitch_for_track_group(track_group.group_id, True)
             pitch_offset = TableSpinbox()
-            pitch_offset.setRange(-127, 127)
+            spinner_min = 0 - group_pitch_min
+            spinner_max = 127 - group_pitch_max
+            pitch_offset.setRange(spinner_min, spinner_max)
             pitch_offset.setValue(track_group.pitch_offset)
             pitch_offset.valueChanged.connect(lambda pad, row=row: self._on_pitch_offset_changed(row, pad))
             self.table.setCellWidget(row, col, pitch_offset)

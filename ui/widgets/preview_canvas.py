@@ -107,25 +107,47 @@ class PreviewCanvas(QWidget):
                 painter.drawLine(0, y, rect.width(), y)
 
             # draw pitch guide lines for each track group
-            for tg in self.vis_config.track_groups:
-                if not tg.visible:
+            for track_group in self.vis_config.track_groups:
+                if not track_group.visible:
                     continue
 
-                color = QUtil.rgb_to_qcolor(tg.color)
+                color = QUtil.rgb_to_qcolor(track_group.color)
                 color.setAlpha(200)
                 pen = QPen(color)
                 pen.setStyle(Qt.SolidLine)
                 pen.setWidth(1)
                 painter.setPen(pen)     
 
-                group_pmin = self.vis_config.get_min_pitch_for_track_group(tg.group_id)
-                group_pmax = self.vis_config.get_max_pitch_for_track_group(tg.group_id)
+                group_pmin = self.vis_config.get_min_pitch_for_track_group(track_group.group_id)
+                group_pmax = self.vis_config.get_max_pitch_for_track_group(track_group.group_id)
 
                 pitch_min_y = MidiRenderUtil.pitch_to_y(group_pmin, pmin, pmax, rect, vpr, vor)
                 pitch_max_y = MidiRenderUtil.pitch_to_y(group_pmax, pmin, pmax, rect, vpr, vor)
 
                 painter.drawLine(0, pitch_min_y, rect.width(), pitch_min_y)
                 painter.drawLine(0, pitch_max_y, rect.width(), pitch_max_y)
+
+                if user_settings.show_track_names:
+                    # list track names
+                    track_group_font_size = 8
+                    track_font_size = 6
+                    text_padding = 5
+                    text_top = pitch_max_y + text_padding
+
+                    color = QUtil.rgb_to_qcolor(track_group.color)
+                    color.setAlpha(200)
+                    painter.setPen(color)
+
+                    font = QFont(Const.PRIMARY_FONT, track_group_font_size, 200)
+                    painter.setFont(font)
+                    painter.drawText(QRect(text_padding, text_top, 200, track_group_font_size), f'{track_group.name}')
+                    text_top += track_group_font_size + 3
+
+                    for track in self.vis_config.get_tracks_by_group_id(track_group.group_id):
+                        font = QFont(Const.PRIMARY_FONT, track_font_size, 100)
+                        painter.setFont(font)
+                        painter.drawText(QRect(text_padding, text_top, 200, track_font_size), f'{track.name}')
+                        text_top += track_font_size + 3
 
 
 
@@ -147,26 +169,3 @@ class PreviewCanvas(QWidget):
             m, s = divmod(int(t_abs), 60)
             painter.drawText(QRect(text_top, text_padding, 100, time_display_font_size), f'{sign}{m:02d}:{s:02d}')
             text_top += time_display_font_size + text_padding
-
-        if user_settings.show_track_names:
-            # list track names
-            tg_font_size = 8
-            t_font_size = 6
-            for track_group in self.vis_config.track_groups:
-                if not track_group.visible:
-                    continue
-
-                color = QUtil.rgb_to_qcolor(track_group.color)
-                color.setAlpha(200)
-                painter.setPen(color)
-
-                font = QFont(Const.PRIMARY_FONT, tg_font_size, 200)
-                painter.setFont(font)
-                painter.drawText(QRect(text_padding, text_top, 200, tg_font_size), f'{track_group.name}')
-                text_top += tg_font_size + 3
-
-                for track in self.vis_config.get_tracks_by_group_id(track_group.group_id):
-                    font = QFont(Const.PRIMARY_FONT, t_font_size, 100)
-                    painter.setFont(font)
-                    painter.drawText(QRect(text_padding, text_top, 200, t_font_size), f'{track.name}')
-                    text_top += t_font_size + 3

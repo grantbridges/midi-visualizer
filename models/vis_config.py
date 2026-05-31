@@ -19,8 +19,9 @@ History
   3 - Note playing props
   4 - Track groups
   5 - Track group pitch offsets
+  6 - Auto-calc pitch bounds & manual values
 '''
-VIS_CONFIG_SCHEMA_VERSION = 5
+VIS_CONFIG_SCHEMA_VERSION = 6
 
 '''
 Top level construct containing all visualizing info
@@ -48,6 +49,10 @@ class VisConfig:
     # ratio of vertical offset positioning - -1 to 1 (-1 is top, 0 center, 1 bottom)
     vertical_offset_ratio = 0
     fps: int = 60
+
+    auto_calc_pitch_bounds: bool = True
+    manual_pitch_min: int = 0
+    manual_pitch_max: int = 127
 
     # Ratio of distance from playhead to left edge that note will fade out over - 0.01 to 1
     # 1 means fade out over full distance to left edge, 0.5 means fade out to 
@@ -126,6 +131,9 @@ class VisConfig:
             "noteFadeoutRatio": self.note_fadeout_ratio,
             "notePlayColor": list(self.note_play_color),
             "fps": self.fps,
+            "autoCalcPitchBounds": self.auto_calc_pitch_bounds,
+            "manualPitchMin": self.manual_pitch_min,
+            "manualPitchMax": self.manual_pitch_max,
 
             "trackGroups": [
                 track_group.save()
@@ -184,6 +192,11 @@ class VisConfig:
                     TrackGroup.load(track_data, schema_version)
                     for track_data in data["trackGroups"]
                 ]
+
+            if schema_version >= 6:
+                config.auto_calc_pitch_bounds = data["autoCalcPitchBounds"]
+                config.manual_pitch_min = data["manualPitchMin"]
+                config.manual_pitch_max = data["manualPitchMax"]
 
             return config
         except Exception as ex:
@@ -261,6 +274,9 @@ class VisConfig:
         return tracks
     
     def get_min_pitch(self) -> int:
+        if not self.auto_calc_pitch_bounds:
+            return self.manual_pitch_min
+
         values = []
 
         for group in self.track_groups:
@@ -272,15 +288,18 @@ class VisConfig:
 
         return min(values) if values else 0
     
-    def get_min_pitch_for_track_group(self, group_id: UUID) -> int:
+    def get_min_pitch_for_track_group(self, group_id: UUID, exclude_offset: int = False) -> int:
         group = self.get_track_group_by_id(group_id)
         values = [
-            track.pitch_min + group.pitch_offset
+            track.pitch_min + (group.pitch_offset if not exclude_offset else 0)
             for track in self.get_tracks_by_group_id(group_id)
         ]
         return min(values) if values else 0
 
     def get_max_pitch(self) -> int:
+        if not self.auto_calc_pitch_bounds:
+            return self.manual_pitch_max
+
         values = []
 
         for group in self.track_groups:
@@ -292,10 +311,10 @@ class VisConfig:
 
         return max(values) if values else 0
     
-    def get_max_pitch_for_track_group(self, group_id: UUID) -> int:
+    def get_max_pitch_for_track_group(self, group_id: UUID, exclude_offset: int = False) -> int:
         group = self.get_track_group_by_id(group_id)
         values = [
-            track.pitch_max + group.pitch_offset
+            track.pitch_max + (group.pitch_offset if not exclude_offset else 0)
             for track in self.get_tracks_by_group_id(group_id)
         ]
         return max(values) if values else 0
