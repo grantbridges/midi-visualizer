@@ -52,26 +52,17 @@ class PreviewWidget(QWidget):
         self.settings_btn.setFixedWidth(32)
 
         # create settings menu
-        self.settings_menu = QMenu(self)
-        self.show_time_action = QAction("Show Time Display", self)
-        self.show_time_action.setCheckable(True)
-        self.show_time_action.setChecked(user_settings.show_time_display)
-        self.show_time_action.triggered.connect(self._on_show_time_display_toggled)
+        # (I did this in extreme shorthand to keep it easy to add configs here)
+        settings_menu = QMenu(self)
+        for action in [
+            self.create_settings_action("Show Time Display", "show_time_display"),
+            self.create_settings_action("Show Track Names", "show_track_names"),
+            self.create_settings_action("Show Guides", "show_guides"),
+            self.create_settings_action("Show Pitches", "show_pitches")
+        ]:
+            settings_menu.addAction(action)
 
-        self.show_track_names_action = QAction("Show Track Names", self)
-        self.show_track_names_action.setCheckable(True)
-        self.show_track_names_action.setChecked(user_settings.show_track_names)
-        self.show_track_names_action.triggered.connect(self._on_show_track_names_toggled)
-
-        self.show_guides_action = QAction("Show Guides", self)
-        self.show_guides_action.setCheckable(True)
-        self.show_guides_action.setChecked(user_settings.show_guides)
-        self.show_guides_action.triggered.connect(self._on_show_guides_toggled)
-
-        self.settings_menu.addAction(self.show_time_action)
-        self.settings_menu.addAction(self.show_track_names_action)
-        self.settings_menu.addAction(self.show_guides_action)
-        self.settings_btn.setMenu(self.settings_menu)
+        self.settings_btn.setMenu(settings_menu)
 
         self.slider = QSlider(Qt.Horizontal)
         self.slider.setRange(0, 1000)
@@ -122,7 +113,7 @@ class PreviewWidget(QWidget):
                 self.end_time = new_end_time
                 if self.start_time == self.end_time:
                     self.end_time += 1 # prevent divide by 0
-                self.current_time = self.start_time
+                self.current_time = 0.0
                 self._update_slider_position()
 
         self._refresh_canvas()
@@ -176,18 +167,22 @@ class PreviewWidget(QWidget):
         user_settings.mute_audio = checked
         user_settings.save()
 
-    def _on_show_time_display_toggled(self, checked: bool):
-        user_settings.show_time_display = checked
-        user_settings.save()
-        self._refresh_canvas()
+    def create_settings_action(self, label: str, property_name: str) -> QAction:
+        action = QAction(label, self)
+        action.setCheckable(True)
+        action.setChecked(getattr(user_settings, property_name))
 
-    def _on_show_track_names_toggled(self, checked: bool):
-        user_settings.show_track_names = checked
-        user_settings.save()
-        self._refresh_canvas()
+        def on_triggered(checked: bool):
+            setattr(user_settings, property_name, checked)
+            user_settings.save()
+            self._refresh_canvas()
 
-    def _on_show_guides_toggled(self, checked: bool):
-        user_settings.show_guides = checked
+        action.triggered.connect(on_triggered)
+
+        return action
+
+    def _on_user_setting_toggled(self, property_name: str, checked: bool):
+        setattr(user_settings, property_name, checked)
         user_settings.save()
         self._refresh_canvas()
 

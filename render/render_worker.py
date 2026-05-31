@@ -132,7 +132,8 @@ class RenderWorker(QObject):
         painter = QPainter(image)
         painter.setRenderHint(QPainter.Antialiasing)
         rect = QRect(0, 0, job.width, job.height)
-        MidiRenderUtil.draw_frame(painter, current_time, job.vis_config, job.pitch_min, job.pitch_max, rect)
+        MidiRenderUtil.draw_background(painter, current_time, job.vis_config, rect)
+        MidiRenderUtil.draw_notes(painter, current_time, job.vis_config, job.pitch_min, job.pitch_max, rect)
         painter.end()
 
         if cancel_event.is_set():

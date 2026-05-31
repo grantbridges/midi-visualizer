@@ -12,6 +12,7 @@ from utility.file_util import FileUtil
 History
   1 - Initial version
   2 - Added "show guides" and "mute audio"
+  3 - Added "show pitches"
 '''
 USER_SETTINGS_SCHEMA_VERSION = 2
 USER_SETTINGS_FILENAME = "user_settings.json"
@@ -27,6 +28,7 @@ class UserSettings:
     show_time_display: bool = True
     show_track_names: bool = True
     show_guides: bool = True
+    show_pitches: bool = True
     mute_audio: bool = True
 
     @staticmethod
@@ -67,6 +69,9 @@ class UserSettings:
         if schema_version >= 2:
             self.show_guides = data.get("show_guides", True)
             self.mute_audio = data.get("mute_audio", True)
+
+        if schema_version >= 3:
+            self.show_pitches = data.get("show_pitches", True)
 
 
 # module-level singleton instance

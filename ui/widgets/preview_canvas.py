@@ -29,7 +29,17 @@ class PreviewCanvas(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
 
-        MidiRenderUtil.draw_frame(
+        MidiRenderUtil.draw_background(
+            painter, 
+            self.current_time, 
+            self.vis_config,
+            self.rect()
+        )
+
+        self._draw_guides(painter)
+        self._draw_text(painter)
+
+        MidiRenderUtil.draw_notes(
             painter, 
             self.current_time, 
             self.vis_config,
@@ -38,37 +48,55 @@ class PreviewCanvas(QWidget):
             self.rect()
         )
 
-        if user_settings.show_guides:
-            self._draw_guides(painter)
-
-        self._draw_text(painter)
-
     def _draw_guides(self, painter: QPainter):
         vert_padding = self.vis_config.vertical_padding_ratio * self.rect().height() / 2
         vert_offset = self.vis_config.vertical_offset_ratio * self.rect().height() / 2
+        rect = self.rect()
 
         # positions
         y_center = self.rect().height() / 2 + vert_offset
         y_min = vert_padding + vert_offset
         y_max = self.rect().height() - vert_padding + vert_offset
 
-        # color
+        # draw pitches
         color = QUtil.rgb_to_qcolor(Util.invert_color(self.vis_config.bg_color))
-        color.setAlpha(200)
+        color.setAlpha(30)
         pen = QPen(color)
-
-        # draw vertical padding guides
         pen.setStyle(Qt.SolidLine)
         pen.setWidth(1)
-        painter.setPen(pen)
-        painter.drawLine(0, y_min, self.rect().width(), y_min)
-        painter.drawLine(0, y_max, self.rect().width(), y_max)
+        painter.setPen(pen)        
 
-        # draw center line
-        pen.setStyle(Qt.DashLine)
-        pen.setDashPattern([4, 8])  # 4px dash, 8px gap
-        painter.setPen(pen)
-        painter.drawLine(0, y_center, self.rect().width(), y_center)
+        if user_settings.show_pitches:
+            pitch_range = self.pitch_max - self.pitch_min
+            if pitch_range > 0:
+                for pitch in range(self.pitch_min, self.pitch_max + 1):
+                    y = MidiRenderUtil.pitch_to_y(
+                        pitch,
+                        self.pitch_min,
+                        self.pitch_max,
+                        rect,
+                        self.vis_config.vertical_padding_ratio,
+                        self.vis_config.vertical_offset_ratio,
+                    )
+
+                    painter.drawLine(0, y, rect.width(), y)
+
+        if user_settings.show_guides:
+            # draw vertical padding guides
+            color.setAlpha(200)
+            pen = QPen(color)
+            pen.setStyle(Qt.SolidLine)
+            pen.setWidth(2)
+            painter.setPen(pen)
+            painter.drawLine(0, y_min, rect.width(), y_min)
+            painter.drawLine(0, y_max, rect.width(), y_max)
+
+            # draw center line
+            pen.setStyle(Qt.DashLine)
+            pen.setWidth(1)
+            pen.setDashPattern([4, 8])  # 4px dash, 8px gap
+            painter.setPen(pen)
+            painter.drawLine(0, y_center, rect.width(), y_center)
 
     def _draw_text(self, painter: QPainter):
         text_padding = 5
@@ -91,16 +119,23 @@ class PreviewCanvas(QWidget):
 
         if user_settings.show_track_names:
             # list track names
-            track_font_size = 8
+            tg_font_size = 8
+            t_font_size = 6
             for track_group in self.vis_config.track_groups:
                 if not track_group.visible:
                     continue
 
+                color = QUtil.rgb_to_qcolor(track_group.color)
+                color.setAlpha(200)
+                painter.setPen(color)
+
+                font = QFont(Const.PRIMARY_FONT, tg_font_size, 200)
+                painter.setFont(font)
+                painter.drawText(QRect(text_padding, text_top, 200, tg_font_size), f'{track_group.name}')
+                text_top += tg_font_size + 3
+
                 for track in self.vis_config.get_tracks_by_group_id(track_group.group_id):
-                    color = QUtil.rgb_to_qcolor(track_group.color)
-                    color.setAlpha(200)
-                    font = QFont(Const.PRIMARY_FONT, track_font_size)
-                    painter.setPen(color)
+                    font = QFont(Const.PRIMARY_FONT, t_font_size, 100)
                     painter.setFont(font)
-                    painter.drawText(QRect(text_padding, text_top, 200, track_font_size), f'{track.name}')
-                    text_top += track_font_size + text_padding
+                    painter.drawText(QRect(text_padding, text_top, 200, t_font_size), f'{track.name}')
+                    text_top += t_font_size + 3

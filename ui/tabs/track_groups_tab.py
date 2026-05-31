@@ -97,11 +97,11 @@ class TrackGroupsTab(QWidget):
             self.table.setCellWidget(row, col, alpha)
             col += 1
 
-            # bar height
+            # bar height ratio
             bar_height = TableDoubleSpinbox()
-            bar_height.setDecimals(2)
-            bar_height.setRange(0.01, 1.00)
-            bar_height.setSingleStep(.01)
+            bar_height.setDecimals(3)
+            bar_height.setRange(0.001, 1.000)
+            bar_height.setSingleStep(.001)
             bar_height.setValue(track_group.bar_height_ratio)
             bar_height.valueChanged.connect(lambda height, row=row: self._on_bar_height_changed(row, height))
             self.table.setCellWidget(row, col, bar_height)
@@ -132,7 +132,7 @@ class TrackGroupsTab(QWidget):
             vertical_offset.setDecimals(2)
             vertical_offset.setRange(-1.00, 1.00)
             vertical_offset.setSingleStep(.01)
-            vertical_padding.setValue(track_group.vertical_offset_ratio)
+            vertical_offset.setValue(track_group.vertical_offset_ratio)
             vertical_offset.valueChanged.connect(lambda offset, row=row: self._on_vert_offset_changed(row, offset))
             self.table.setCellWidget(row, col, vertical_offset)
             col += 1
@@ -201,36 +201,57 @@ class TrackGroupsTab(QWidget):
         self.on_changes_callback()
         
     def _on_visible_changed(self, row: int, checked: bool):
+        if self.table.signalsBlocked():
+            return
+        
         track_group = self.track_groups[row]
         track_group.visible = checked
         self.on_changes_callback()
 
     def _on_color_changed(self, row: int, color: RGB):
+        if self.table.signalsBlocked():
+            return
+        
         track_group = self.track_groups[row]
         track_group.color = color
         self.on_changes_callback()
 
     def _on_alpha_changed(self, row: int, alpha: int):
+        if self.table.signalsBlocked():
+            return
+        
         track_group = self.track_groups[row]
         track_group.alpha = alpha
         self.on_changes_callback()
 
     def _on_bar_height_changed(self, row: int, value: float):
+        if self.table.signalsBlocked():
+            return
+        
         track_group = self.track_groups[row]
         track_group.bar_height_ratio = value
         self.on_changes_callback()
 
     def _on_bar_speed_changed(self, row: int, value: float):
+        if self.table.signalsBlocked():
+            return
+        
         track_group = self.track_groups[row]
         track_group.bar_sec_across_screen = value
         self.on_changes_callback()
 
     def _on_vert_padding_changed(self, row: int, value: float):
+        if self.table.signalsBlocked():
+            return
+        
         track_group = self.track_groups[row]
         track_group.vertical_padding_ratio = value
         self.on_changes_callback()
 
     def _on_vert_offset_changed(self, row: int, value: float):
+        if self.table.signalsBlocked():
+            return
+        
         track_group = self.track_groups[row]
         track_group.vertical_offset_ratio = value
         self.on_changes_callback()

@@ -14,8 +14,6 @@ class RenderTrack:
     alpha: int = 255
     bar_height_ratio: float = .05
     bar_sec_across_screen: float = 2.0
-    vertical_padding_ratio: float = 0.0
-    vertical_offset_ratio: float = 0.0
     notes: List[Note] = field(default_factory=list)
 
 class MidiRenderUtil:
@@ -49,11 +47,29 @@ class MidiRenderUtil:
 
         return max(values) if values else 0.0
     
+    # translates a pitch to a y value for a given rect and offsets
     @staticmethod
-    def draw_frame(painter: QPainter, current_time: float, vis_config: VisConfig, pitch_min: int, pitch_max:int, rect: QRect):
+    def pitch_to_y(pitch: int, pitch_min: int, pitch_max: int, rect: QRect, vert_padding_ratio: float, vert_offset_ratio: float) -> float:
+        if pitch_max == pitch_min:
+            return rect.height() / 2
+
+        vert_padding = vert_padding_ratio * rect.height() / 2
+        vert_offset = vert_offset_ratio * rect.height() / 2
+
+        y_min = vert_padding + vert_offset
+        y_max = rect.height() - vert_padding + vert_offset
+
+        t = (pitch - pitch_min) / (pitch_max - pitch_min)
+
+        return y_max + t * (y_min - y_max)
+    
+    @staticmethod
+    def draw_background(painter: QPainter, current_time: float, vis_config: VisConfig, rect: QRect):
         # fill in bg color
         painter.fillRect(rect, QUtil.rgb_to_qcolor(vis_config.bg_color))
-
+    
+    @staticmethod
+    def draw_notes(painter: QPainter, current_time: float, vis_config: VisConfig, pitch_min: int, pitch_max:int, rect: QRect):
         # convert ratios to pixel values
         playhead_x = rect.width() * vis_config.playhead_pos_ratio
         note_fade_distance = playhead_x * vis_config.note_fadeout_ratio
@@ -79,16 +95,11 @@ class MidiRenderUtil:
                     alpha = tg.alpha,
                     bar_height_ratio = tg.bar_height_ratio,
                     bar_sec_across_screen = tg.bar_sec_across_screen,
-                    vertical_padding_ratio = tg.vertical_padding_ratio,
-                    vertical_offset_ratio = tg.vertical_offset_ratio,
                     notes = t.notes
                 ))
 
         # draw midi bars
         for track in tracks:
-            vert_padding = track.vertical_padding_ratio * rect.height() / 2
-            vert_offset = track.vertical_offset_ratio * rect.height() / 2
-
             pixels_per_sec = rect.width() / track.bar_sec_across_screen
 
             for note in track.notes:
@@ -102,13 +113,19 @@ class MidiRenderUtil:
                     continue
 
                 # convert bar height ratio to pixels
-                bar_height = rect.height() * track.bar_height_ratio
+                bar_height = rect.height() * track.bar_height_ratio * (1 - vis_config.vertical_padding_ratio)
+                bar_height = max(bar_height, 1) # min of 1 pixel
 
                 # y and height calc
-                t = (note.pitch - pitch_min) / (pitch_max - pitch_min)
-                y_min = vert_padding + vert_offset
-                y_max = rect.height() - vert_padding + vert_offset
-                y = (y_max + t * (y_min - y_max)) - bar_height / 2
+                center_y = MidiRenderUtil.pitch_to_y(
+                    note.pitch,
+                    pitch_min,
+                    pitch_max,
+                    rect,
+                    vis_config.vertical_padding_ratio,
+                    vis_config.vertical_offset_ratio,
+                )
+                y = center_y - bar_height / 2
                 h = bar_height
 
                 color = track.color
