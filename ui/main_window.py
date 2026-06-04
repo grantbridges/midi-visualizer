@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import subprocess
 import sys
 from uuid import UUID
@@ -12,11 +13,12 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QPushButton,
     QMessageBox,
-    QDialog
+    QDialog,
+    QFileDialog
 )
 from PySide6.QtGui import QAction
 from common import Const
-from models import VisConfig, Resolution
+from models import VisConfig, Resolution, user_settings
 from render import RenderWorker
 from ui.tabs import ConfigTab, TrackGroupsTab, TracksTab
 from ui.widgets import PreviewWidget
@@ -31,7 +33,6 @@ from ui.dialogs import (
 TRACK_NAME = 'Puppet Master'
 #TRACK_NAME = 'MIDI Test'
 INPUT_MIDI_FILE = f'input/{TRACK_NAME}.midi'
-INPUT_CONFIG_FILE = f'input/{TRACK_NAME}.json'
 
 START_TIME_OFFSET = 0 # seconds
 
@@ -78,24 +79,28 @@ class MainWindow(QMainWindow):
         file_menu.addSeparator()
         file_menu.addAction(self.export_action)
 
-        # 1) Check if we already have a .json file for this track
-        self.vis_config = VisConfig.load(INPUT_CONFIG_FILE)
+        load_path = user_settings.active_project_path
+        if load_path and not Path.exists(load_path):
+            # if last active project doesn't exist, load nothing
+            load_path = None
+        
+        self.vis_config = None
+        if load_path:
+            self.vis_config = VisConfig.load(load_path)
 
         if self.vis_config is None:
+            # TODO - show blank screen to start. For now just crash out.
+            raise RuntimeError("No vis config loaded")
             # 2) Generate new vis_config from midi file
-            print(f"MainWindow | Generating new config for \"{TRACK_NAME}\"")
-            midi_data = pretty_midi.PrettyMIDI(INPUT_MIDI_FILE)
-            self.vis_config = VisConfig.create_from_midi_data(TRACK_NAME, midi_data)
+            #print(f"MainWindow | Generating new config for \"{TRACK_NAME}\"")
+            #midi_data = pretty_midi.PrettyMIDI(INPUT_MIDI_FILE)
+            #self.vis_config = VisConfig.create_from_midi_data(TRACK_NAME, midi_data)
 
             # 2.1) Save out as initial generated file
-            self.vis_config.save(INPUT_CONFIG_FILE)
-        
-        self.vis_config.init()
+            #self.vis_config.save(INPUT_CONFIG_FILE)
 
-        if self.vis_config is not None:
-            self.init_vis_config_editor_view()
-        else:
-            self.init_default_view()
+        self.vis_config.init()
+        self.init_vis_config_editor_view()
 
     def init_default_view(self):
         pass # TODO
@@ -153,11 +158,36 @@ class MainWindow(QMainWindow):
         self.tracks_tab.update_model()
 
     # returns True on successful save
-    def save_config(self) -> bool:
+    def save_config(self, force_select_save_location: bool = False) -> bool:
         self.update_model()
+
+        # if we don't have a path, prompt user for where to save it
+        if force_select_save_location or not user_settings.active_project_path:
+            default_filepath = ""
+            if user_settings.active_project_path:
+                default_filepath = user_settings.active_project_path
+
+            save_path, _ = QFileDialog.getSaveFileName(
+                self,
+                f"Save {Const.APP_NAME} Project",
+                default_filepath,
+                f"Project Files (*.{Const.PROJECT_EXT})"
+            )
+
+            if not save_path:
+                return False # cancelled
+            
+            path = Path(save_path)
+            expected_suffix = f".{Const.PROJECT_EXT}"
+            if path.suffix != expected_suffix:
+                path = path.with_suffix(expected_suffix)
+            
+            # update active project path
+            user_settings.active_project_path = str(path)
+            user_settings.save()
         
         try:
-            self.vis_config.save(INPUT_CONFIG_FILE)
+            self.vis_config.save(user_settings.active_project_path)
             self.has_unsaved_changes = False
             self.refresh_window_title()
             return True
@@ -234,8 +264,7 @@ class MainWindow(QMainWindow):
         self.save_config()
 
     def on_save_as_action(self):
-        print("MainWindow | Save As clicked")
-        pass # TODO
+        self.save_config(True)
 
     def on_export_action(self):
         export_dialog = ExportOptionsDialog(vis_config=self.vis_config, parent=self)
@@ -246,7 +275,8 @@ class MainWindow(QMainWindow):
             self.vis_config.export_filename = options.filename
             self.vis_config.export_format = options.render_format
             self.vis_config.export_resolution = options.resolution
-            self.save_config()
+            self.has_unsaved_changes = True
+            self.refresh_window_title()
 
             self.progress_dialog = ExportProgressDialog(track_title=self.vis_config.track_name, parent=self)
             self.progress_dialog.show()

@@ -110,7 +110,7 @@ class VisConfig:
         pass
 
     def save(self, path: str) -> None:
-        print(f'VisConfig | Saving config at "{path}"')
+        print(f'VisConfig | Saving config to "{path}"')
 
         data = {
             "schemaVersion": VIS_CONFIG_SCHEMA_VERSION,
@@ -152,7 +152,7 @@ class VisConfig:
     @staticmethod
     def load(path: str) -> VisConfig:
         try:
-            print(f'VisConfig | Loading config at "{path}"')
+            print(f'VisConfig | Loading config from at "{path}"')
 
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)

@@ -14,8 +14,9 @@ History
   2 - Added "show guides" and "mute audio"
   3 - Added "show pitches"
   4 - Renamed to "show_track_groups"
+  5 - Added active project path
 '''
-USER_SETTINGS_SCHEMA_VERSION = 4
+USER_SETTINGS_SCHEMA_VERSION = 5
 USER_SETTINGS_FILENAME = "user_settings.json"
 
 '''
@@ -23,7 +24,9 @@ User Settings data container
 '''
 @dataclass
 class UserSettings:
-    # TODO store info about last accessed project
+    # file info
+    # persisted so we can reload last project on startup
+    active_project_path: str | None = None
 
     # preview area displays
     show_time_display: bool = True
@@ -77,6 +80,9 @@ class UserSettings:
             self.show_track_groups = data["show_track_groups"]
         else:
             self.show_track_groups = data["show_track_names"]
+
+        if schema_version >= 5:
+            self.active_project_path = data["active_project_path"]
 
 
 # module-level singleton instance
