@@ -152,7 +152,7 @@ class VisConfig:
     @staticmethod
     def load(path: str) -> VisConfig:
         try:
-            print(f'VisConfig | Loading config from at "{path}"')
+            print(f'VisConfig | Loading config from "{path}"')
 
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)

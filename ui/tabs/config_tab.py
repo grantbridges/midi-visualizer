@@ -174,6 +174,9 @@ class ConfigTab(QWidget):
 
         v_layout.addLayout(h_layout)
 
+    def shutdown(self):
+        pass
+
     def refresh_ui(self):
         self.bg_button.rgb = self.vis_config.bg_color
         self.bg_button.refresh()

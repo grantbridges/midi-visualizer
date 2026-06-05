@@ -72,6 +72,9 @@ class PreviewWidget(QWidget):
 
         self.preview_canvas = PreviewCanvas(parent=self)
 
+    def shutdown(self):
+        self.timer.stop()
+
     def layout_controls(self):
         # layout controls
         v_layout = QVBoxLayout(self)

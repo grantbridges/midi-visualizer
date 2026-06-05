@@ -42,16 +42,26 @@ class MainWindow(QMainWindow):
 
         print(f"MainWindow | Starting MIDI Visualizer app")
 
-        self.setWindowTitle(Const.APP_NAME)
+
         self.setFixedSize(Const.SCREEN_WIDTH, Const.SCREEN_HEIGHT)
 
-        self.render_thread = None
-        self.render_worker = None
-
-        self.progress_dialog: ExportProgressDialog = None
+        # child widgets
+        self.config_tab: ConfigTab = None
+        self.track_groups_tab: TrackGroupsTab = None
+        self.tracks_tab: TracksTab = None
+        self.preview_widget: PreviewWidget = None
 
         # used to notify user before exit that they have unsaved changes
         self.has_unsaved_changes = False
+        self.initialized_editor_view = False
+
+        # render components
+        self.render_thread = None
+        self.render_worker = None
+        self.progress_dialog: ExportProgressDialog = None
+
+
+        self.refresh_window_title()
 
         # File menu
         menu_bar = self.menuBar()
@@ -79,6 +89,9 @@ class MainWindow(QMainWindow):
         file_menu.addSeparator()
         file_menu.addAction(self.export_action)
 
+        # TODO - self.update_file_menu_state() where we can call `self.save_action.setVisible(has_project)`
+
+        # initial config load
         load_path = user_settings.active_project_path
         if load_path and not Path.exists(load_path):
             # if last active project doesn't exist, load nothing
@@ -106,6 +119,19 @@ class MainWindow(QMainWindow):
         pass # TODO
 
     def init_vis_config_editor_view(self):
+        # clean up children if already initialized 
+        if self.initialized_editor_view:
+            self.config_tab.shutdown()
+            self.config_tab.deleteLater()
+            self.track_groups_tab.shutdown()
+            self.track_groups_tab.deleteLater()
+            self.tracks_tab.shutdown()
+            self.tracks_tab.deleteLater()
+            self.preview_widget.shutdown()
+            self.preview_widget.deleteLater()
+
+            self.tabs.deleteLater()
+
         # tabs
         self.tabs = QTabWidget()
         self.config_tab = ConfigTab(self.vis_config, self.on_config_changed)
@@ -123,8 +149,9 @@ class MainWindow(QMainWindow):
 
         # initial model changed call to initialize stuff
         self.preview_widget.model_changed()
-
         self.refresh_ui()
+
+        self.initialized_editor_view = True
 
     def layout_controls(self):
         # create controls
@@ -146,6 +173,11 @@ class MainWindow(QMainWindow):
 
     def refresh_window_title(self):
         title = Const.APP_NAME
+
+        active_file = user_settings.active_project_path
+        if active_file:
+            title += f" - {Path(active_file).stem}"
+
         if self.has_unsaved_changes:
             title += "*"
 
@@ -171,7 +203,7 @@ class MainWindow(QMainWindow):
                 self,
                 f"Save {Const.APP_NAME} Project",
                 default_filepath,
-                f"Project Files (*.{Const.PROJECT_EXT})"
+                f"{Const.APP_NAME} Project Files (*.{Const.PROJECT_EXT})"
             )
 
             if not save_path:
@@ -257,8 +289,59 @@ class MainWindow(QMainWindow):
         pass # TODO
 
     def on_open_action(self):
-        print("MainWindow | Open clicked")
-        pass # TODO
+        default_filepath = ""
+        if user_settings.active_project_path:
+            default_filepath = user_settings.active_project_path
+
+        load_path, _ = QFileDialog.getOpenFileName(
+            self,
+            f"Open {Const.APP_NAME} Project",
+            default_filepath,
+            f"{Const.APP_NAME} Project Files (*.{Const.PROJECT_EXT})"
+        )
+
+        if not load_path:
+            return
+        
+        # first prompt for saving unsaved changes
+        if self.has_unsaved_changes:
+            result = QMessageBox.question(
+                self,
+                "Unsaved Changes",
+                "You have unsaved changes. Save before closing?",
+                QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel,
+                QMessageBox.Save,
+            )
+
+            if result == QMessageBox.Save:
+                save_result = self.save_config()
+                if not save_result:
+                    return # something went wrong while saving
+            elif result == QMessageBox.Discard:
+                pass # ignore, continue loading
+            elif result == QMessageBox.Cancel:
+                return # user cancelled load
+        
+        # load new file in
+        vis_config = VisConfig.load(load_path)
+        if vis_config is None:
+            QMessageBox.critical(self, "Load Failed", f'Unable to load {Const.APP_NAME} project file')
+            return
+        
+        # update local working model
+        self.vis_config = vis_config
+        self.vis_config.init()
+
+        # update active project entry
+        user_settings.active_project_path = load_path
+        user_settings.save()
+
+        # clear working state
+        self.has_unsaved_changes = False
+        self.refresh_window_title()
+
+        # re-init UI
+        self.init_vis_config_editor_view()
 
     def on_save_action(self):
         self.save_config()
@@ -313,7 +396,7 @@ class MainWindow(QMainWindow):
         self.progress_dialog.hide()
         self.progress_dialog = None
 
-        QMessageBox.critical(None, 'Render Failed', error)
+        QMessageBox.critical(self, 'Render Failed', error)
 
     def on_render_finished(self):
         show_output = self.progress_dialog.get_show_output_folder()
@@ -331,6 +414,6 @@ class MainWindow(QMainWindow):
             else:  # linux
                 subprocess.run(["xdg-open", folder])
         else:
-            QMessageBox.information(None, "Success", f"Exported video to {self.vis_config.export_dir}")
+            QMessageBox.information(self, "Success", f"Exported video to {self.vis_config.export_dir}")
         
 

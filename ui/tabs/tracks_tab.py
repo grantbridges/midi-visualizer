@@ -35,6 +35,9 @@ class TracksTab(QWidget):
         v_layout = QVBoxLayout(self)
         v_layout.addWidget(self.table)
 
+    def shutdown(self):
+        pass
+
     def refresh_ui(self):
         # prevent callbacks while populating
         self.table.blockSignals(True)
