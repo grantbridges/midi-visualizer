@@ -64,6 +64,30 @@ class MainWindow(QMainWindow):
 
         self.refresh_window_title()
 
+        # initial config load
+        load_path = user_settings.active_project_path
+        if load_path and not Path.exists(load_path):
+            # if last active project doesn't exist, load nothing
+            load_path = None
+        
+        loaded_vis_config = None
+        if load_path:
+            loaded_vis_config = VisConfig.load(load_path)
+
+        if loaded_vis_config is None:
+            # TODO - show blank screen to start. For now just crash out.
+            raise RuntimeError("No vis config loaded")
+            # 2) Generate new vis_config from midi file
+            #print(f"MainWindow | Generating new config for \"{TRACK_NAME}\"")
+            #midi_data = pretty_midi.PrettyMIDI(INPUT_MIDI_FILE)
+            #self.vis_config = VisConfig.create_from_midi_data(TRACK_NAME, midi_data)
+
+            # 2.1) Save out as initial generated file
+            #self.vis_config.save(INPUT_CONFIG_FILE)
+
+        self.vis_config = loaded_vis_config
+        self.vis_config.init()
+
         # File menu
         menu_bar = self.menuBar()
         file_menu = menu_bar.addMenu("File")
@@ -90,30 +114,8 @@ class MainWindow(QMainWindow):
         file_menu.addSeparator()
         file_menu.addAction(self.export_action)
 
-        # TODO - self.update_file_menu_state() where we can call `self.save_action.setVisible(has_project)`
+        self.refresh_file_menu()
 
-        # initial config load
-        load_path = user_settings.active_project_path
-        if load_path and not Path.exists(load_path):
-            # if last active project doesn't exist, load nothing
-            load_path = None
-        
-        self.vis_config = None
-        if load_path:
-            self.vis_config = VisConfig.load(load_path)
-
-        if self.vis_config is None:
-            # TODO - show blank screen to start. For now just crash out.
-            raise RuntimeError("No vis config loaded")
-            # 2) Generate new vis_config from midi file
-            #print(f"MainWindow | Generating new config for \"{TRACK_NAME}\"")
-            #midi_data = pretty_midi.PrettyMIDI(INPUT_MIDI_FILE)
-            #self.vis_config = VisConfig.create_from_midi_data(TRACK_NAME, midi_data)
-
-            # 2.1) Save out as initial generated file
-            #self.vis_config.save(INPUT_CONFIG_FILE)
-
-        self.vis_config.init()
         self.init_vis_config_editor_view()
 
     def init_default_view(self):
@@ -187,6 +189,13 @@ class MainWindow(QMainWindow):
             title += "*"
 
         self.setWindowTitle(title)
+
+    def refresh_file_menu(self):
+        has_project = self.vis_config is not None
+
+        self.save_action.setVisible(has_project)
+        self.save_as_action.setVisible(has_project)
+        self.export_action.setVisible(has_project)
 
     def update_model(self):
         # ask individual tabs to copy their local UI models into the data model
@@ -348,6 +357,7 @@ class MainWindow(QMainWindow):
         # clear working state
         self.has_unsaved_changes = False
         self.refresh_window_title()
+        self.refresh_file_menu()
 
         # re-init UI
         self.init_vis_config_editor_view()
