@@ -47,6 +47,10 @@ class TrackGroupsTab(QWidget):
         self.table.itemChanged.connect(self._on_item_changed)
         self.table.currentCellChanged.connect(self._on_cell_changed)
 
+    def shutdown(self):
+        pass
+
+    def layout_controls(self):
         # layout controls
         v_layout = QVBoxLayout(self)
         btns_layout = QHBoxLayout()
@@ -55,9 +59,6 @@ class TrackGroupsTab(QWidget):
         btns_layout.addStretch()
         v_layout.addLayout(btns_layout)
         v_layout.addWidget(self.table)
-
-    def shutdown(self):
-        pass
 
     def refresh_ui(self):
         self._refresh_clear_selection_btn()

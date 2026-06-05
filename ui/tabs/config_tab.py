@@ -89,6 +89,10 @@ class ConfigTab(QWidget):
         self.pitch_max_input.setValue(self.vis_config.get_max_pitch() if self.vis_config.auto_calc_pitch_bounds else self.vis_config.manual_pitch_max)        
         self.pitch_max_input.valueChanged.connect(self._on_pitch_max_changed)
 
+    def shutdown(self):
+        pass
+
+    def layout_controls(self):
         # layout controls
         v_layout = QVBoxLayout(self)
         h_layout = QHBoxLayout()
@@ -173,9 +177,6 @@ class ConfigTab(QWidget):
         h_layout.addLayout(v_right_layout, 1)
 
         v_layout.addLayout(h_layout)
-
-    def shutdown(self):
-        pass
 
     def refresh_ui(self):
         self.bg_button.rgb = self.vis_config.bg_color

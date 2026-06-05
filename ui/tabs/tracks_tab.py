@@ -31,12 +31,13 @@ class TracksTab(QWidget):
         self.table.setHorizontalHeaderLabels(self.track_columns)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
+    def shutdown(self):
+        pass
+
+    def layout_controls(self):
         # layout controls
         v_layout = QVBoxLayout(self)
         v_layout.addWidget(self.table)
-
-    def shutdown(self):
-        pass
 
     def refresh_ui(self):
         # prevent callbacks while populating

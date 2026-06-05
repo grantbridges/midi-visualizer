@@ -42,7 +42,9 @@ class MainWindow(QMainWindow):
 
         print(f"MainWindow | Starting MIDI Visualizer app")
 
-
+        # TODO make resizable
+        #self.resize(Const.SCREEN_WIDTH, Const.SCREEN_HEIGHT)
+        #self.setMinimumSize(Const.SCREEN_WIDTH, Const.SCREEN_HEIGHT)
         self.setFixedSize(Const.SCREEN_WIDTH, Const.SCREEN_HEIGHT)
 
         # child widgets
@@ -59,7 +61,6 @@ class MainWindow(QMainWindow):
         self.render_thread = None
         self.render_worker = None
         self.progress_dialog: ExportProgressDialog = None
-
 
         self.refresh_window_title()
 
@@ -145,6 +146,7 @@ class MainWindow(QMainWindow):
         # preview area
         self.preview_widget = PreviewWidget(self.vis_config)
 
+        # layout controls
         self.layout_controls()
 
         # initial model changed call to initialize stuff
@@ -163,6 +165,9 @@ class MainWindow(QMainWindow):
         root.addWidget(self.tabs, 1)
         root.addWidget(self.preview_widget, 1)
 
+        self.config_tab.layout_controls()
+        self.track_groups_tab.layout_controls()
+        self.tracks_tab.layout_controls()
         self.preview_widget.layout_controls()
 
     def refresh_ui(self):
@@ -281,6 +286,10 @@ class MainWindow(QMainWindow):
 
         else:  # Cancel
             event.ignore()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        # TODO handle screen resizing
 
     # action callbacks
 
