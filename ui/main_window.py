@@ -4,8 +4,9 @@ import subprocess
 import sys
 from uuid import UUID
 import pretty_midi
-from PySide6.QtCore import QThread
+from PySide6.QtCore import QThread, Qt
 from PySide6.QtWidgets import (
+    QLabel,
     QMainWindow,
     QTabWidget,
     QWidget,
@@ -16,7 +17,7 @@ from PySide6.QtWidgets import (
     QDialog,
     QFileDialog
 )
-from PySide6.QtGui import QAction
+from PySide6.QtGui import QAction, QKeySequence
 from common import Const
 from models import VisConfig, Resolution, user_settings
 from render import RenderWorker
@@ -62,38 +63,26 @@ class MainWindow(QMainWindow):
         self.render_worker = None
         self.progress_dialog: ExportProgressDialog = None
 
-        self.refresh_window_title()
-
         # initial config load
+        self.vis_config: VisConfig = None
         load_path = user_settings.active_project_path
         if load_path and not Path.exists(load_path):
             # if last active project doesn't exist, load nothing
             load_path = None
         
-        loaded_vis_config = None
         if load_path:
             loaded_vis_config = VisConfig.load(load_path)
 
-        if loaded_vis_config is None:
-            # TODO - show blank screen to start. For now just crash out.
-            raise RuntimeError("No vis config loaded")
-            # 2) Generate new vis_config from midi file
-            #print(f"MainWindow | Generating new config for \"{TRACK_NAME}\"")
-            #midi_data = pretty_midi.PrettyMIDI(INPUT_MIDI_FILE)
-            #self.vis_config = VisConfig.create_from_midi_data(TRACK_NAME, midi_data)
-
-            # 2.1) Save out as initial generated file
-            #self.vis_config.save(INPUT_CONFIG_FILE)
-
-        self.vis_config = loaded_vis_config
-        self.vis_config.init()
+            if loaded_vis_config is not None:
+                self.vis_config = loaded_vis_config
+                self.vis_config.init()
 
         # File menu
         menu_bar = self.menuBar()
         file_menu = menu_bar.addMenu("File")
 
         # Actions
-        self.new_project_action = QAction("New Project...", self)
+        self.new_project_action = QAction("New Project...", self, shortcut="Ctrl+N")
         self.new_project_action.triggered.connect(self.on_new_project_action)
         self.open_action = QAction("Open...", parent=self, shortcut="Ctrl+O")
         self.open_action.triggered.connect(self.on_open_action)
@@ -115,11 +104,42 @@ class MainWindow(QMainWindow):
         file_menu.addAction(self.export_action)
 
         self.refresh_file_menu()
+        self.refresh_window_title()
 
-        self.init_vis_config_editor_view()
+        # initialize views
+        if self.vis_config is not None:
+            self.init_vis_config_editor_view()
+        else:
+            self.init_default_view()
 
     def init_default_view(self):
-        pass # TODO
+        central = QWidget()
+        self.setCentralWidget(central)
+
+        layout = QVBoxLayout(central)
+        layout.setAlignment(Qt.AlignCenter)
+
+        new_shortcut = self.new_project_action.shortcut().toString(QKeySequence.NativeText)
+        open_shortcut = self.open_action.shortcut().toString(QKeySequence.NativeText)
+
+        label1 = QLabel()
+        label1.setText(f"{new_shortcut} to create a new project from a .midi file")
+        label1.setAlignment(Qt.AlignCenter)
+        label1.setStyleSheet("color: #888888;")
+
+        label2 = QLabel()
+        label2.setText(f"{open_shortcut} to open an existing project")
+        label2.setAlignment(Qt.AlignCenter)
+        label2.setStyleSheet("color: #888888;")
+
+        font = label1.font()
+        font.setPointSize(14)
+
+        label1.setFont(font)
+        label2.setFont(font)
+
+        layout.addWidget(label1)
+        layout.addWidget(label2)
 
     def init_vis_config_editor_view(self):
         # clean up children if already initialized 
@@ -149,7 +169,7 @@ class MainWindow(QMainWindow):
         self.preview_widget = PreviewWidget(self.vis_config)
 
         # layout controls
-        self.layout_controls()
+        self.layout_editor_controls()
 
         # initial model changed call to initialize stuff
         self.preview_widget.model_changed()
@@ -157,7 +177,7 @@ class MainWindow(QMainWindow):
 
         self.initialized_editor_view = True
 
-    def layout_controls(self):
+    def layout_editor_controls(self):
         # create controls
         central = QWidget()
         self.setCentralWidget(central)
