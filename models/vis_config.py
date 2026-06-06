@@ -353,6 +353,12 @@ class VisConfig:
         return max(values) if values else 0
     
     def get_min_time(self) -> float:
+        if not self.auto_calc_time_range:
+            return self.manual_start_time
+        
+        return self.get_calculated_min_time()
+    
+    def get_calculated_min_time(self) -> float:
         values = [
             track.time_min
             for track in self.get_visible_tracks()
@@ -360,6 +366,12 @@ class VisConfig:
         return min(values) if values else 0.0
     
     def get_max_time(self) -> float:
+        if not self.auto_calc_time_range:
+            return self.manual_end_time
+        
+        return self.get_calculated_max_time()
+
+    def get_calculated_max_time(self) -> float:
         values = [
             track.time_max
             for track in self.get_visible_tracks()
