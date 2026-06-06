@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import pretty_midi
 from uuid import UUID
 from PySide6.QtCore import QThread, Qt
 from PySide6.QtWidgets import (
@@ -70,6 +71,8 @@ class MainWindow(QMainWindow):
                 if loaded_vis_config is not None:
                     self.vis_config = loaded_vis_config
                     self.vis_config.init()
+                else:
+                    QMessageBox.critical(self, "Load Failed", f"Unable to load previous project at {load_path}. See logs for details.")
 
         # File menu
         menu_bar = self.menuBar()
@@ -193,9 +196,8 @@ class MainWindow(QMainWindow):
     def refresh_window_title(self):
         title = Const.APP_NAME
 
-        active_file = user_settings.active_project_path
-        if active_file:
-            title += f" - {Path(active_file).stem}"
+        if self.vis_config:
+            title += f" - {self.vis_config.track_name}"
 
         if self.has_unsaved_changes:
             title += "*"
@@ -322,8 +324,56 @@ class MainWindow(QMainWindow):
     # action callbacks
 
     def on_new_project_action(self):
-        print("MainWindow | Create clicked")
-        pass # TODO
+        midi_path, _ = QFileDialog.getOpenFileName(
+            self,
+            f"Open MIDI File",
+            "",
+            f"MIDI Files (*.mid, *.midi)"
+        )
+        
+        if not midi_path:
+            return
+       
+        # first prompt for saving unsaved changes
+        if self.has_unsaved_changes:
+            result = QMessageBox.question(
+                self,
+                "Unsaved Changes",
+                "You have unsaved changes. Save before closing?",
+                QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel,
+                QMessageBox.Save,
+            )
+
+            if result == QMessageBox.Save:
+                save_result = self.save_config()
+                if not save_result:
+                    return # something went wrong while saving
+            elif result == QMessageBox.Discard:
+                pass # ignore, continue loading
+            elif result == QMessageBox.Cancel:
+                return # user cancelled load
+            
+        try:
+            midi_data = pretty_midi.PrettyMIDI(midi_path)
+        except ValueError:
+            QMessageBox.critical(self, "Project Creation Failed", f'Unable to create new {Const.APP_NAME} project from provided midi file')
+            return
+            
+        # update local working model
+        self.vis_config = VisConfig.create_from_midi_data(Path(midi_path).stem, midi_data)
+        self.vis_config.init()
+
+        # update active project entry
+        user_settings.active_project_path = None
+        user_settings.save()
+
+        # clear working state
+        self.has_unsaved_changes = True # to prompt user to save this project
+        self.refresh_window_title()
+        self.refresh_file_menu()
+
+        # re-init UI
+        self.init_vis_config_editor_view()
 
     def on_open_action(self):
         default_filepath = ""

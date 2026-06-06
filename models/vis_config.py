@@ -164,8 +164,12 @@ class VisConfig:
             config.audio_filepath = data["audioFilepath"]
             config.export_dir = data["exportDir"]
             config.export_filename = data["exportFilename"]
-            config.export_format = RenderFormat[data["exportFormat"]]
-            config.export_resolution = Resolution[data["exportResolution"]]
+
+            export_format = data["exportFormat"]
+            config.export_format = RenderFormat[export_format] if export_format else None
+
+            export_resolution = data["exportResolution"]
+            config.export_resolution = Resolution[export_resolution] if export_resolution else None
 
             config.track_name = data["trackName"]
             config.bg_color = tuple(data["bgColor"])
