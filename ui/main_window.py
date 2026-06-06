@@ -143,7 +143,7 @@ class MainWindow(QMainWindow):
             layout.addWidget(label)
         
     def init_vis_config_editor_view(self):
-        # clean up children if already initialized 
+        # clean up children if already initialized
         if self.initialized_editor_view:
             self.config_tab.shutdown()
             self.config_tab.deleteLater()
@@ -194,9 +194,15 @@ class MainWindow(QMainWindow):
         self.preview_widget.layout_controls()
 
     def refresh_ui(self):
-        self.config_tab.refresh_ui()
-        self.track_groups_tab.refresh_ui()
-        self.tracks_tab.refresh_ui()
+        # refresh currently visibile tab
+        match self.tabs.currentIndex():
+            case 0:
+                self.config_tab.refresh_ui()
+            case 1:
+                self.track_groups_tab.refresh_ui()
+            case 2:
+                self.tracks_tab.refresh_ui()
+
         self.preview_widget.refresh_ui()
 
     def refresh_window_title(self):
@@ -275,6 +281,8 @@ class MainWindow(QMainWindow):
         # notify preview tab to redraw
         self.preview_widget.model_changed()
 
+        self.refresh_ui()
+
     def on_tracks_changed(self):
         self.update_model()
 
@@ -282,12 +290,7 @@ class MainWindow(QMainWindow):
         self.preview_widget.model_changed()
 
     def on_tab_changed(self, index: int):
-        if index == 0:
-            self.config_tab.refresh_ui()
-        elif index == 1:
-            self.track_groups_tab.refresh_ui()
-        elif index == 2:
-            self.tracks_tab.refresh_ui()
+        self.refresh_ui()
 
     def on_track_group_selected(self, group_id: UUID | None):
         self.preview_widget.set_selected_group_id(group_id)

@@ -11,19 +11,27 @@ from PySide6.QtWidgets import (
 class ColorButton(QPushButton):
     valueChanged = Signal(tuple)
 
-    def __init__(self, color: RGB, parent=None):
+    def __init__(self, color: RGB = None, parent=None):
         super().__init__(parent)
-        self.rgb = color
 
-        self.clicked.connect(self.pick_color)
+        self._rgb = color if color is not None else Color.WHITE
+
+        self.clicked.connect(self._pick_color)
         self.refresh()
 
     def setDisabled(self, disabled: bool):
         super().setDisabled(disabled)
         self.refresh()
 
+    def getColor(self) -> RGB:
+        return self._rgb
+
+    def setColor(self, color: RGB):
+        self._rgb = color
+        self.refresh()
+
     def refresh(self):
-        r, g, b = self.rgb
+        r, g, b = self._rgb
         self.setText(f"{r}, {g}, {b}")
 
         if not self.isEnabled():
@@ -35,11 +43,12 @@ class ColorButton(QPushButton):
             f"color: {'black' if (r*0.299 + g*0.587 + b*0.114) > 160 else 'white'};"
         )
 
-    def pick_color(self):
-        color = QColorDialog.getColor(QUtil.rgb_to_qcolor(self.rgb), self, "Choose color")
+    # click handling
+    def _pick_color(self):
+        color = QColorDialog.getColor(QUtil.rgb_to_qcolor(self._rgb), self, "Choose color")
         if color.isValid():
-            self.rgb = QUtil.qcolor_to_rgb(color)
+            self._rgb = QUtil.qcolor_to_rgb(color)
             self.refresh()
 
-            self.valueChanged.emit(self.rgb)
+            self.valueChanged.emit(self._rgb)
             

@@ -100,7 +100,7 @@ class TrackGroupsTab(QWidget):
             col += 1
 
             # color button
-            color_btn = ColorButton(track_group.color)
+            color_btn = ColorButton(color=track_group.color)
             color_btn.valueChanged.connect(lambda color, row=row: self._on_color_changed(row, color))
             self.table.setCellWidget(row, col, color_btn)
             col += 1
