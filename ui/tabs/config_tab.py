@@ -183,12 +183,12 @@ class ConfigTab(QWidget):
         v_right_layout.addLayout(auto_calc_pitch_bounds_layout)
 
         pitch_min_layout = QHBoxLayout()
-        pitch_min_layout.addWidget(QLabel("Manual Pitch Min"))
+        pitch_min_layout.addWidget(QLabel("Pitch Min"))
         pitch_min_layout.addWidget(self.pitch_min_input)
         v_right_layout.addLayout(pitch_min_layout)
 
         pitch_max_layout = QHBoxLayout()
-        pitch_max_layout.addWidget(QLabel("Manual Pitch Max"))
+        pitch_max_layout.addWidget(QLabel("Pitch Max"))
         pitch_max_layout.addWidget(self.pitch_max_input)
         v_right_layout.addLayout(pitch_max_layout)
 
