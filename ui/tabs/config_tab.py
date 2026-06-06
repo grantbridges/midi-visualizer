@@ -1,4 +1,6 @@
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QScrollArea,
     QSpinBox,
     QDoubleSpinBox,
     QCheckBox,
@@ -94,7 +96,16 @@ class ConfigTab(QWidget):
 
     def layout_controls(self):
         # layout controls
-        v_layout = QVBoxLayout(self)
+        root = QVBoxLayout(self)
+
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+
+        content = QWidget()
+        content_layout = QVBoxLayout(content)
+
         h_layout = QHBoxLayout()
         v_left_layout = QVBoxLayout()
         v_right_layout = QVBoxLayout()
@@ -176,7 +187,11 @@ class ConfigTab(QWidget):
         h_layout.addLayout(v_left_layout, 1)
         h_layout.addLayout(v_right_layout, 1)
 
-        v_layout.addLayout(h_layout)
+        content_layout.addLayout(h_layout)
+        
+        scroll_area.setWidget(content)
+
+        root.addWidget(scroll_area)
 
     def refresh_ui(self):
         self.bg_button.rgb = self.vis_config.bg_color

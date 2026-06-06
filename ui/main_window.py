@@ -3,7 +3,6 @@ from pathlib import Path
 import subprocess
 import sys
 from uuid import UUID
-import pretty_midi
 from PySide6.QtCore import QThread, Qt
 from PySide6.QtWidgets import (
     QLabel,
@@ -17,7 +16,7 @@ from PySide6.QtWidgets import (
     QDialog,
     QFileDialog
 )
-from PySide6.QtGui import QAction, QKeySequence
+from PySide6.QtGui import QAction, QKeySequence, QResizeEvent
 from common import Const
 from models import VisConfig, Resolution, user_settings
 from render import RenderWorker
@@ -31,11 +30,7 @@ from ui.dialogs import (
 
 # ----
 
-TRACK_NAME = 'Puppet Master'
-#TRACK_NAME = 'MIDI Test'
-INPUT_MIDI_FILE = f'input/{TRACK_NAME}.midi'
-
-START_TIME_OFFSET = 0 # seconds
+FORCE_INITIAL_VIEW: bool = False
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -43,10 +38,8 @@ class MainWindow(QMainWindow):
 
         print(f"MainWindow | Starting MIDI Visualizer app")
 
-        # TODO make resizable
-        #self.resize(Const.SCREEN_WIDTH, Const.SCREEN_HEIGHT)
-        #self.setMinimumSize(Const.SCREEN_WIDTH, Const.SCREEN_HEIGHT)
-        self.setFixedSize(Const.SCREEN_WIDTH, Const.SCREEN_HEIGHT)
+        self.resize(Const.SCREEN_MIN_WIDTH, Const.SCREEN_MIN_HEIGHT)
+        self.setMinimumSize(Const.SCREEN_MIN_WIDTH, Const.SCREEN_MIN_HEIGHT)
 
         # child widgets
         self.config_tab: ConfigTab = None
@@ -65,17 +58,18 @@ class MainWindow(QMainWindow):
 
         # initial config load
         self.vis_config: VisConfig = None
-        load_path = user_settings.active_project_path
-        if load_path and not Path.exists(load_path):
-            # if last active project doesn't exist, load nothing
-            load_path = None
-        
-        if load_path:
-            loaded_vis_config = VisConfig.load(load_path)
+        if not FORCE_INITIAL_VIEW:
+            load_path = user_settings.active_project_path
+            if load_path and not Path.exists(load_path):
+                # if last active project doesn't exist, load nothing
+                load_path = None
+            
+            if load_path:
+                loaded_vis_config = VisConfig.load(load_path)
 
-            if loaded_vis_config is not None:
-                self.vis_config = loaded_vis_config
-                self.vis_config.init()
+                if loaded_vis_config is not None:
+                    self.vis_config = loaded_vis_config
+                    self.vis_config.init()
 
         # File menu
         menu_bar = self.menuBar()
@@ -122,24 +116,22 @@ class MainWindow(QMainWindow):
         new_shortcut = self.new_project_action.shortcut().toString(QKeySequence.NativeText)
         open_shortcut = self.open_action.shortcut().toString(QKeySequence.NativeText)
 
-        label1 = QLabel()
-        label1.setText(f"{new_shortcut} to create a new project from a .midi file")
-        label1.setAlignment(Qt.AlignCenter)
-        label1.setStyleSheet("color: #888888;")
+        help_tips = [
+            f"{new_shortcut} to create a new project from a .midi file",
+            f"{open_shortcut} to open an existing project"
+        ]
 
-        label2 = QLabel()
-        label2.setText(f"{open_shortcut} to open an existing project")
-        label2.setAlignment(Qt.AlignCenter)
-        label2.setStyleSheet("color: #888888;")
-
-        font = label1.font()
-        font.setPointSize(14)
-
-        label1.setFont(font)
-        label2.setFont(font)
-
-        layout.addWidget(label1)
-        layout.addWidget(label2)
+        for text in help_tips:
+            label = QLabel()
+            label.setText(text)
+            label.setAlignment(Qt.AlignCenter)
+            label.setStyleSheet("color: #888888;")
+            font = label.font()
+            font.setFamily(Const.PRIMARY_FONT)
+            font.setPointSize(14)
+            label.setFont(font)
+            layout.addWidget(label)
+        
 
     def init_vis_config_editor_view(self):
         # clean up children if already initialized 
@@ -316,9 +308,16 @@ class MainWindow(QMainWindow):
         else:  # Cancel
             event.ignore()
 
-    def resizeEvent(self, event):
+    def resizeEvent(self, event: QResizeEvent):
+        new_size = event.size()
+
+        width = new_size.width()
+        height = new_size.height()
+
+        if self.preview_widget is not None:
+            self.preview_widget.handle_resize(width, height)
+
         super().resizeEvent(event)
-        # TODO handle screen resizing
 
     # action callbacks
 
