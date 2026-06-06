@@ -97,17 +97,6 @@ class VisConfig:
             inst_names.add(inst.name)
 
         return vis_config
-    
-    @staticmethod
-    def update_from_midi_data(midi_data: pretty_midi.PrettyMIDI) -> None:
-        # TODO
-        # Updates an existing config's track and note data from a provided
-        # midi track - useful for updating underlying midi data for a track 
-        # without losing existing config settings.
-        # 1) Remove any tracks that don't exist in update
-        # 2) Add any new tracks that only exist in update
-        # 3) Update existing tracks that still exist with refreshed note data
-        pass
 
     def save(self, path: str) -> None:
         print(f'VisConfig | Saving config to "{path}"')

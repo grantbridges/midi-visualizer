@@ -37,6 +37,12 @@ class Track:
             track.notes.append(note)
 
         return track
+    
+    def update_notes_from_midi_data(self, inst: pretty_midi.Instrument):
+        self.notes.clear()
+        for note in inst.notes:
+            note = Note.create_from_midi_data(note)
+            self.notes.append(note)
 
     def save(self) -> dict:
         return {
