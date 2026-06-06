@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
 )
 
 from models import VisConfig, BackgroundMode
-from ui.common import ColorButton
+from ui.common import ColorButton, SectionDivider
 
 class ConfigTab(QWidget):
     def __init__(self, vis_config: VisConfig, on_changes_callback: object, parent=None):
@@ -108,11 +108,18 @@ class ConfigTab(QWidget):
         v_right_layout.setSpacing(2)
 
         # Left Column
+        v_left_layout.addWidget(SectionDivider("Track Props"))
+
         track_name_layout = QHBoxLayout()
         track_name_layout.addWidget(QLabel("Track Name"))
         track_name_layout.addStretch()
         track_name_layout.addWidget(self.track_name)
         v_left_layout.addLayout(track_name_layout)
+
+        fps_layout = QHBoxLayout()
+        fps_layout.addWidget(QLabel("FPS"))
+        fps_layout.addWidget(self.fps_input)
+        v_left_layout.addLayout(fps_layout)
 
         use_audio_layout = QHBoxLayout()
         use_audio_layout.addWidget(QLabel("Use Audio"))
@@ -129,10 +136,7 @@ class ConfigTab(QWidget):
         audio_file_layout.addWidget(self.audio_file_browse_btn)
         v_left_layout.addWidget(self.audio_file_row)
 
-        fps_layout = QHBoxLayout()
-        fps_layout.addWidget(QLabel("FPS"))
-        fps_layout.addWidget(self.fps_input)
-        v_left_layout.addLayout(fps_layout)
+        v_left_layout.addWidget(SectionDivider("Background"))
 
         background_mode_layout = QHBoxLayout()
         background_mode_layout.addWidget(QLabel("Background Mode"))
@@ -164,6 +168,8 @@ class ConfigTab(QWidget):
         background_video_layout.addWidget(self.bg_video_file_browse_btn)
         v_left_layout.addWidget(self.background_video_row)
 
+        v_left_layout.addWidget(SectionDivider("Playhead"))
+
         show_playhead_layout = QHBoxLayout()
         show_playhead_layout.addWidget(QLabel("Show Playhead"))
         show_playhead_layout.addStretch()
@@ -180,6 +186,8 @@ class ConfigTab(QWidget):
         playhead_pos_layout.addWidget(self.playhead_pos_input)
         v_left_layout.addLayout(playhead_pos_layout)
 
+        v_left_layout.addWidget(SectionDivider("Position"))
+
         vertical_padding_layout = QHBoxLayout()
         vertical_padding_layout.addWidget(QLabel("Vertical Padding"))
         vertical_padding_layout.addWidget(self.vertical_padding_input)
@@ -193,6 +201,9 @@ class ConfigTab(QWidget):
         v_left_layout.addStretch()
 
         # Right Column
+
+        v_right_layout.addWidget(SectionDivider("Note Style"))
+
         note_fadeout_layout = QHBoxLayout()
         note_fadeout_layout.addWidget(QLabel("Note Fadeout"))
         note_fadeout_layout.addWidget(self.note_fadeout_input)
@@ -202,6 +213,8 @@ class ConfigTab(QWidget):
         note_play_color_layout.addWidget(QLabel("Note Play Color"))
         note_play_color_layout.addWidget(self.note_play_color_button)
         v_right_layout.addLayout(note_play_color_layout)
+
+        v_right_layout.addWidget(SectionDivider("Pitch Settings"))
 
         auto_calc_pitch_bounds_layout = QHBoxLayout()
         auto_calc_pitch_bounds_layout.addWidget(QLabel("Auto-Calc Pitch Min/Max"))
