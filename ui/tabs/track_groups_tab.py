@@ -11,9 +11,9 @@ from PySide6.QtWidgets import (
     QStyle,
     QSizePolicy
 )
-
-from common.types import RGB
+from common import RGB
 from models import VisConfig, TrackGroup
+from utility import Util
 from ui.common import ColorButton, TableCheckbox, TableSpinbox, TableDoubleSpinbox
 import copy
 
@@ -37,7 +37,7 @@ class TrackGroupsTab(QWidget):
         self.clear_selection_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         self.clear_selection_btn.clicked.connect(self._on_clear_selection)
 
-        self.track_columns = ["", "", "Name", "Visible", "Color", "Alpha", "Bar Height", "Speed (sec)", "Pitch Offset", ""]
+        self.track_columns = ["", "", "Name", "Visible", "Color", "Alpha", "Bar Height", "Speed", "Pitch Offset", ""]
         self.table = QTableWidget(0, len(self.track_columns))
         self.table.setHorizontalHeaderLabels(self.track_columns)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
@@ -115,10 +115,11 @@ class TrackGroupsTab(QWidget):
 
             # bar height ratio
             bar_height = TableDoubleSpinbox()
-            bar_height.setDecimals(3)
-            bar_height.setRange(0.001, 1.000)
-            bar_height.setSingleStep(.001)
-            bar_height.setValue(track_group.bar_height_ratio)
+            bar_height.setDecimals(2)
+            bar_height.setRange(1.0, 10.0)
+            bar_height.setSingleStep(0.01)
+            bar_height_ratio_display_value = Util.internal_to_display(track_group.bar_height_ratio, 0.001, 1.000, 1.0, 10.0)
+            bar_height.setValue(bar_height_ratio_display_value)
             bar_height.valueChanged.connect(lambda height, row=row: self._on_bar_height_changed(row, height))
             self.table.setCellWidget(row, col, bar_height)
             col += 1
@@ -128,7 +129,8 @@ class TrackGroupsTab(QWidget):
             sec_across_screen.setDecimals(1)
             sec_across_screen.setRange(0.1, 10.0)
             sec_across_screen.setSingleStep(.1)
-            sec_across_screen.setValue(track_group.bar_sec_across_screen)
+            speed_display_value = Util.internal_to_display(track_group.bar_sec_across_screen, 0.1, 10.0, 10.0, 0.1)
+            sec_across_screen.setValue(speed_display_value)
             sec_across_screen.valueChanged.connect(lambda speed, row=row: self._on_bar_speed_changed(row, speed))
             self.table.setCellWidget(row, col, sec_across_screen)
             col += 1
@@ -256,7 +258,7 @@ class TrackGroupsTab(QWidget):
             return
         
         track_group = self.track_groups[row]
-        track_group.bar_height_ratio = value
+        track_group.bar_height_ratio = Util.display_to_internal(value, 1.0, 10.0, 0.001, 1.0)
         self.on_changes_callback()
 
     def _on_bar_speed_changed(self, row: int, value: float):
@@ -264,7 +266,7 @@ class TrackGroupsTab(QWidget):
             return
         
         track_group = self.track_groups[row]
-        track_group.bar_sec_across_screen = value
+        track_group.bar_sec_across_screen = Util.display_to_internal(value, 10.0, 0.1, 0.1, 10.0)
         self.on_changes_callback()
 
     def _on_pitch_offset_changed(self, row: int, value: int):
