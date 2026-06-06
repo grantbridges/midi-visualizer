@@ -36,7 +36,7 @@ class ExportOptionsDialog(QDialog):
         output_dir = vis_config.export_dir if vis_config.export_dir else str(Path.home() / "Desktop")
         self.output_dir_input = QLineEdit(output_dir)
         self.output_dir_input.setReadOnly(True)
-        browse_btn = QPushButton("Browse...")
+        browse_btn = QPushButton("...")
         browse_btn.clicked.connect(self.browse_output_dir)
         output_dir_row = QHBoxLayout()
         output_dir_row.addWidget(QLabel("Output folder"))
@@ -50,6 +50,7 @@ class ExportOptionsDialog(QDialog):
         filename_row = QHBoxLayout()
         filename_row.addWidget(QLabel("Filename"))
         filename_row.addWidget(self.filename_input)
+
         self.filename_ext = QLabel(f".{vis_config.export_format.value}")
         filename_row.addWidget(self.filename_ext)
         layout.addLayout(filename_row)
@@ -61,10 +62,9 @@ class ExportOptionsDialog(QDialog):
         self.format_combo.addItem("webm", RenderFormat.WEBM)
         self.format_combo.currentIndexChanged.connect(self.on_format_combo_changed)
 
-        if vis_config.export_format:
-            # initialize if previously set
-            index = self.format_combo.findData(vis_config.export_format)
-            self.format_combo.setCurrentIndex(index)
+        # initialize export format dropdown
+        index = self.format_combo.findData(vis_config.export_format)
+        self.format_combo.setCurrentIndex(index)
 
         format_row = QHBoxLayout()
         format_row.addWidget(QLabel("Format"))
@@ -80,10 +80,9 @@ class ExportOptionsDialog(QDialog):
         self.resolution_combo.addItem("Quad HD (1440p)", Resolution.QuadHD)
         self.resolution_combo.addItem("4K (2160p)", Resolution.UltraHD)
 
-        if vis_config.export_resolution:
-            # initialize if previously set
-            index = self.resolution_combo.findData(vis_config.export_resolution)
-            self.resolution_combo.setCurrentIndex(index)
+        # initialize resolution dropdown
+        index = self.resolution_combo.findData(vis_config.export_resolution)
+        self.resolution_combo.setCurrentIndex(index)
 
         resolution_row = QHBoxLayout()
         resolution_row.addWidget(QLabel("Resolution"))

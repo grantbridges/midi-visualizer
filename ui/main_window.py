@@ -6,6 +6,7 @@ import pretty_midi
 from uuid import UUID
 from PySide6.QtCore import QThread, Qt
 from PySide6.QtWidgets import (
+    QApplication,
     QLabel,
     QMainWindow,
     QTabWidget,
@@ -31,8 +32,6 @@ from ui.dialogs import (
 
 # ----
 
-FORCE_INITIAL_VIEW: bool = False
-
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -56,23 +55,6 @@ class MainWindow(QMainWindow):
         self.render_thread = None
         self.render_worker = None
         self.progress_dialog: ExportProgressDialog = None
-
-        # initial config load
-        self.vis_config: VisConfig = None
-        if not FORCE_INITIAL_VIEW:
-            load_path = user_settings.active_project_path
-            if load_path and not Path.exists(load_path):
-                # if last active project doesn't exist, load nothing
-                load_path = None
-            
-            if load_path:
-                loaded_vis_config = VisConfig.load(load_path)
-
-                if loaded_vis_config is not None:
-                    self.vis_config = loaded_vis_config
-                    self.vis_config.init()
-                else:
-                    QMessageBox.critical(self, "Load Failed", f"Unable to load previous project at {load_path}. See logs for details.")
 
         # File menu
         menu_bar = self.menuBar()
@@ -99,6 +81,27 @@ class MainWindow(QMainWindow):
         file_menu.addAction(self.save_as_action)
         file_menu.addSeparator()
         file_menu.addAction(self.export_action)
+
+        # initial config load
+        self.vis_config: VisConfig = None
+        load_path = user_settings.active_project_path
+        if load_path:
+            if Path.exists(load_path):
+                print(f"MainWindow | Previous active project detected at \"{load_path}\"")
+            else:
+                print(f"MainWindow | Warning | Previous active project filepath is invalid (\"{load_path}\") - starting default view")
+                load_path = None
+        else:
+            print(f"MainWindow | No previous active project detected - starting default view")
+        
+        if load_path:
+            loaded_vis_config = VisConfig.load(load_path)
+
+            if loaded_vis_config is not None:
+                self.vis_config = loaded_vis_config
+                self.vis_config.init()
+            else:
+                QMessageBox.critical(self, "Load Failed", f"Unable to load previous project at {load_path}. See logs for details.")
 
         self.refresh_file_menu()
         self.refresh_window_title()
@@ -135,7 +138,6 @@ class MainWindow(QMainWindow):
             label.setFont(font)
             layout.addWidget(label)
         
-
     def init_vis_config_editor_view(self):
         # clean up children if already initialized 
         if self.initialized_editor_view:
@@ -226,6 +228,8 @@ class MainWindow(QMainWindow):
             default_filepath = ""
             if user_settings.active_project_path:
                 default_filepath = user_settings.active_project_path
+            else:
+                default_filepath = f"{self.vis_config.track_name}.{Const.PROJECT_EXT}"
 
             save_path, _ = QFileDialog.getSaveFileName(
                 self,
@@ -359,7 +363,7 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Project Creation Failed", f'Unable to create new {Const.APP_NAME} project from provided midi file')
             return
             
-        # update local working model
+        # import into local working model
         self.vis_config = VisConfig.create_from_midi_data(Path(midi_path).stem, midi_data)
         self.vis_config.init()
 

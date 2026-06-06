@@ -24,6 +24,9 @@ class ConfigTab(QWidget):
         self.vis_config = vis_config
 
         # create controls
+        self.track_name = QLineEdit(self.vis_config.track_name)
+        self.track_name.editingFinished.connect(self.on_changes_callback)
+
         self.bg_button = ColorButton(self.vis_config.bg_color)
         self.bg_button.valueChanged.connect(self.on_changes_callback)
 
@@ -62,7 +65,7 @@ class ConfigTab(QWidget):
 
         self.audio_file_input = QLineEdit(self.vis_config.audio_filepath)
         self.audio_file_input.setReadOnly(True)
-        self.audio_file_browse_btn = QPushButton("Browse...")
+        self.audio_file_browse_btn = QPushButton("...")
         self.audio_file_browse_btn.clicked.connect(self.browse_audio_file)
 
         self.note_fadeout_input = QDoubleSpinBox()
@@ -113,8 +116,15 @@ class ConfigTab(QWidget):
         v_right_layout.setSpacing(2)
 
         # Left Column
+        track_name_layout = QHBoxLayout()
+        track_name_layout.addWidget(QLabel("Track Name"))
+        track_name_layout.addStretch()
+        track_name_layout.addWidget(self.track_name)
+        v_left_layout.addLayout(track_name_layout)
+
         audio_file_layout = QHBoxLayout()
         audio_file_layout.addWidget(QLabel("Audio File"))
+        audio_file_layout.addStretch()
         audio_file_layout.addWidget(self.audio_file_input)
         audio_file_layout.addWidget(self.audio_file_browse_btn)
         v_left_layout.addLayout(audio_file_layout)
@@ -218,6 +228,7 @@ class ConfigTab(QWidget):
 
     def update_model(self):
         # pull UI values out of controls and set on model
+        self.vis_config.track_name = self.track_name.text()
         self.vis_config.audio_filepath = self.audio_file_input.text()
         self.vis_config.fps = self.fps_input.value()
         self.vis_config.bg_color = self.bg_button.rgb

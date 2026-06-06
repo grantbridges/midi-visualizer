@@ -15,9 +15,9 @@ class TrackGroup:
     color: RGB = Color.KAYLA_1
     alpha: int = 255
     # 0 - 1, ratio of midi region height
-    bar_height_ratio: float = .05 
+    bar_height_ratio: float = .02
     # seconds for bar to fully cross screen
-    bar_sec_across_screen: float = 2.0 
+    bar_sec_across_screen: float = 3.0 
     pitch_offset: int = 0 # -127 - 127
 
     def save(self) -> dict:
