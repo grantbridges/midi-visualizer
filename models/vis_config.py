@@ -9,6 +9,7 @@ from models.track import Track
 from models.note import Note
 from models.render_format import RenderFormat
 from models.resolution import Resolution
+from models.bg_mode import BackgroundMode
 
 # ----
 
@@ -20,26 +21,36 @@ History
   4 - Track groups
   5 - Track group pitch offsets
   6 - Auto-calc pitch bounds & manual values
+  7 - Bg details, play audio flag, & time overrides
 '''
-VIS_CONFIG_SCHEMA_VERSION = 6
+VIS_CONFIG_SCHEMA_VERSION = 7
 
 '''
 Top level construct containing all visualizing info
 '''
 @dataclass
 class VisConfig:
-    # filepaths
+    # -- Track Props --
+    track_name: str = ""
+    fps: int = 60
+
+    # -- Background Props --
+    bg_mode: BackgroundMode = BackgroundMode.Color
+    bg_color: RGB = Color.DARKEST_GRAY
+    bg_image_filepath: str = ""
+    bg_video_filepath: str = ""
+
+    # -- Audio --
+    play_audio: bool = True
     audio_filepath: str = ""
 
-    # export details
+    # -- Export Props --
     export_dir: str = ""
     export_filename: str = ""
     export_format: RenderFormat = RenderFormat.MP4
     export_resolution: Resolution = Resolution.FullHD
 
-    # properties
-    track_name: str = ""
-    bg_color: RGB = Color.DARKEST_GRAY
+    # -- Display Props --
     show_playhead: bool = True
     # ratio of view area width playhead's located at - 0 to 1 (0 is far left, 1 is far right)
     playhead_pos_ratio: float = 0.5 
@@ -48,17 +59,21 @@ class VisConfig:
     vertical_padding_ratio = 0.15 
     # ratio of vertical offset positioning - -1 to 1 (-1 is top, 0 center, 1 bottom)
     vertical_offset_ratio = 0
-    fps: int = 60
-
-    auto_calc_pitch_bounds: bool = True
-    manual_pitch_min: int = 0
-    manual_pitch_max: int = 127
-
     # Ratio of distance from playhead to left edge that note will fade out over - 0.01 to 1
     # 1 means fade out over full distance to left edge, 0.5 means fade out to 
     # halfway from playhead to left edge, etc. It makes sense, trust me.
     note_fadeout_ratio: float = 0.5
     note_play_color: RGB = Color.WHITE
+
+    # -- Pitch Range --
+    auto_calc_pitch_bounds: bool = True
+    manual_pitch_min: int = 0
+    manual_pitch_max: int = 127
+
+    # -- Time Range --
+    auto_calc_time_range: bool = True
+    manual_start_time: float = 0.0
+    manual_end_time: float = 1.0
 
     # children
     tracks: List[Track] = field(default_factory=list)
@@ -103,26 +118,35 @@ class VisConfig:
 
         data = {
             "schemaVersion": VIS_CONFIG_SCHEMA_VERSION,
+            "trackName": self.track_name,
+            "fps": self.fps,
+
+            "bgMode": self.bg_mode.name,
+            "bgColor": list(self.bg_color),
+            "bgImageFilepath": self.bg_image_filepath,
+            "bgVideoFilepath": self.bg_video_filepath,
+
+            "playAudio": self.play_audio,
             "audioFilepath": self.audio_filepath,
 
             "exportDir": self.export_dir,
             "exportFilename": self.export_filename,
-            "exportFormat": self.export_format.name if self.export_format else None,
-            "exportResolution": self.export_resolution.name if self.export_resolution else None,
+            "exportFormat": self.export_format.name,
+            "exportResolution": self.export_resolution.name,
 
-            "trackName": self.track_name,
-            "bgColor": list(self.bg_color),
-            "verticalPaddingRatio": self.vertical_padding_ratio,
-            "verticalOffsetRatio": self.vertical_offset_ratio,
             "showPlayhead": self.show_playhead,
             "playheadPosRatio": self.playhead_pos_ratio,
             "playheadColor": list(self.playhead_color),
+            "verticalPaddingRatio": self.vertical_padding_ratio,
+            "verticalOffsetRatio": self.vertical_offset_ratio,
             "noteFadeoutRatio": self.note_fadeout_ratio,
             "notePlayColor": list(self.note_play_color),
-            "fps": self.fps,
             "autoCalcPitchBounds": self.auto_calc_pitch_bounds,
             "manualPitchMin": self.manual_pitch_min,
             "manualPitchMax": self.manual_pitch_max,
+            "autoCalcTimeRange": self.auto_calc_time_range,
+            "manualStartTime": self.manual_start_time,
+            "manualEndTime": self.manual_end_time,
 
             "trackGroups": [
                 track_group.save()
@@ -150,18 +174,21 @@ class VisConfig:
 
             config = VisConfig()
 
+            config.track_name = data["trackName"]
+            config.fps = data["fps"]
+
+            config.bg_color = tuple(data["bgColor"])
+            
             config.audio_filepath = data["audioFilepath"]
+
             config.export_dir = data["exportDir"]
             config.export_filename = data["exportFilename"]
             config.export_format = RenderFormat[data["exportFormat"]]
             config.export_resolution = Resolution[data["exportResolution"]]
 
-            config.track_name = data["trackName"]
-            config.bg_color = tuple(data["bgColor"])
             config.vertical_padding_ratio = data["verticalPaddingRatio"]
             config.vertical_offset_ratio = data["verticalOffsetRatio"]
             config.playhead_pos_ratio = data["playheadPosRatio"]
-            config.fps = data["fps"]
 
             config.tracks = [
                 Track.load(track_data, schema_version)
@@ -186,6 +213,17 @@ class VisConfig:
                 config.auto_calc_pitch_bounds = data["autoCalcPitchBounds"]
                 config.manual_pitch_min = data["manualPitchMin"]
                 config.manual_pitch_max = data["manualPitchMax"]
+
+            if schema_version >= 7:
+                config.bg_mode = BackgroundMode[data["bgMode"]]
+                config.bg_image_filepath = tuple(data["bgImageFilepath"])
+                config.bg_video_filepath = tuple(data["bgVideoFilepath"])
+
+                config.play_audio = data["playAudio"]
+
+                config.auto_calc_time_range = data["autoCalcTimeRange"]
+                config.manual_start_time = data["manualStartTime"]
+                config.manual_end_time = data["manualEndTime"]
 
             return config
         except Exception as ex:

@@ -175,7 +175,7 @@ class RenderWorker(QObject):
                     "-pix_fmt", "yuv420p",
                 ]
                 if has_audio:
-                    cmd += ["-c:a", "aac", "-shortest"]
+                    cmd += ["-c:a", "aac"]
 
             case RenderFormat.MOV:
                 cmd += [
@@ -183,7 +183,7 @@ class RenderWorker(QObject):
                     "-profile:v", "3",
                 ]
                 if has_audio:
-                    cmd += ["-c:a", "aac", "-shortest"]
+                    cmd += ["-c:a", "aac"]
 
             case RenderFormat.WEBM:
                 cmd += [
@@ -191,7 +191,7 @@ class RenderWorker(QObject):
                     "-b:v", "2M",
                 ]
                 if has_audio:
-                    cmd += ["-c:a", "libopus", "-shortest"]
+                    cmd += ["-c:a", "libopus"]
 
             case _:
                 raise ValueError(f"Unsupported render format: {vis_config.export_format}")
