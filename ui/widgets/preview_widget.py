@@ -119,7 +119,7 @@ class PreviewWidget(QWidget):
                 self.end_time = new_end_time
                 if self.start_time == self.end_time:
                     self.end_time += 1 # prevent divide by 0
-                self.current_time = 0.0
+                self.current_time = self.start_time
                 self._update_slider_position()
 
         self._refresh_canvas()
