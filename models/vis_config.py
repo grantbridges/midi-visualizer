@@ -216,8 +216,8 @@ class VisConfig:
 
             if schema_version >= 7:
                 config.bg_mode = BackgroundMode[data["bgMode"]]
-                config.bg_image_filepath = tuple(data["bgImageFilepath"])
-                config.bg_video_filepath = tuple(data["bgVideoFilepath"])
+                config.bg_image_filepath = data["bgImageFilepath"]
+                config.bg_video_filepath = data["bgVideoFilepath"]
 
                 config.play_audio = data["playAudio"]
 

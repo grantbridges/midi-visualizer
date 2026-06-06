@@ -92,12 +92,12 @@ class PreviewWidget(QWidget):
         v_layout.addLayout(slider_bar_layout)
 
         self.preview_canvas.setFixedWidth(Const.SCREEN_MIN_WIDTH)
-        self.preview_canvas.setFixedHeight(Const.SCREEN_MIN_HEIGHT / 2)
+        self.preview_canvas.setFixedHeight(Const.SCREEN_MIN_HEIGHT / 2 - 100)
         v_layout.addWidget(self.preview_canvas)
 
     def handle_resize(self, screen_width: int, screen_height: int):
         self.preview_canvas.setFixedWidth(screen_width)
-        self.preview_canvas.setFixedHeight(screen_height / 2)
+        self.preview_canvas.setFixedHeight(screen_height / 2 - 100)
 
     def model_changed(self):
         if self.vis_config is not None:

@@ -10,10 +10,11 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QPushButton,
+    QComboBox,
     QFileDialog
 )
 
-from models import VisConfig
+from models import VisConfig, BackgroundMode
 from ui.common import ColorButton
 
 class ConfigTab(QWidget):
@@ -29,8 +30,31 @@ class ConfigTab(QWidget):
         self.track_name = QLineEdit()
         self.track_name.editingFinished.connect(self._on_changes)
 
+        self.fps_input = QSpinBox(minimum=1, maximum=120)
+        self.fps_input.valueChanged.connect(self._on_changes)
+
+        self.bg_mode_combo = QComboBox()
+        for mode in BackgroundMode:
+            self.bg_mode_combo.addItem(mode.name, mode)
+        self.bg_mode_combo.currentIndexChanged.connect(self._on_changes)
+
         self.bg_button = ColorButton()
         self.bg_button.valueChanged.connect(self._on_changes)
+
+        self.bg_image_file_input = QLineEdit(readOnly=True)
+        self.bg_image_file_browse_btn = QPushButton("...")
+        self.bg_image_file_browse_btn.clicked.connect(self._browse_bg_image_file)
+
+        self.bg_video_file_input = QLineEdit(readOnly=True)
+        self.bg_video_file_browse_btn = QPushButton("...")
+        self.bg_video_file_browse_btn.clicked.connect(self._browse_bg_video_file)
+
+        self.use_audio_checkbox = QCheckBox()
+        self.use_audio_checkbox.toggled.connect(self._on_changes)
+
+        self.audio_file_input = QLineEdit(readOnly=True)
+        self.audio_file_browse_btn = QPushButton("...")
+        self.audio_file_browse_btn.clicked.connect(self._browse_audio_file)
 
         self.show_playhead_checkbox = QCheckBox()
         self.show_playhead_checkbox.toggled.connect(self._on_changes)
@@ -46,13 +70,6 @@ class ConfigTab(QWidget):
 
         self.vertical_offset_input = QDoubleSpinBox(decimals=2, minimum=-1.00, maximum=1.00, singleStep=0.01)
         self.vertical_offset_input.valueChanged.connect(self._on_changes)
-
-        self.fps_input = QSpinBox(minimum=1, maximum=120)
-        self.fps_input.valueChanged.connect(self._on_changes)
-
-        self.audio_file_input = QLineEdit(readOnly=True)
-        self.audio_file_browse_btn = QPushButton("...")
-        self.audio_file_browse_btn.clicked.connect(self.browse_audio_file)
 
         self.note_fadeout_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.00, singleStep=.01)
         self.note_fadeout_input.valueChanged.connect(self._on_changes)
@@ -97,25 +114,59 @@ class ConfigTab(QWidget):
         track_name_layout.addWidget(self.track_name)
         v_left_layout.addLayout(track_name_layout)
 
-        audio_file_layout = QHBoxLayout()
+        use_audio_layout = QHBoxLayout()
+        use_audio_layout.addWidget(QLabel("Use Audio"))
+        use_audio_layout.addStretch()
+        use_audio_layout.addWidget(self.use_audio_checkbox)
+        v_left_layout.addLayout(use_audio_layout)
+
+        self.audio_file_row = QWidget()
+        audio_file_layout = QHBoxLayout(self.audio_file_row)
+        audio_file_layout.setContentsMargins(0, 0, 0, 0)
         audio_file_layout.addWidget(QLabel("Audio File"))
         audio_file_layout.addStretch()
         audio_file_layout.addWidget(self.audio_file_input)
         audio_file_layout.addWidget(self.audio_file_browse_btn)
-        v_left_layout.addLayout(audio_file_layout)
+        v_left_layout.addWidget(self.audio_file_row)
 
         fps_layout = QHBoxLayout()
         fps_layout.addWidget(QLabel("FPS"))
         fps_layout.addWidget(self.fps_input)
         v_left_layout.addLayout(fps_layout)
 
-        background_color_layout = QHBoxLayout()
+        background_mode_layout = QHBoxLayout()
+        background_mode_layout.addWidget(QLabel("Background Mode"))
+        background_mode_layout.addWidget(self.bg_mode_combo)
+        v_left_layout.addLayout(background_mode_layout)
+
+        self.background_color_row = QWidget()
+        background_color_layout = QHBoxLayout(self.background_color_row)
+        background_color_layout.setContentsMargins(0, 0, 0, 0)
         background_color_layout.addWidget(QLabel("Background Color"))
         background_color_layout.addWidget(self.bg_button)
-        v_left_layout.addLayout(background_color_layout)
+        v_left_layout.addWidget(self.background_color_row)
+
+        self.background_image_row = QWidget()
+        background_image_layout = QHBoxLayout(self.background_image_row)
+        background_image_layout.setContentsMargins(0, 0, 0, 0)
+        background_image_layout.addWidget(QLabel("Background Image File"))
+        background_image_layout.addStretch()
+        background_image_layout.addWidget(self.bg_image_file_input)
+        background_image_layout.addWidget(self.bg_image_file_browse_btn)
+        v_left_layout.addWidget(self.background_image_row)
+
+        self.background_video_row = QWidget()
+        background_video_layout = QHBoxLayout(self.background_video_row)
+        background_video_layout.setContentsMargins(0, 0, 0, 0)
+        background_video_layout.addWidget(QLabel("Background Video File"))
+        background_video_layout.addStretch()
+        background_video_layout.addWidget(self.bg_video_file_input)
+        background_video_layout.addWidget(self.bg_video_file_browse_btn)
+        v_left_layout.addWidget(self.background_video_row)
 
         show_playhead_layout = QHBoxLayout()
         show_playhead_layout.addWidget(QLabel("Show Playhead"))
+        show_playhead_layout.addStretch()
         show_playhead_layout.addWidget(self.show_playhead_checkbox)
         v_left_layout.addLayout(show_playhead_layout)
 
@@ -154,6 +205,7 @@ class ConfigTab(QWidget):
 
         auto_calc_pitch_bounds_layout = QHBoxLayout()
         auto_calc_pitch_bounds_layout.addWidget(QLabel("Auto-Calc Pitch Min/Max"))
+        auto_calc_pitch_bounds_layout.addStretch()
         auto_calc_pitch_bounds_layout.addWidget(self.auto_calc_pitch_bounds_checkbox)
         v_right_layout.addLayout(auto_calc_pitch_bounds_layout)
 
@@ -184,7 +236,20 @@ class ConfigTab(QWidget):
         self.track_name.setText(self.vis_config.track_name)
         self.fps_input.setValue(self.vis_config.fps)
 
+        index = self.bg_mode_combo.findData(self.vis_config.bg_mode)
+        self.bg_mode_combo.setCurrentIndex(index)
+
+        self.background_color_row.setVisible(self.vis_config.bg_mode == BackgroundMode.Color)
+        self.background_image_row.setVisible(self.vis_config.bg_mode == BackgroundMode.Image)
+        self.background_video_row.setVisible(self.vis_config.bg_mode == BackgroundMode.Video)
+
         self.bg_button.setColor(self.vis_config.bg_color)
+        self.bg_image_file_input.setText(self.vis_config.bg_image_filepath)
+        self.bg_video_file_input.setText(self.vis_config.bg_video_filepath)
+
+        self.use_audio_checkbox.setChecked(self.vis_config.play_audio)
+        self.audio_file_input.setText(self.vis_config.audio_filepath)
+        self.audio_file_row.setVisible(self.vis_config.play_audio)
 
         self.show_playhead_checkbox.setChecked(self.vis_config.show_playhead)
         self.playhead_color_button.setColor(self.vis_config.playhead_color)
@@ -192,8 +257,6 @@ class ConfigTab(QWidget):
 
         self.vertical_padding_input.setValue(self.vis_config.vertical_padding_ratio)
         self.vertical_offset_input.setValue(self.vis_config.vertical_offset_ratio)
-
-        self.audio_file_input.setText(self.vis_config.audio_filepath)
 
         self.note_fadeout_input.setValue(self.vis_config.note_fadeout_ratio)
         self.note_play_color_button.setColor(self.vis_config.note_play_color)
@@ -210,28 +273,18 @@ class ConfigTab(QWidget):
 
         self.block_changes_callback = False
 
-    def browse_audio_file(self):
-        default_filepath = ""
-        if self.vis_config.audio_filepath:
-            default_filepath = self.vis_config.audio_filepath
-
-        audio_file, _ = QFileDialog.getOpenFileName(
-            self,
-            "Select Audio File",
-            default_filepath,
-            "Audio Files (*.wav *.mp3 *.aiff *.aif *.flac *.m4a *.ogg)"
-        )
-
-        if audio_file:
-            self.audio_file_input.setText(audio_file)
-            self._on_changes()
-
     def update_model(self):
         # pull UI values out of controls and set on model
         self.vis_config.track_name = self.track_name.text()
-        self.vis_config.audio_filepath = self.audio_file_input.text()
         self.vis_config.fps = self.fps_input.value()
+
+        self.vis_config.bg_mode = self.bg_mode_combo.currentData()
         self.vis_config.bg_color = self.bg_button.getColor()
+        self.vis_config.bg_image_filepath = self.bg_image_file_input.text()
+        self.vis_config.bg_video_filepath = self.bg_video_file_input.text()
+
+        self.vis_config.play_audio = self.use_audio_checkbox.isChecked()
+        self.vis_config.audio_filepath = self.audio_file_input.text()
 
         self.vis_config.show_playhead = self.show_playhead_checkbox.isChecked()
         self.vis_config.playhead_color = self.playhead_color_button.getColor()
@@ -248,6 +301,48 @@ class ConfigTab(QWidget):
             self.vis_config.manual_pitch_max = self.pitch_max_input.value()
         
         self.vis_config.auto_calc_pitch_bounds = self.auto_calc_pitch_bounds_checkbox.isChecked()
+
+    # callbacks
+
+    def _browse_bg_image_file(self):
+        default_filepath = self.vis_config.bg_image_filepath or ""
+
+        image_file, _ = QFileDialog.getOpenFileName(
+            self,
+            "Select Background Image File",
+            default_filepath,
+            "Image Files (*.png *.jpg *.jpeg *.bmp *.webp)"
+        )
+
+        if image_file:
+            self._on_changes()
+
+
+    def _browse_bg_video_file(self):
+        default_filepath = self.vis_config.bg_video_filepath or ""
+
+        video_file, _ = QFileDialog.getOpenFileName(
+            self,
+            "Select Background Video File",
+            default_filepath,
+            "Video Files (*.mp4 *.mov *.webm *.avi)"
+        )
+
+        if video_file:
+            self._on_changes()
+
+    def _browse_audio_file(self):
+        default_filepath = self.vis_config.audio_filepath or ""
+
+        audio_file, _ = QFileDialog.getOpenFileName(
+            self,
+            "Select Audio File",
+            default_filepath,
+            "Audio Files (*.wav *.mp3 *.aiff *.aif *.flac *.m4a *.ogg)"
+        )
+
+        if audio_file:
+            self._on_changes()
 
     def _on_changes(self):
         if not self.block_changes_callback:
