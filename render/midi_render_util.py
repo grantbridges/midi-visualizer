@@ -2,10 +2,9 @@ from dataclasses import dataclass, field
 from typing import List
 from PySide6.QtGui import QPainter, QPen
 from PySide6.QtCore import QRect, Qt
-from common import Const, Color
-from common.types import RGB
-from models import VisConfig
-from models.note import Note
+from common import Const, Color, RGB
+from models import VisConfig, BackgroundMode, Note
+from render.video_provider import video_provider
 from utility import QUtil
 
 @dataclass
@@ -68,8 +67,18 @@ class MidiRenderUtil:
     
     @staticmethod
     def draw_background(painter: QPainter, current_time: float, vis_config: VisConfig, rect: QRect):
-        # fill in bg color
-        painter.fillRect(rect, QUtil.rgb_to_qcolor(vis_config.bg_color))
+        if vis_config.bg_mode == BackgroundMode.Color:
+            # fill in bg color
+            painter.fillRect(rect, QUtil.rgb_to_qcolor(vis_config.bg_color))
+        elif vis_config.bg_mode == BackgroundMode.Image:
+            # TODO
+            pass
+        elif vis_config.bg_mode == BackgroundMode.Video:
+            frame = video_provider.get_frame(current_time, loop=False)
+            if frame is not None:
+                painter.drawImage(rect, frame)
+            else:
+                painter.fillRect(rect, QUtil.rgb_to_qcolor(vis_config.bg_color))
     
     @staticmethod
     def draw_notes(painter: QPainter, current_time: float, vis_config: VisConfig, pitch_min: int, pitch_max:int, rect: QRect):

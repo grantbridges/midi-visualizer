@@ -21,8 +21,8 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import QAction, QKeySequence, QResizeEvent
 from common import Const
-from models import VisConfig, Track, Resolution, user_settings
-from render import RenderWorker
+from models import VisConfig, Track, Resolution, user_settings, BackgroundMode
+from render import RenderWorker, video_provider
 from ui.tabs import ConfigTab, TrackGroupsTab, TracksTab
 from ui.widgets import PreviewWidget
 from ui.dialogs import (
@@ -103,6 +103,7 @@ class MainWindow(QMainWindow):
             if loaded_vis_config is not None:
                 self.vis_config = loaded_vis_config
                 self.vis_config.init()
+                self.load_config_resources()
             else:
                 QMessageBox.critical(self, "Load Failed", f"Unable to load previous project at {load_path}. See logs for details.")
 
@@ -269,8 +270,25 @@ class MainWindow(QMainWindow):
             self.refresh_window_title()
             return True
         except Exception as e:
-            QMessageBox.critical(self, "Save failed", str(e))
+            QMessageBox.critical(self, "Save failed", f"Failed to save config: {str(e)}")
             return False
+        
+    def load_config_resources(self):
+        try:
+            QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+            has_video = (
+                self.vis_config.bg_mode == BackgroundMode.Video
+                and bool(self.vis_config.bg_video_filepath)
+                and Path(self.vis_config.bg_video_filepath).is_file()
+            )
+
+            if has_video:
+                video_provider.clear()
+                video_provider.load(self.vis_config.bg_video_filepath)
+        except Exception as e:
+            QMessageBox.critical(self, "Load Failed", f"Failed to load video: {str(e)}")
+        finally:
+            QApplication.restoreOverrideCursor()
 
     # child tab API
 
