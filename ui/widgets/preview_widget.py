@@ -47,6 +47,9 @@ class PreviewWidget(QWidget):
         self.mute_checkbox = QCheckBox("Mute")
         self.mute_checkbox.setChecked(user_settings.mute_audio)
         self.mute_checkbox.toggled.connect(self._on_mute_toggled)
+        self.loop_checkbox = QCheckBox("Loop")
+        self.loop_checkbox.setChecked(user_settings.loop_preview)
+        self.loop_checkbox.toggled.connect(self._on_loop_toggled)
 
         # create button
         self.settings_btn = QPushButton("⚙")
@@ -82,7 +85,8 @@ class PreviewWidget(QWidget):
         top_row_layout = QHBoxLayout()
         top_row_layout.addWidget(self.play_btn)
         top_row_layout.addWidget(self.reset_btn)
-        top_row_layout.addWidget(self.mute_checkbox)
+        # top_row_layout.addWidget(self.mute_checkbox) # TODO when audio preview is supported
+        top_row_layout.addWidget(self.loop_checkbox)
         top_row_layout.addStretch()
         top_row_layout.addWidget(self.settings_btn)
         v_layout.addLayout(top_row_layout)
@@ -153,7 +157,10 @@ class PreviewWidget(QWidget):
                 self.current_time += 1 / float(self.vis_config.fps) # iterate one frame
 
                 if self.current_time > self.end_time:
-                    self._stop()
+                    if user_settings.loop_preview:
+                        self.current_time = self.start_time
+                    else:
+                        self._stop()
 
             self._update_slider_position()
             self._refresh_canvas()
@@ -189,6 +196,10 @@ class PreviewWidget(QWidget):
 
     def _on_mute_toggled(self, checked: bool):
         user_settings.mute_audio = checked
+        user_settings.save()
+
+    def _on_loop_toggled(self, checked: bool):
+        user_settings.loop_preview = checked
         user_settings.save()
 
     def _create_settings_action(self, label: str, property_name: str) -> QAction:

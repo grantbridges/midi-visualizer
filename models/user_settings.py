@@ -15,8 +15,9 @@ History
   3 - Added "show pitches"
   4 - Renamed to "show_track_groups"
   5 - Added active project path
+  6 - Added preview loop
 '''
-USER_SETTINGS_SCHEMA_VERSION = 5
+USER_SETTINGS_SCHEMA_VERSION = 6
 USER_SETTINGS_FILENAME = "user_settings.json"
 
 '''
@@ -34,6 +35,7 @@ class UserSettings:
     show_guides: bool = True
     show_pitches: bool = True
     mute_audio: bool = True
+    loop_preview: bool = True
 
     @staticmethod
     def _settings_path() -> Path:
@@ -83,6 +85,9 @@ class UserSettings:
 
         if schema_version >= 5:
             self.active_project_path = data["active_project_path"]
+
+        if schema_version >= 6:
+            self.loop_preview = data["loop_preview"]
 
 
 # module-level singleton instance
