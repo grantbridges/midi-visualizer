@@ -1,8 +1,8 @@
-from PySide6.QtCore import QObject, QRect, Signal, Slot
+from PySide6.QtCore import QObject, QRect, Qt, Signal, Slot
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from multiprocessing import Manager
 from common import Const
-from models import VisConfig
+from models import VisConfig, RenderFormat, BackgroundMode
 from pathlib import Path
 from PySide6.QtGui import QImage, QPainter
 from render.midi_render_util import MidiRenderUtil
@@ -12,7 +12,6 @@ import tempfile
 import shutil
 import os
 import subprocess
-from models import RenderFormat
 
 @dataclass(frozen=True)
 class RenderFrameJobInput:
@@ -129,10 +128,11 @@ class RenderWorker(QObject):
         current_time = job.start_time + job.frame_index / job.vis_config.fps
 
         image = QImage(job.width, job.height, QImage.Format_ARGB32)
+        image.fill(Qt.transparent)
         painter = QPainter(image)
         painter.setRenderHint(QPainter.Antialiasing)
         rect = QRect(0, 0, job.width, job.height)
-        MidiRenderUtil.draw_background(painter, current_time, job.vis_config, rect)
+        #MidiRenderUtil.draw_background(painter, current_time, job.vis_config, rect)
         MidiRenderUtil.draw_notes(painter, current_time, job.vis_config, job.pitch_min, job.pitch_max, rect)
         painter.end()
 
@@ -147,27 +147,115 @@ class RenderWorker(QObject):
     
     @staticmethod
     def encode_frames_to_video(frames_dir: str, vis_config: VisConfig, audio_delay_ms: int, output_file: Path):
-        cmd = [
-            "ffmpeg",
-            "-y",
-            "-framerate", str(vis_config.fps),
-            "-i", os.path.join(frames_dir, "frame_%05d.png"),
-        ]
+        # TODO: later move these to config
+        loop_video = False
+        bg_video_start_delay_sec = 0.0
 
-        # check if audio path is filled in and is a valid file
         has_audio = (
             vis_config.play_audio
             and bool(vis_config.audio_filepath)
             and Path(vis_config.audio_filepath).is_file()
         )
 
+        has_bg_video = (
+            vis_config.bg_mode == BackgroundMode.Video
+            and bool(vis_config.bg_video_filepath)
+            and Path(vis_config.bg_video_filepath).is_file()
+        )
+
+        cmd = [
+            "ffmpeg",
+            "-y",
+
+            # input 0: rendered MIDI overlay frames
+            "-framerate", str(vis_config.fps),
+            "-i", os.path.join(frames_dir, "frame_%05d.png"),
+        ]
+
+        input_index = 1
+        bg_video_input_index = None
+        audio_input_index = None
+
+        if has_bg_video:
+            if loop_video:
+                cmd += ["-stream_loop", "-1"]
+
+            bg_video_input_index = input_index
+            input_index += 1
+
+            cmd += [
+                "-i", str(vis_config.bg_video_filepath),
+            ]
+
         if has_audio:
+            audio_input_index = input_index
+            input_index += 1
+
             cmd += [
                 "-i", str(vis_config.audio_filepath),
-                "-filter_complex", f"[1:a]adelay={audio_delay_ms}:all=1[a]",
-                "-map", "0:v",
-                "-map", "[a]",
             ]
+
+        filter_parts = []
+
+        # If using video background:
+        # - create a transparent base using the rendered frame sequence
+        # - draw bg video onto that base
+        # - draw MIDI overlay frames on top
+        if has_bg_video:
+            width, height = vis_config.export_resolution.value
+
+            filter_parts.append(
+                "[0:v]format=rgba,split=2[midi][base0]"
+            )
+
+            filter_parts.append(
+                "[base0]colorchannelmixer=aa=0[base]"
+            )
+
+            filter_parts.append(
+                f"[{bg_video_input_index}:v]"
+                f"scale={width}:{height},"
+                f"setsar=1,"
+                f"setpts=PTS+{bg_video_start_delay_sec}/TB,"
+                f"format=rgba"
+                f"[bg]"
+            )
+
+            # filter_parts.append(
+            #     "[base][bg]overlay=0:0:eof_action=pass[bgbase]"
+            # )
+
+            # filter_parts.append(
+            #     "[bgbase][midi]overlay=0:0:format=auto[v]"
+            # )
+
+            filter_parts.append(
+                "[base][bg]overlay=0:0:eof_action=repeat[bgbase]"
+            )
+
+            filter_parts.append(
+                "[bgbase][midi]overlay=0:0:format=auto[v]"
+            )
+
+        # If using audio, delay it.
+        if has_audio:
+            filter_parts.append(
+                f"[{audio_input_index}:a]adelay={audio_delay_ms}:all=1[a]"
+            )
+
+        if filter_parts:
+            cmd += [
+                "-filter_complex",
+                ";".join(filter_parts),
+            ]
+
+            if has_bg_video:
+                cmd += ["-map", "[v]"]
+            else:
+                cmd += ["-map", "0:v"]
+
+            if has_audio:
+                cmd += ["-map", "[a]"]
 
         match vis_config.export_format:
             case RenderFormat.MP4:
