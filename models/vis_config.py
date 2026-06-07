@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 from typing import List
 from dataclasses import dataclass, field
 from uuid import UUID
@@ -21,7 +22,7 @@ History
   4 - Track groups
   5 - Track group pitch offsets
   6 - Auto-calc pitch bounds & manual values
-  7 - Bg details, play audio flag, & time overrides
+  7 - Bg details, play audio flag, & time offsets
 '''
 VIS_CONFIG_SCHEMA_VERSION = 7
 
@@ -71,9 +72,9 @@ class VisConfig:
     manual_pitch_max: int = 127
 
     # -- Time Range --
-    auto_calc_time_range: bool = True
-    manual_start_time: float = 0.0
-    manual_end_time: float = 1.0
+    apply_time_offsets: bool = True
+    start_time_offset: float = 0.0
+    end_time_offset: float = 1.0
 
     # children
     tracks: List[Track] = field(default_factory=list)
@@ -144,9 +145,9 @@ class VisConfig:
             "autoCalcPitchBounds": self.auto_calc_pitch_bounds,
             "manualPitchMin": self.manual_pitch_min,
             "manualPitchMax": self.manual_pitch_max,
-            "autoCalcTimeRange": self.auto_calc_time_range,
-            "manualStartTime": self.manual_start_time,
-            "manualEndTime": self.manual_end_time,
+            "applyTimeOffsets": self.apply_time_offsets,
+            "startTimeOffset": self.start_time_offset,
+            "endTimeOffset": self.end_time_offset,
 
             "trackGroups": [
                 track_group.save()
@@ -221,9 +222,9 @@ class VisConfig:
 
                 config.play_audio = data["playAudio"]
 
-                config.auto_calc_time_range = data["autoCalcTimeRange"]
-                config.manual_start_time = data["manualStartTime"]
-                config.manual_end_time = data["manualEndTime"]
+                config.apply_time_offsets = data["applyTimeOffsets"]
+                config.start_time_offset = data["startTimeOffset"]
+                config.end_time_offset = data["endTimeOffset"]
 
             return config
         except Exception as ex:
@@ -353,30 +354,20 @@ class VisConfig:
         return max(values) if values else 0
     
     def get_min_time(self) -> float:
-        if not self.auto_calc_time_range:
-            return self.manual_start_time
-        
-        return self.get_calculated_min_time()
-    
-    def get_calculated_min_time(self) -> float:
         values = [
             track.time_min
             for track in self.get_visible_tracks()
         ]
-        return min(values) if values else 0.0
+        offset = self.start_time_offset if self.apply_time_offsets else 0.0
+        return min(values) + offset if values else 0.0
     
     def get_max_time(self) -> float:
-        if not self.auto_calc_time_range:
-            return self.manual_end_time
-        
-        return self.get_calculated_max_time()
-
-    def get_calculated_max_time(self) -> float:
         values = [
             track.time_max
             for track in self.get_visible_tracks()
         ]
-        return max(values) if values else 1.0
+        offset = self.end_time_offset if self.apply_time_offsets else 0.0
+        return max(values) + offset if values else 1.0
 
     def get_max_sec_across_screen(self) -> float:
         values = [
@@ -385,6 +376,9 @@ class VisConfig:
             if tg.visible
         ]
         return max(values) if values else 0.0
+    
+    def get_exported_filepath(self) -> Path:
+        return Path(self.export_dir) / f"{self.export_filename}.{self.export_format.value}"
 
     # Helpers
 

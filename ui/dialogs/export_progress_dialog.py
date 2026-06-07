@@ -30,8 +30,8 @@ class ExportProgressDialog(QDialog):
         self.progress_bar.setValue(0)
         self.progress_bar.setTextVisible(True)
 
-        self.show_folder_checkbox = QCheckBox("Open Output Folder")
-        self.show_folder_checkbox.setChecked(True)
+        self.open_file_checkbox = QCheckBox("Open file when complete")
+        self.open_file_checkbox.setChecked(True)
         self.cancel_button = QPushButton("Cancel")
         self.cancel_button.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
@@ -45,7 +45,7 @@ class ExportProgressDialog(QDialog):
         root_layout.addStretch()
 
         button_row = QHBoxLayout()
-        button_row.addWidget(self.show_folder_checkbox)
+        button_row.addWidget(self.open_file_checkbox)
         button_row.addStretch()
         button_row.addWidget(self.cancel_button)
 
@@ -63,8 +63,8 @@ class ExportProgressDialog(QDialog):
 
         self.status_label.setText(message)
 
-    def get_show_output_folder(self) -> bool:
-        return self.show_folder_checkbox.isChecked()
+    def get_open_output_file(self) -> bool:
+        return self.open_file_checkbox.isChecked()
 
     def _on_cancel_clicked(self):
         self.cancel_clicked.emit()

@@ -17,6 +17,14 @@ class Util:
         return (0, 0, 0) if brightness > 160 else (255, 255, 255)
     
     @staticmethod
+    def clamp(val, min_val, max_val):
+        return max(min_val, min(val, max_val))
+    
+    @staticmethod
+    def is_equal(val, check_val, precision = 0.0001):
+        return abs(val - check_val) <= precision
+
+    @staticmethod
     def internal_to_display(
         value: float,
         internal_min: float,

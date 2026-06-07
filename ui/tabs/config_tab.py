@@ -86,13 +86,13 @@ class ConfigTab(QWidget):
         self.pitch_max_input = QSpinBox()      
         self.pitch_max_input.valueChanged.connect(self._on_changes)
 
-        self.auto_calc_time_checkbox = QCheckBox()
-        self.auto_calc_time_checkbox.toggled.connect(self._on_changes)
+        self.apply_time_offsets_checkbox = QCheckBox()
+        self.apply_time_offsets_checkbox.toggled.connect(self._on_changes)
 
-        self.start_time_input = QDoubleSpinBox(decimals=2, suffix=" sec")
+        self.start_time_input = QDoubleSpinBox(decimals=2, minimum=-10.0, maximum=10.0, singleStep=0.01, suffix=" sec")
         self.start_time_input.valueChanged.connect(self._on_changes)
 
-        self.end_time_input = QDoubleSpinBox(decimals=2, suffix=" sec")      
+        self.end_time_input = QDoubleSpinBox(decimals=2, minimum=-10.0, maximum=10.0, singleStep=0.01, suffix=" sec")
         self.end_time_input.valueChanged.connect(self._on_changes)
 
     def shutdown(self):
@@ -241,21 +241,21 @@ class ConfigTab(QWidget):
         pitch_max_layout.addWidget(self.pitch_max_input)
         v_right_layout.addLayout(pitch_max_layout)
 
-        v_right_layout.addWidget(SectionDivider("Time Range"))
+        v_right_layout.addWidget(SectionDivider("Time Offsets"))
 
-        auto_calc_time_layout = QHBoxLayout()
-        auto_calc_time_layout.addWidget(QLabel("Auto-Calc Time Start/End"))
-        auto_calc_time_layout.addStretch()
-        auto_calc_time_layout.addWidget(self.auto_calc_time_checkbox)
-        v_right_layout.addLayout(auto_calc_time_layout)
+        apply_time_offsets_layout = QHBoxLayout()
+        apply_time_offsets_layout.addWidget(QLabel("Apply Time Offsets"))
+        apply_time_offsets_layout.addStretch()
+        apply_time_offsets_layout.addWidget(self.apply_time_offsets_checkbox)
+        v_right_layout.addLayout(apply_time_offsets_layout)
 
         start_time_layout = QHBoxLayout()
-        start_time_layout.addWidget(QLabel("Start Time"))
+        start_time_layout.addWidget(QLabel("Start Time Offset"))
         start_time_layout.addWidget(self.start_time_input)
         v_right_layout.addLayout(start_time_layout)
 
         end_time_layout = QHBoxLayout()
-        end_time_layout.addWidget(QLabel("End Time"))
+        end_time_layout.addWidget(QLabel("End Time Offset"))
         end_time_layout.addWidget(self.end_time_input)
         v_right_layout.addLayout(end_time_layout)
 
@@ -311,15 +311,13 @@ class ConfigTab(QWidget):
         self.pitch_max_input.setRange(self.vis_config.manual_pitch_min, 127)
         self.pitch_max_input.setValue(self.vis_config.get_max_pitch() if self.vis_config.auto_calc_pitch_bounds else self.vis_config.manual_pitch_max)  
 
-        self.auto_calc_time_checkbox.setChecked(self.vis_config.auto_calc_time_range)
+        self.apply_time_offsets_checkbox.setChecked(self.vis_config.apply_time_offsets)
 
-        self.start_time_input.setDisabled(self.vis_config.auto_calc_time_range)
-        self.start_time_input.setRange(-10, self.vis_config.manual_end_time - 1)
-        self.start_time_input.setValue(self.vis_config.get_min_time() if self.vis_config.auto_calc_time_range else self.vis_config.manual_start_time)
+        self.start_time_input.setDisabled(not self.vis_config.apply_time_offsets)
+        self.start_time_input.setValue(self.vis_config.start_time_offset)
 
-        self.end_time_input.setDisabled(self.vis_config.auto_calc_time_range)
-        self.end_time_input.setMinimum(self.vis_config.manual_start_time + 1) # no max needed
-        self.end_time_input.setValue(self.vis_config.get_max_time() if self.vis_config.auto_calc_time_range else self.vis_config.manual_end_time)  
+        self.end_time_input.setDisabled(not self.vis_config.apply_time_offsets)
+        self.end_time_input.setValue(self.vis_config.end_time_offset)  
 
         self.block_changes_callback = False
 
@@ -352,11 +350,10 @@ class ConfigTab(QWidget):
         
         self.vis_config.auto_calc_pitch_bounds = self.auto_calc_pitch_bounds_checkbox.isChecked()
 
-        if not self.vis_config.auto_calc_time_range:
-            self.vis_config.manual_start_time = self.start_time_input.value()
-            self.vis_config.manual_end_time = self.end_time_input.value()
+        self.vis_config.apply_time_offsets = self.apply_time_offsets_checkbox.isChecked()
+        self.vis_config.start_time_offset = self.start_time_input.value()
+        self.vis_config.end_time_offset = self.end_time_input.value()
         
-        self.vis_config.auto_calc_time_range = self.auto_calc_time_checkbox.isChecked()
 
     # callbacks
 

@@ -39,7 +39,6 @@ class MainWindow(QMainWindow):
 
         print(f"MainWindow | Starting MIDI Visualizer app")
 
-        self.resize(Const.SCREEN_MIN_WIDTH, Const.SCREEN_MIN_HEIGHT)
         self.setMinimumSize(Const.SCREEN_MIN_WIDTH, Const.SCREEN_MIN_HEIGHT)
 
         # child widgets
@@ -115,6 +114,9 @@ class MainWindow(QMainWindow):
             self.init_vis_config_editor_view()
         else:
             self.init_default_view()
+
+        #self.resize(Const.SCREEN_MIN_WIDTH, Const.SCREEN_MIN_HEIGHT)
+        self.showFullScreen()
 
     def init_default_view(self):
         central = QWidget()
@@ -588,21 +590,25 @@ class MainWindow(QMainWindow):
         QMessageBox.critical(self, 'Render Failed', error)
 
     def on_render_finished(self):
-        show_output = self.progress_dialog.get_show_output_folder()
+        open_file = self.progress_dialog.get_open_output_file()
 
         self.progress_dialog.hide()
         self.progress_dialog = None
 
-        if show_output:
-            folder = os.path.dirname(self.vis_config.export_dir)
+        output_filepath = str(self.vis_config.get_exported_filepath())
 
+        if open_file:
             if sys.platform == "darwin":
-                subprocess.run(["open", folder])
+                subprocess.run(["open", output_filepath])
             elif sys.platform == "win32":
-                os.startfile(folder)
+                os.startfile(output_filepath)
             else:  # linux
-                subprocess.run(["xdg-open", folder])
+                subprocess.run(["xdg-open", output_filepath])
         else:
-            QMessageBox.information(self, "Success", f"Exported video to {self.vis_config.export_dir}")
-        
+            QMessageBox.information(
+                self,
+                "Success",
+                f"Exported video to {output_filepath}"
+            )
+                
 

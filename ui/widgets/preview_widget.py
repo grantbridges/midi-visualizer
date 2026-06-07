@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
 from common import Const, Color
 from models import VisConfig, user_settings
 from render import MidiRenderUtil
-from utility import QUtil
+from utility import QUtil, Util
 from ui.widgets.preview_canvas import PreviewCanvas
 
 class PreviewWidget(QWidget):
@@ -113,13 +113,26 @@ class PreviewWidget(QWidget):
             new_end_time = MidiRenderUtil.calc_end_time(self.vis_config, self.preview_canvas.width())
 
             if self.start_time != new_start_time or self.end_time != new_end_time:
+                # store whether current time was at existing start/end position so
+                # we can reset it there after updating time range
+                was_time_at_start = Util.is_equal(self.current_time, self.start_time)
+                was_time_at_end = Util.is_equal(self.current_time, self.end_time)
+
                 # if time bounds changed, reset position
                 self.playing = False
                 self.start_time = new_start_time
                 self.end_time = new_end_time
                 if self.start_time == self.end_time:
                     self.end_time += 1 # prevent divide by 0
-                self.current_time = self.start_time
+
+                if was_time_at_start:
+                    self.current_time = self.start_time
+                elif was_time_at_end:
+                    self.current_time = self.end_time
+                else:
+                    # apply clamping to ensure current time stays in bounds
+                    self.current_time = Util.clamp(self.current_time, self.start_time, self.end_time)
+
                 self._update_slider_position()
 
         self._refresh_canvas()

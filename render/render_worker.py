@@ -105,7 +105,7 @@ class RenderWorker(QObject):
                         return
 
                     # define output file path - delete if already exists
-                    output_file = Path(self.vis_config.export_dir) / f"{self.vis_config.export_filename}.{self.vis_config.export_format.value}"
+                    output_file = self.vis_config.get_exported_filepath()
                     output_file.unlink(missing_ok=True)
 
                     # move temp file to output location and rename
@@ -156,7 +156,8 @@ class RenderWorker(QObject):
 
         # check if audio path is filled in and is a valid file
         has_audio = (
-            bool(vis_config.audio_filepath)
+            vis_config.play_audio
+            and bool(vis_config.audio_filepath)
             and Path(vis_config.audio_filepath).is_file()
         )
 

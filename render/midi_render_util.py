@@ -46,7 +46,9 @@ class MidiRenderUtil:
                 track.time_max + ratio * group.bar_sec_across_screen
             )
 
-        return max(values) if values else 0.0
+        offset = vis_config.end_time_offset if vis_config.apply_time_offsets else 0.0
+
+        return max(values) + offset if values else 0.0
     
     # translates a pitch to a y value for a given rect and offsets
     @staticmethod
