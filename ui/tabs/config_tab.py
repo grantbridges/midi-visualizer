@@ -368,6 +368,7 @@ class ConfigTab(QWidget):
         )
 
         if image_file:
+            self.bg_image_file_input.setText(image_file)
             self._on_changes()
 
 
@@ -382,6 +383,7 @@ class ConfigTab(QWidget):
         )
 
         if video_file:
+            self.bg_video_file_input.setText(video_file)
             self._on_changes()
 
     def _browse_audio_file(self):
@@ -395,6 +397,7 @@ class ConfigTab(QWidget):
         )
 
         if audio_file:
+            self.audio_file_input.setText(audio_file)
             self._on_changes()
 
     def _on_changes(self):
