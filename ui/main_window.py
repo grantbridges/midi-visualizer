@@ -116,7 +116,7 @@ class MainWindow(QMainWindow):
         else:
             self.init_default_view()
 
-        self.resize(Const.SCREEN_MIN_WIDTH, Const.SCREEN_MIN_HEIGHT)
+        self.resize(1200, 900)
         #self.showFullScreen()
 
     def init_default_view(self):

@@ -66,19 +66,23 @@ class MidiRenderUtil:
         return y_max + t * (y_min - y_max)
     
     @staticmethod
-    def draw_background(painter: QPainter, current_time: float, vis_config: VisConfig, rect: QRect):
+    def draw_preview_background(painter: QPainter, current_time: float, vis_config: VisConfig, rect: QRect, ignore_video: bool = False):
+        # Note: only use this method for preview; bg renderer will only use color background here
         if vis_config.bg_mode == BackgroundMode.Color:
-            # fill in bg color
-            painter.fillRect(rect, QUtil.rgb_to_qcolor(vis_config.bg_color))
+            MidiRenderUtil.draw_color_background(painter, vis_config, rect)
         elif vis_config.bg_mode == BackgroundMode.Image:
             # TODO
             pass
         elif vis_config.bg_mode == BackgroundMode.Video:
-            frame = video_provider.get_frame(current_time, loop=False)
+            frame = video_provider.get_frame(current_time + vis_config.bg_video_time_offset, loop=vis_config.bg_video_loop)
             if frame is not None:
                 painter.drawImage(rect, frame)
             else:
                 painter.fillRect(rect, QUtil.rgb_to_qcolor(vis_config.bg_color))
+
+    @staticmethod
+    def draw_color_background(painter: QPainter, vis_config: VisConfig, rect: QRect):
+        painter.fillRect(rect, QUtil.rgb_to_qcolor(vis_config.bg_color))
     
     @staticmethod
     def draw_notes(painter: QPainter, current_time: float, vis_config: VisConfig, pitch_min: int, pitch_max:int, rect: QRect):

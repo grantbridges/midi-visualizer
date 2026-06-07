@@ -132,7 +132,11 @@ class RenderWorker(QObject):
         painter = QPainter(image)
         painter.setRenderHint(QPainter.Antialiasing)
         rect = QRect(0, 0, job.width, job.height)
-        #MidiRenderUtil.draw_background(painter, current_time, job.vis_config, rect)
+
+        if job.vis_config.bg_mode == BackgroundMode.Color:
+            MidiRenderUtil.draw_color_background(painter, current_time, job.vis_config, rect)
+            # don't handle other BG types here - those will get layered in during video construction
+        
         MidiRenderUtil.draw_notes(painter, current_time, job.vis_config, job.pitch_min, job.pitch_max, rect)
         painter.end()
 
@@ -147,9 +151,8 @@ class RenderWorker(QObject):
     
     @staticmethod
     def encode_frames_to_video(frames_dir: str, vis_config: VisConfig, audio_delay_ms: int, output_file: Path):
-        # TODO: later move these to config
-        loop_video = False
-        bg_video_start_delay_sec = 0.0
+        loop_video = vis_config.bg_video_loop
+        bg_video_start_delay_sec = vis_config.bg_video_time_offset
 
         has_audio = (
             vis_config.play_audio
@@ -220,14 +223,6 @@ class RenderWorker(QObject):
                 f"format=rgba"
                 f"[bg]"
             )
-
-            # filter_parts.append(
-            #     "[base][bg]overlay=0:0:eof_action=pass[bgbase]"
-            # )
-
-            # filter_parts.append(
-            #     "[bgbase][midi]overlay=0:0:format=auto[v]"
-            # )
 
             filter_parts.append(
                 "[base][bg]overlay=0:0:eof_action=repeat[bgbase]"

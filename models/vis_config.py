@@ -22,9 +22,10 @@ History
   4 - Track groups
   5 - Track group pitch offsets
   6 - Auto-calc pitch bounds & manual values
-  7 - Bg details, play audio flag, & time offsets
+  7 - BG details, play audio flag, & time offsets
+  8 - BG video props
 '''
-VIS_CONFIG_SCHEMA_VERSION = 7
+VIS_CONFIG_SCHEMA_VERSION = 8
 
 '''
 Top level construct containing all visualizing info
@@ -40,6 +41,10 @@ class VisConfig:
     bg_color: RGB = Color.DARKEST_GRAY
     bg_image_filepath: str = ""
     bg_video_filepath: str = ""
+
+    # -- Video Props --
+    bg_video_time_offset: float = 0.0
+    bg_video_loop: bool = False
 
     # -- Audio --
     play_audio: bool = True
@@ -126,6 +131,9 @@ class VisConfig:
             "bgColor": list(self.bg_color),
             "bgImageFilepath": self.bg_image_filepath,
             "bgVideoFilepath": self.bg_video_filepath,
+
+            "bgVideoTimeOffset": self.bg_video_time_offset,
+            "bgVideoLoop": self.bg_video_loop,
 
             "playAudio": self.play_audio,
             "audioFilepath": self.audio_filepath,
@@ -225,6 +233,10 @@ class VisConfig:
                 config.apply_time_offsets = data["applyTimeOffsets"]
                 config.start_time_offset = data["startTimeOffset"]
                 config.end_time_offset = data["endTimeOffset"]
+
+            if schema_version >= 8:
+                config.bg_video_time_offset = data["bgVideoTimeOffset"]
+                config.bg_video_loop = data["bgVideoLoop"]
 
             return config
         except Exception as ex:

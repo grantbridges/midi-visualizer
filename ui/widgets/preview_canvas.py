@@ -37,7 +37,7 @@ class PreviewCanvas(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
 
-        MidiRenderUtil.draw_background(
+        MidiRenderUtil.draw_preview_background(
             painter, 
             self.current_time, 
             self.vis_config,

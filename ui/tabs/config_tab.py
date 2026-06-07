@@ -49,6 +49,12 @@ class ConfigTab(QWidget):
         self.bg_video_file_browse_btn = QPushButton("...")
         self.bg_video_file_browse_btn.clicked.connect(self._browse_bg_video_file)
 
+        self.bg_video_time_offset_input = QDoubleSpinBox(decimals=2, minimum=-10.0, maximum=10.0, singleStep=0.01, suffix=" sec")
+        self.bg_video_time_offset_input.valueChanged.connect(self._on_changes)
+
+        self.bg_video_loop_checkbox = QCheckBox()
+        self.bg_video_loop_checkbox.toggled.connect(self._on_changes)
+
         self.use_audio_checkbox = QCheckBox()
         self.use_audio_checkbox.toggled.connect(self._on_changes)
 
@@ -152,30 +158,45 @@ class ConfigTab(QWidget):
         background_mode_layout.addWidget(self.bg_mode_combo)
         v_left_layout.addLayout(background_mode_layout)
 
-        self.background_color_row = QWidget()
-        background_color_layout = QHBoxLayout(self.background_color_row)
+        self.bg_color_row = QWidget()
+        background_color_layout = QHBoxLayout(self.bg_color_row)
         background_color_layout.setContentsMargins(0, 0, 0, 0)
         background_color_layout.addWidget(QLabel("Background Color"))
         background_color_layout.addWidget(self.bg_button)
-        v_left_layout.addWidget(self.background_color_row)
+        v_left_layout.addWidget(self.bg_color_row)
 
-        self.background_image_row = QWidget()
-        background_image_layout = QHBoxLayout(self.background_image_row)
+        self.bg_image_row = QWidget()
+        background_image_layout = QHBoxLayout(self.bg_image_row)
         background_image_layout.setContentsMargins(0, 0, 0, 0)
         background_image_layout.addWidget(QLabel("Background Image File"))
         background_image_layout.addStretch()
         background_image_layout.addWidget(self.bg_image_file_input)
         background_image_layout.addWidget(self.bg_image_file_browse_btn)
-        v_left_layout.addWidget(self.background_image_row)
+        v_left_layout.addWidget(self.bg_image_row)
 
-        self.background_video_row = QWidget()
-        background_video_layout = QHBoxLayout(self.background_video_row)
+        self.bg_video_row = QWidget()
+        background_video_layout = QHBoxLayout(self.bg_video_row)
         background_video_layout.setContentsMargins(0, 0, 0, 0)
         background_video_layout.addWidget(QLabel("Background Video File"))
         background_video_layout.addStretch()
         background_video_layout.addWidget(self.bg_video_file_input)
         background_video_layout.addWidget(self.bg_video_file_browse_btn)
-        v_left_layout.addWidget(self.background_video_row)
+        v_left_layout.addWidget(self.bg_video_row)
+
+        self.bg_video_time_offset_row = QWidget()
+        bg_video_time_offset_layout = QHBoxLayout(self.bg_video_time_offset_row)
+        bg_video_time_offset_layout.setContentsMargins(0, 0, 0, 0)
+        bg_video_time_offset_layout.addWidget(QLabel("Background Video Time Offset"))
+        bg_video_time_offset_layout.addWidget(self.bg_video_time_offset_input)
+        v_left_layout.addWidget(self.bg_video_time_offset_row)
+
+        self.bg_video_loop_row = QWidget()
+        bg_video_loop_video_layout = QHBoxLayout(self.bg_video_loop_row)
+        bg_video_loop_video_layout.setContentsMargins(0, 0, 0, 0)
+        bg_video_loop_video_layout.addWidget(QLabel("Background Video Loop"))
+        bg_video_loop_video_layout.addStretch()
+        bg_video_loop_video_layout.addWidget(self.bg_video_loop_checkbox)
+        v_left_layout.addWidget(self.bg_video_loop_row)
 
         v_left_layout.addWidget(SectionDivider("Playhead"))
 
@@ -279,13 +300,17 @@ class ConfigTab(QWidget):
         index = self.bg_mode_combo.findData(self.vis_config.bg_mode)
         self.bg_mode_combo.setCurrentIndex(index)
 
-        self.background_color_row.setVisible(self.vis_config.bg_mode == BackgroundMode.Color)
-        self.background_image_row.setVisible(self.vis_config.bg_mode == BackgroundMode.Image)
-        self.background_video_row.setVisible(self.vis_config.bg_mode == BackgroundMode.Video)
+        self.bg_color_row.setVisible(self.vis_config.bg_mode == BackgroundMode.Color)
+        self.bg_image_row.setVisible(self.vis_config.bg_mode == BackgroundMode.Image)
+        self.bg_video_row.setVisible(self.vis_config.bg_mode == BackgroundMode.Video)
+        self.bg_video_time_offset_row.setVisible(self.vis_config.bg_mode == BackgroundMode.Video)
+        self.bg_video_loop_row.setVisible(self.vis_config.bg_mode == BackgroundMode.Video)
 
         self.bg_button.setColor(self.vis_config.bg_color)
         self.bg_image_file_input.setText(self.vis_config.bg_image_filepath)
         self.bg_video_file_input.setText(self.vis_config.bg_video_filepath)
+        self.bg_video_time_offset_input.setValue(self.vis_config.bg_video_time_offset)
+        self.bg_video_loop_checkbox.setChecked(self.vis_config.bg_video_loop)
 
         self.use_audio_checkbox.setChecked(self.vis_config.play_audio)
         self.audio_file_input.setText(self.vis_config.audio_filepath)
@@ -330,6 +355,9 @@ class ConfigTab(QWidget):
         self.vis_config.bg_color = self.bg_button.getColor()
         self.vis_config.bg_image_filepath = self.bg_image_file_input.text()
         self.vis_config.bg_video_filepath = self.bg_video_file_input.text()
+
+        self.vis_config.bg_video_time_offset = self.bg_video_time_offset_input.value()
+        self.vis_config.bg_video_loop = self.bg_video_loop_checkbox.isChecked()
 
         self.vis_config.play_audio = self.use_audio_checkbox.isChecked()
         self.vis_config.audio_filepath = self.audio_file_input.text()
