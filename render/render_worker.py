@@ -152,7 +152,8 @@ class RenderWorker(QObject):
     @staticmethod
     def encode_frames_to_video(frames_dir: str, vis_config: VisConfig, audio_delay_ms: int, output_file: Path):
         loop_video = vis_config.bg_video_loop
-        bg_video_start_delay_sec = vis_config.bg_video_time_offset
+        # TODO this isn't aligning with preview mode offset
+        bg_video_start_delay_sec = vis_config.bg_video_time_offset + audio_delay_ms / 1000
 
         has_audio = (
             vis_config.play_audio
@@ -224,12 +225,14 @@ class RenderWorker(QObject):
                 f"[bg]"
             )
 
+            # when looping, we need "shortest" so video won't loop forever
+            shortest_flag = 1 if loop_video else 0
             filter_parts.append(
-                "[base][bg]overlay=0:0:eof_action=repeat[bgbase]"
+                f"[base][bg]overlay=0:0:eof_action=repeat:shortest={shortest_flag}[bgbase]"
             )
 
             filter_parts.append(
-                "[bgbase][midi]overlay=0:0:format=auto[v]"
+                f"[bgbase][midi]overlay=0:0:format=auto:shortest={shortest_flag}[v]"
             )
 
         # If using audio, delay it.
