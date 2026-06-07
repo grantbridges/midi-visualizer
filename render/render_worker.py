@@ -46,8 +46,8 @@ class RenderWorker(QObject):
                 frames_dir = tempfile.mkdtemp()
 
                 try:
-                    start_time = MidiRenderUtil.calc_start_time(self.vis_config, self.width)
-                    end_time = MidiRenderUtil.calc_end_time(self.vis_config, self.width)
+                    start_time = self.vis_config.get_min_time()
+                    end_time = self.vis_config.get_max_time()
                     pitch_min = self.vis_config.get_min_pitch()
                     pitch_max = self.vis_config.get_max_pitch()
 
@@ -97,8 +97,9 @@ class RenderWorker(QObject):
                     # create output filepath - delete if already exists
                     temp_output_file = Path(tempfile.gettempdir()) / f"midi_render_{uuid.uuid4()}.{self.vis_config.export_format.value}"
 
-                    audio_delay_ms = max(0, int((-start_time) * 1000))
-                    RenderWorker.encode_frames_to_video(frames_dir, self.vis_config, audio_delay_ms, temp_output_file)
+                    # delay until midi actually crosses playhead for first time
+                    midi_delay_ms = max(0, int((-start_time) * 1000))
+                    RenderWorker.encode_frames_to_video(frames_dir, self.vis_config, midi_delay_ms, temp_output_file)
 
                     if self._cancel_requested:
                         return
@@ -150,10 +151,9 @@ class RenderWorker(QObject):
         return job.frame_index
     
     @staticmethod
-    def encode_frames_to_video(frames_dir: str, vis_config: VisConfig, audio_delay_ms: int, output_file: Path):
+    def encode_frames_to_video(frames_dir: str, vis_config: VisConfig, midi_delay_ms: int, output_file: Path):
         loop_video = vis_config.bg_video_loop
-        # TODO this isn't aligning with preview mode offset
-        bg_video_start_delay_sec = vis_config.bg_video_time_offset + audio_delay_ms / 1000
+        bg_video_start_delay_sec = midi_delay_ms / 1000 + vis_config.bg_video_time_offset
 
         has_audio = (
             vis_config.play_audio
@@ -238,7 +238,7 @@ class RenderWorker(QObject):
         # If using audio, delay it.
         if has_audio:
             filter_parts.append(
-                f"[{audio_input_index}:a]adelay={audio_delay_ms}:all=1[a]"
+                f"[{audio_input_index}:a]adelay={midi_delay_ms}:all=1[a]"
             )
 
         if filter_parts:

@@ -20,35 +20,6 @@ class MidiRenderUtil:
     def __new__(cls):
         raise TypeError("MidiRenderUtil is static")
 
-    # calculated as function of view area width and playhead position such
-    # that the first note bar appears just to the right of the right edge of
-    # the view area
-    @staticmethod
-    def calc_start_time(vis_config: VisConfig, view_width: int) -> float:
-        time_min = vis_config.get_min_time()
-        max_sec = vis_config.get_max_sec_across_screen()
-        playhead_x = view_width * vis_config.playhead_pos_ratio
-        return time_min - ((view_width - playhead_x) / view_width) * max_sec
-    
-    # calculated as function of view area width and playhead position such
-    # that the last note bar will end just to the left of the left edge of
-    # the view area
-    @staticmethod
-    def calc_end_time(vis_config: VisConfig, view_width: int) -> float:
-        playhead_x = view_width * vis_config.playhead_pos_ratio
-        ratio = playhead_x / view_width
-
-        values = []
-        for track in vis_config.get_visible_tracks():
-            group = vis_config.get_track_group_by_id(track.group_id)
-            values.append(
-                track.time_max + ratio * group.bar_sec_across_screen
-            )
-
-        offset = vis_config.end_time_offset if vis_config.apply_time_offsets else 0.0
-
-        return max(values) + offset if values else 0.0
-    
     # translates a pitch to a y value for a given rect and offsets
     @staticmethod
     def pitch_to_y(pitch: int, pitch_min: int, pitch_max: int, rect: QRect, vert_padding_ratio: float, vert_offset_ratio: float) -> float:
@@ -67,14 +38,14 @@ class MidiRenderUtil:
     
     @staticmethod
     def draw_preview_background(painter: QPainter, current_time: float, vis_config: VisConfig, rect: QRect, ignore_video: bool = False):
-        # Note: only use this method for preview; bg renderer will only use color background here
+        # Note: only use this method for preview; bg renderer will only use color background
         if vis_config.bg_mode == BackgroundMode.Color:
             MidiRenderUtil.draw_color_background(painter, vis_config, rect)
         elif vis_config.bg_mode == BackgroundMode.Image:
             # TODO
             pass
         elif vis_config.bg_mode == BackgroundMode.Video:
-            frame = video_provider.get_frame(current_time + vis_config.bg_video_time_offset, loop=vis_config.bg_video_loop)
+            frame = video_provider.get_frame(current_time - vis_config.bg_video_time_offset, loop=vis_config.bg_video_loop)
             if frame is not None:
                 painter.drawImage(rect, frame)
             else:

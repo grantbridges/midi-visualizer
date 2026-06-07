@@ -113,8 +113,8 @@ class PreviewWidget(QWidget):
             self.pitch_max = self.vis_config.get_max_pitch()
 
             # calculate start/end time for preview area
-            new_start_time = MidiRenderUtil.calc_start_time(self.vis_config, self.preview_canvas.width())
-            new_end_time = MidiRenderUtil.calc_end_time(self.vis_config, self.preview_canvas.width())
+            new_start_time = self.vis_config.get_min_time()
+            new_end_time = self.vis_config.get_max_time()
 
             if self.start_time != new_start_time or self.end_time != new_end_time:
                 # store whether current time was at existing start/end position so
