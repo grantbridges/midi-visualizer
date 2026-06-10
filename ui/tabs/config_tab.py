@@ -68,7 +68,13 @@ class ConfigTab(QWidget):
         self.playhead_color_button = ColorButton()
         self.playhead_color_button.valueChanged.connect(self._on_changes)
 
-        self.playhead_pos_input = QDoubleSpinBox(decimals=2, minimum=0.00, maximum=1.00, singleStep=0.01)
+        self.playhead_alpha_input = QSpinBox(minimum=0, maximum=255)
+        self.playhead_alpha_input.valueChanged.connect(self._on_changes)
+
+        self.playhead_thickness_input = QSpinBox(minimum=1, maximum=50)
+        self.playhead_thickness_input.valueChanged.connect(self._on_changes)
+        
+        self.playhead_pos_input = QDoubleSpinBox(decimals=3, minimum=0.000, maximum=1.000, singleStep=0.005)
         self.playhead_pos_input.valueChanged.connect(self._on_changes)
 
         self.vertical_padding_input = QDoubleSpinBox(decimals=2, minimum=0.00, maximum=1.00, singleStep=0.01)
@@ -211,12 +217,22 @@ class ConfigTab(QWidget):
         playhead_color_layout.addWidget(self.playhead_color_button)
         v_left_layout.addLayout(playhead_color_layout)
 
+        playhead_alpha_layout = QHBoxLayout()
+        playhead_alpha_layout.addWidget(QLabel("Playhead Alpha"))
+        playhead_alpha_layout.addWidget(self.playhead_alpha_input)
+        v_left_layout.addLayout(playhead_alpha_layout)
+
+        playhead_thickness_layout = QHBoxLayout()
+        playhead_thickness_layout.addWidget(QLabel("Playhead Thickness"))
+        playhead_thickness_layout.addWidget(self.playhead_thickness_input)
+        v_left_layout.addLayout(playhead_thickness_layout)
+
         playhead_pos_layout = QHBoxLayout()
         playhead_pos_layout.addWidget(QLabel("Playhead Position"))
         playhead_pos_layout.addWidget(self.playhead_pos_input)
         v_left_layout.addLayout(playhead_pos_layout)
 
-        v_left_layout.addWidget(SectionDivider("Position"))
+        v_left_layout.addWidget(SectionDivider("Scaling/Position"))
 
         vertical_padding_layout = QHBoxLayout()
         vertical_padding_layout.addWidget(QLabel("Vertical Padding"))
@@ -318,6 +334,8 @@ class ConfigTab(QWidget):
 
         self.show_playhead_checkbox.setChecked(self.vis_config.show_playhead)
         self.playhead_color_button.setColor(self.vis_config.playhead_color)
+        self.playhead_alpha_input.setValue(self.vis_config.playhead_alpha)
+        self.playhead_thickness_input.setValue(self.vis_config.playhead_thickness)
         self.playhead_pos_input.setValue(self.vis_config.playhead_pos_ratio)
 
         self.vertical_padding_input.setValue(self.vis_config.vertical_padding_ratio)
@@ -364,6 +382,8 @@ class ConfigTab(QWidget):
 
         self.vis_config.show_playhead = self.show_playhead_checkbox.isChecked()
         self.vis_config.playhead_color = self.playhead_color_button.getColor()
+        self.vis_config.playhead_alpha = self.playhead_alpha_input.value()
+        self.vis_config.playhead_thickness = self.playhead_thickness_input.value()
         self.vis_config.playhead_pos_ratio = self.playhead_pos_input.value()
 
         self.vis_config.vertical_padding_ratio = self.vertical_padding_input.value()

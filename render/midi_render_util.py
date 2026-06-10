@@ -63,8 +63,10 @@ class MidiRenderUtil:
 
         # draw playhead line that notes will cross when they "play"
         if vis_config.show_playhead:
-            pen = QPen(QUtil.rgb_to_qcolor(vis_config.playhead_color))
-            pen.setWidth(2)
+            color = QUtil.rgb_to_qcolor(vis_config.playhead_color)
+            color.setAlpha(vis_config.playhead_alpha)
+            pen = QPen(color)
+            pen.setWidth(vis_config.playhead_thickness)
             painter.setPen(pen)
             painter.drawLine(playhead_x, 0, playhead_x, rect.height())
 
