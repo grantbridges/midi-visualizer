@@ -123,7 +123,6 @@ class PreviewWidget(QWidget):
                 was_time_at_end = Util.is_equal(self.current_time, self.end_time)
 
                 # if time bounds changed, reset position
-                self.playing = False
                 self.start_time = new_start_time
                 self.end_time = new_end_time
                 if self.start_time == self.end_time:
@@ -167,8 +166,10 @@ class PreviewWidget(QWidget):
 
     def _refresh_canvas(self):
         self.preview_canvas.refresh(
-            self.current_time, 
-            self.vis_config, 
+            self.current_time,
+            self.vis_config,
+            self.start_time, 
+            self.end_time,
             self.pitch_min, 
             self.pitch_max
         )
@@ -180,7 +181,6 @@ class PreviewWidget(QWidget):
             self._stop()
 
     def _reset(self):
-        self.playing = False
         self.current_time = self.start_time
         self._update_slider_position()
         self._refresh_canvas()

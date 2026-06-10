@@ -16,14 +16,18 @@ class PreviewCanvas(QWidget):
         # (cached as members for paintEvent to access)
         self.vis_config: VisConfig = None
         self.current_time: float = 0.0 # sec
+        self.start_time: float = 0.0 # sec
+        self.end_time: float = 1.0 # sec
         self.pitch_min: int = 0
         self.pitch_max: int = 0
 
         self.selected_group_id: UUID | None = None
 
-    def refresh(self, current_time: float, vis_config: VisConfig, pitch_min: int, pitch_max: int):
+    def refresh(self, current_time: float, vis_config: VisConfig, start_time: float, end_time: float, pitch_min: int, pitch_max: int):
         self.current_time = current_time
         self.vis_config = vis_config
+        self.start_time = start_time
+        self.end_time = end_time
         self.pitch_min = pitch_min
         self.pitch_max = pitch_max
 
@@ -46,7 +50,6 @@ class PreviewCanvas(QWidget):
 
         self._draw_guides(painter)
         self._draw_pitches(painter)
-        self._draw_text(painter)
 
         MidiRenderUtil.draw_notes(
             painter, 
@@ -56,6 +59,17 @@ class PreviewCanvas(QWidget):
             self.pitch_max, 
             self.rect()
         )
+
+        MidiRenderUtil.draw_fade_overlay(
+            painter,
+            self.current_time,
+            self.start_time,
+            self.end_time,
+            self.vis_config,
+            self.rect()
+        )
+
+        self._draw_text(painter)
 
     def _draw_guides(self, painter: QPainter):
         if not user_settings.show_guides:

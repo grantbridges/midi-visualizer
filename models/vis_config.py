@@ -63,7 +63,7 @@ class VisConfig:
     playhead_pos_ratio: float = 0.5 
     playhead_color: RGB = Color.LIGHT_GRAY
     playhead_alpha: int = 255
-    playhead_thickness: int = 1
+    playhead_thickness_ratio: float = .001
     # ratio of vertical compression of midi area - 0 to 1 (1 is maximally crunched)
     vertical_padding_ratio = 0.15 
     # ratio of vertical offset positioning - -1 to 1 (-1 is top, 0 center, 1 bottom)
@@ -158,7 +158,7 @@ class VisConfig:
             "playhead_pos_ratio": self.playhead_pos_ratio,
             "playhead_color": list(self.playhead_color),
             "playhead_alpha": self.playhead_alpha,
-            "playhead_thickness": self.playhead_thickness,
+            "playhead_thickness_ratio": self.playhead_thickness_ratio,
 
             "vertical_padding_ratio": self.vertical_padding_ratio,
             "vertical_offset_ratio": self.vertical_offset_ratio,
@@ -262,7 +262,7 @@ class VisConfig:
 
             if schema_version >= 9:
                 config.playhead_alpha = data["playhead_alpha"]
-                config.playhead_thickness = data["playhead_thickness"]
+                config.playhead_thickness_ratio = data["playhead_thickness_ratio"]
                 config.fade_in_enabled = data["fade_in_enabled"]
                 config.fade_in_color = tuple(data["fade_in_color"])
                 config.fade_in_time = data["fade_in_time"]

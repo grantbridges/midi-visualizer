@@ -6,6 +6,7 @@ from common import Const, Color, RGB
 from models import VisConfig, BackgroundMode, Note
 from render.video_provider import video_provider
 from utility import QUtil
+from utility.util import Util
 
 @dataclass
 class RenderTrack:
@@ -66,7 +67,7 @@ class MidiRenderUtil:
             color = QUtil.rgb_to_qcolor(vis_config.playhead_color)
             color.setAlpha(vis_config.playhead_alpha)
             pen = QPen(color)
-            pen.setWidth(vis_config.playhead_thickness)
+            pen.setWidth(vis_config.playhead_thickness_ratio * rect.width())
             painter.setPen(pen)
             painter.drawLine(playhead_x, 0, playhead_x, rect.height())
 
@@ -153,3 +154,32 @@ class MidiRenderUtil:
                             painter.setBrush(qcolor)
                             painter.setPen(Qt.NoPen)
                             painter.drawRoundedRect(color_x, y, color_w, h, radius, radius)
+
+    @staticmethod
+    def draw_fade_overlay(painter: QPainter, current_time: float, start_time: float, end_time: float, vis_config: VisConfig, rect: QRect):
+        if vis_config.fade_in_enabled and vis_config.fade_in_time > 0:
+            # draw fade in
+            fade_in_finish_time = start_time + vis_config.fade_in_time
+
+            if start_time <= current_time <= fade_in_finish_time:
+                t = (current_time - start_time) / vis_config.fade_in_time
+                alpha = int(255 * (1.0 - t))
+                alpha = Util.clamp(alpha, 0, 255)
+
+                qcolor = QUtil.rgb_to_qcolor(vis_config.fade_in_color)
+                qcolor.setAlpha(alpha)
+                painter.fillRect(rect, qcolor)
+
+        if vis_config.fade_out_enabled and vis_config.fade_out_time > 0:
+            # draw fade out
+            fade_out_start_time = end_time - vis_config.fade_out_time
+
+            if fade_out_start_time <= current_time <= end_time:
+                t = (current_time - fade_out_start_time) / vis_config.fade_out_time
+                alpha = int(255 * t)
+                alpha = Util.clamp(alpha, 0, 255)
+
+                qcolor = QUtil.rgb_to_qcolor(vis_config.fade_out_color)
+                qcolor.setAlpha(alpha)
+                painter.fillRect(rect, qcolor)
+

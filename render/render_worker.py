@@ -22,6 +22,7 @@ class RenderFrameJobInput:
     width: int
     height: int
     start_time: float
+    end_time: float
     frames_dir: str
 
 class RenderWorker(QObject):
@@ -62,6 +63,7 @@ class RenderWorker(QObject):
                             width=self.width,
                             height=self.height,
                             start_time=start_time,
+                            end_time=end_time,
                             frames_dir=frames_dir
                         )
                         for i in range(total_frames)
@@ -139,6 +141,8 @@ class RenderWorker(QObject):
             # don't handle other BG types here - those will get layered in during video construction
         
         MidiRenderUtil.draw_notes(painter, current_time, job.vis_config, job.pitch_min, job.pitch_max, rect)
+        MidiRenderUtil.draw_fade_overlay(painter, current_time, job.start_time, job.end_time, job.vis_config, rect)
+        
         painter.end()
 
         if cancel_event.is_set():
