@@ -48,64 +48,64 @@ class ConfigTab(QWidget):
         self.bg_video_file_input = QLineEdit(readOnly=True)
         self.bg_video_file_browse_btn = QPushButton("...")
         self.bg_video_file_browse_btn.clicked.connect(self._browse_bg_video_file)
-
         self.bg_video_time_offset_input = QDoubleSpinBox(decimals=2, minimum=-10.0, maximum=10.0, singleStep=0.01, suffix=" sec")
         self.bg_video_time_offset_input.valueChanged.connect(self._on_changes)
-
         self.bg_video_loop_checkbox = QCheckBox()
         self.bg_video_loop_checkbox.toggled.connect(self._on_changes)
 
         self.use_audio_checkbox = QCheckBox()
         self.use_audio_checkbox.toggled.connect(self._on_changes)
-
         self.audio_file_input = QLineEdit(readOnly=True)
         self.audio_file_browse_btn = QPushButton("...")
         self.audio_file_browse_btn.clicked.connect(self._browse_audio_file)
 
         self.show_playhead_checkbox = QCheckBox()
         self.show_playhead_checkbox.toggled.connect(self._on_changes)
-
         self.playhead_color_button = ColorButton()
         self.playhead_color_button.valueChanged.connect(self._on_changes)
-
         self.playhead_alpha_input = QSpinBox(minimum=0, maximum=255)
         self.playhead_alpha_input.valueChanged.connect(self._on_changes)
-
         self.playhead_thickness_input = QSpinBox(minimum=1, maximum=50)
         self.playhead_thickness_input.valueChanged.connect(self._on_changes)
-        
         self.playhead_pos_input = QDoubleSpinBox(decimals=3, minimum=0.000, maximum=1.000, singleStep=0.005)
         self.playhead_pos_input.valueChanged.connect(self._on_changes)
 
         self.vertical_padding_input = QDoubleSpinBox(decimals=2, minimum=0.00, maximum=1.00, singleStep=0.01)
         self.vertical_padding_input.valueChanged.connect(self._on_changes)
-
         self.vertical_offset_input = QDoubleSpinBox(decimals=2, minimum=-1.00, maximum=1.00, singleStep=0.01)
         self.vertical_offset_input.valueChanged.connect(self._on_changes)
 
         self.note_fadeout_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.00, singleStep=.01)
         self.note_fadeout_input.valueChanged.connect(self._on_changes)
-
         self.note_play_color_button = ColorButton()
         self.note_play_color_button.valueChanged.connect(self._on_changes)
 
         self.auto_calc_pitch_bounds_checkbox = QCheckBox()
         self.auto_calc_pitch_bounds_checkbox.toggled.connect(self._on_changes)
-
         self.pitch_min_input = QSpinBox()
         self.pitch_min_input.valueChanged.connect(self._on_changes)
-
         self.pitch_max_input = QSpinBox()      
         self.pitch_max_input.valueChanged.connect(self._on_changes)
 
         self.apply_time_offsets_checkbox = QCheckBox()
         self.apply_time_offsets_checkbox.toggled.connect(self._on_changes)
-
         self.start_time_input = QDoubleSpinBox(decimals=2, minimum=-10.0, maximum=10.0, singleStep=0.01, suffix=" sec")
         self.start_time_input.valueChanged.connect(self._on_changes)
-
         self.end_time_input = QDoubleSpinBox(decimals=2, minimum=-10.0, maximum=10.0, singleStep=0.01, suffix=" sec")
         self.end_time_input.valueChanged.connect(self._on_changes)
+
+        self.fade_in_checkbox = QCheckBox()
+        self.fade_in_checkbox.toggled.connect(self._on_changes)
+        self.fade_in_color = ColorButton()
+        self.fade_in_color.valueChanged.connect(self._on_changes)
+        self.fade_in_time = QDoubleSpinBox(decimals=2, minimum=0.0, maximum=5.00, singleStep=0.01, suffix=" sec")
+        self.fade_in_time.valueChanged.connect(self._on_changes)
+        self.fade_out_checkbox = QCheckBox()
+        self.fade_out_checkbox.toggled.connect(self._on_changes)
+        self.fade_out_color = ColorButton()
+        self.fade_out_color.valueChanged.connect(self._on_changes)
+        self.fade_out_time = QDoubleSpinBox(decimals=2, minimum=0.0, maximum=5.00, singleStep=0.01, suffix=" sec")
+        self.fade_out_time.valueChanged.connect(self._on_changes)
 
     def shutdown(self):
         pass
@@ -122,7 +122,7 @@ class ConfigTab(QWidget):
         content = QWidget()
         content_layout = QVBoxLayout(content)
 
-        h_layout = QHBoxLayout()
+        root_h_layout = QHBoxLayout()
         v_left_layout = QVBoxLayout()
         v_right_layout = QVBoxLayout()
         v_left_layout.setSpacing(2)
@@ -131,118 +131,118 @@ class ConfigTab(QWidget):
         # Left Column
         v_left_layout.addWidget(SectionDivider("Track Props"))
 
-        track_name_layout = QHBoxLayout()
-        track_name_layout.addWidget(QLabel("Track Name"))
-        track_name_layout.addStretch()
-        track_name_layout.addWidget(self.track_name)
-        v_left_layout.addLayout(track_name_layout)
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(QLabel("Track Name"))
+        h_layout.addStretch()
+        h_layout.addWidget(self.track_name)
+        v_left_layout.addLayout(h_layout)
 
-        fps_layout = QHBoxLayout()
-        fps_layout.addWidget(QLabel("FPS"))
-        fps_layout.addWidget(self.fps_input)
-        v_left_layout.addLayout(fps_layout)
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(QLabel("FPS"))
+        h_layout.addWidget(self.fps_input)
+        v_left_layout.addLayout(h_layout)
 
-        use_audio_layout = QHBoxLayout()
-        use_audio_layout.addWidget(QLabel("Use Audio"))
-        use_audio_layout.addStretch()
-        use_audio_layout.addWidget(self.use_audio_checkbox)
-        v_left_layout.addLayout(use_audio_layout)
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(QLabel("Use Audio"))
+        h_layout.addStretch()
+        h_layout.addWidget(self.use_audio_checkbox)
+        v_left_layout.addLayout(h_layout)
 
         self.audio_file_row = QWidget()
-        audio_file_layout = QHBoxLayout(self.audio_file_row)
-        audio_file_layout.setContentsMargins(0, 0, 0, 0)
-        audio_file_layout.addWidget(QLabel("Audio File"))
-        audio_file_layout.addStretch()
-        audio_file_layout.addWidget(self.audio_file_input)
-        audio_file_layout.addWidget(self.audio_file_browse_btn)
+        h_layout = QHBoxLayout(self.audio_file_row)
+        h_layout.setContentsMargins(0, 0, 0, 0)
+        h_layout.addWidget(QLabel("Audio File"))
+        h_layout.addStretch()
+        h_layout.addWidget(self.audio_file_input)
+        h_layout.addWidget(self.audio_file_browse_btn)
         v_left_layout.addWidget(self.audio_file_row)
 
         v_left_layout.addWidget(SectionDivider("Background"))
 
-        background_mode_layout = QHBoxLayout()
-        background_mode_layout.addWidget(QLabel("Background Mode"))
-        background_mode_layout.addWidget(self.bg_mode_combo)
-        v_left_layout.addLayout(background_mode_layout)
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(QLabel("Background Mode"))
+        h_layout.addWidget(self.bg_mode_combo)
+        v_left_layout.addLayout(h_layout)
 
         self.bg_color_row = QWidget()
-        background_color_layout = QHBoxLayout(self.bg_color_row)
-        background_color_layout.setContentsMargins(0, 0, 0, 0)
-        background_color_layout.addWidget(QLabel("Background Color"))
-        background_color_layout.addWidget(self.bg_button)
+        h_layout = QHBoxLayout(self.bg_color_row)
+        h_layout.setContentsMargins(0, 0, 0, 0)
+        h_layout.addWidget(QLabel("Background Color"))
+        h_layout.addWidget(self.bg_button)
         v_left_layout.addWidget(self.bg_color_row)
 
         self.bg_image_row = QWidget()
-        background_image_layout = QHBoxLayout(self.bg_image_row)
-        background_image_layout.setContentsMargins(0, 0, 0, 0)
-        background_image_layout.addWidget(QLabel("Background Image File"))
-        background_image_layout.addStretch()
-        background_image_layout.addWidget(self.bg_image_file_input)
-        background_image_layout.addWidget(self.bg_image_file_browse_btn)
+        h_layout = QHBoxLayout(self.bg_image_row)
+        h_layout.setContentsMargins(0, 0, 0, 0)
+        h_layout.addWidget(QLabel("Background Image File"))
+        h_layout.addStretch()
+        h_layout.addWidget(self.bg_image_file_input)
+        h_layout.addWidget(self.bg_image_file_browse_btn)
         v_left_layout.addWidget(self.bg_image_row)
 
         self.bg_video_row = QWidget()
-        background_video_layout = QHBoxLayout(self.bg_video_row)
-        background_video_layout.setContentsMargins(0, 0, 0, 0)
-        background_video_layout.addWidget(QLabel("Background Video File"))
-        background_video_layout.addStretch()
-        background_video_layout.addWidget(self.bg_video_file_input)
-        background_video_layout.addWidget(self.bg_video_file_browse_btn)
+        h_layout = QHBoxLayout(self.bg_video_row)
+        h_layout.setContentsMargins(0, 0, 0, 0)
+        h_layout.addWidget(QLabel("Background Video File"))
+        h_layout.addStretch()
+        h_layout.addWidget(self.bg_video_file_input)
+        h_layout.addWidget(self.bg_video_file_browse_btn)
         v_left_layout.addWidget(self.bg_video_row)
 
         self.bg_video_time_offset_row = QWidget()
-        bg_video_time_offset_layout = QHBoxLayout(self.bg_video_time_offset_row)
-        bg_video_time_offset_layout.setContentsMargins(0, 0, 0, 0)
-        bg_video_time_offset_layout.addWidget(QLabel("Background Video Time Offset"))
-        bg_video_time_offset_layout.addWidget(self.bg_video_time_offset_input)
+        h_layout = QHBoxLayout(self.bg_video_time_offset_row)
+        h_layout.setContentsMargins(0, 0, 0, 0)
+        h_layout.addWidget(QLabel("Background Video Time Offset"))
+        h_layout.addWidget(self.bg_video_time_offset_input)
         v_left_layout.addWidget(self.bg_video_time_offset_row)
 
         self.bg_video_loop_row = QWidget()
-        bg_video_loop_video_layout = QHBoxLayout(self.bg_video_loop_row)
-        bg_video_loop_video_layout.setContentsMargins(0, 0, 0, 0)
-        bg_video_loop_video_layout.addWidget(QLabel("Background Video Loop"))
-        bg_video_loop_video_layout.addStretch()
-        bg_video_loop_video_layout.addWidget(self.bg_video_loop_checkbox)
+        h_layout = QHBoxLayout(self.bg_video_loop_row)
+        h_layout.setContentsMargins(0, 0, 0, 0)
+        h_layout.addWidget(QLabel("Background Video Loop"))
+        h_layout.addStretch()
+        h_layout.addWidget(self.bg_video_loop_checkbox)
         v_left_layout.addWidget(self.bg_video_loop_row)
 
         v_left_layout.addWidget(SectionDivider("Playhead"))
 
-        show_playhead_layout = QHBoxLayout()
-        show_playhead_layout.addWidget(QLabel("Show Playhead"))
-        show_playhead_layout.addStretch()
-        show_playhead_layout.addWidget(self.show_playhead_checkbox)
-        v_left_layout.addLayout(show_playhead_layout)
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(QLabel("Show Playhead"))
+        h_layout.addStretch()
+        h_layout.addWidget(self.show_playhead_checkbox)
+        v_left_layout.addLayout(h_layout)
 
-        playhead_color_layout = QHBoxLayout()
-        playhead_color_layout.addWidget(QLabel("Playhead Color"))
-        playhead_color_layout.addWidget(self.playhead_color_button)
-        v_left_layout.addLayout(playhead_color_layout)
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(QLabel("Playhead Color"))
+        h_layout.addWidget(self.playhead_color_button)
+        v_left_layout.addLayout(h_layout)
 
-        playhead_alpha_layout = QHBoxLayout()
-        playhead_alpha_layout.addWidget(QLabel("Playhead Alpha"))
-        playhead_alpha_layout.addWidget(self.playhead_alpha_input)
-        v_left_layout.addLayout(playhead_alpha_layout)
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(QLabel("Playhead Alpha"))
+        h_layout.addWidget(self.playhead_alpha_input)
+        v_left_layout.addLayout(h_layout)
 
-        playhead_thickness_layout = QHBoxLayout()
-        playhead_thickness_layout.addWidget(QLabel("Playhead Thickness"))
-        playhead_thickness_layout.addWidget(self.playhead_thickness_input)
-        v_left_layout.addLayout(playhead_thickness_layout)
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(QLabel("Playhead Thickness"))
+        h_layout.addWidget(self.playhead_thickness_input)
+        v_left_layout.addLayout(h_layout)
 
-        playhead_pos_layout = QHBoxLayout()
-        playhead_pos_layout.addWidget(QLabel("Playhead Position"))
-        playhead_pos_layout.addWidget(self.playhead_pos_input)
-        v_left_layout.addLayout(playhead_pos_layout)
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(QLabel("Playhead Position"))
+        h_layout.addWidget(self.playhead_pos_input)
+        v_left_layout.addLayout(h_layout)
 
         v_left_layout.addWidget(SectionDivider("Scaling/Position"))
 
-        vertical_padding_layout = QHBoxLayout()
-        vertical_padding_layout.addWidget(QLabel("Vertical Padding"))
-        vertical_padding_layout.addWidget(self.vertical_padding_input)
-        v_left_layout.addLayout(vertical_padding_layout)
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(QLabel("Vertical Padding"))
+        h_layout.addWidget(self.vertical_padding_input)
+        v_left_layout.addLayout(h_layout)
 
-        vertical_offset_layout = QHBoxLayout()
-        vertical_offset_layout.addWidget(QLabel("Vertical Offset"))
-        vertical_offset_layout.addWidget(self.vertical_offset_input)
-        v_left_layout.addLayout(vertical_offset_layout)
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(QLabel("Vertical Offset"))
+        h_layout.addWidget(self.vertical_offset_input)
+        v_left_layout.addLayout(h_layout)
 
         v_left_layout.addStretch()
 
@@ -250,58 +250,92 @@ class ConfigTab(QWidget):
 
         v_right_layout.addWidget(SectionDivider("Note Style"))
 
-        note_fadeout_layout = QHBoxLayout()
-        note_fadeout_layout.addWidget(QLabel("Note Fadeout"))
-        note_fadeout_layout.addWidget(self.note_fadeout_input)
-        v_right_layout.addLayout(note_fadeout_layout)
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(QLabel("Note Fadeout"))
+        h_layout.addWidget(self.note_fadeout_input)
+        v_right_layout.addLayout(h_layout)
 
-        note_play_color_layout = QHBoxLayout()
-        note_play_color_layout.addWidget(QLabel("Note Play Color"))
-        note_play_color_layout.addWidget(self.note_play_color_button)
-        v_right_layout.addLayout(note_play_color_layout)
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(QLabel("Note Play Color"))
+        h_layout.addWidget(self.note_play_color_button)
+        v_right_layout.addLayout(h_layout)
 
         v_right_layout.addWidget(SectionDivider("Pitch Settings"))
 
-        auto_calc_pitch_bounds_layout = QHBoxLayout()
-        auto_calc_pitch_bounds_layout.addWidget(QLabel("Auto-Calc Pitch Min/Max"))
-        auto_calc_pitch_bounds_layout.addStretch()
-        auto_calc_pitch_bounds_layout.addWidget(self.auto_calc_pitch_bounds_checkbox)
-        v_right_layout.addLayout(auto_calc_pitch_bounds_layout)
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(QLabel("Auto-Calc Pitch Min/Max"))
+        h_layout.addStretch()
+        h_layout.addWidget(self.auto_calc_pitch_bounds_checkbox)
+        v_right_layout.addLayout(h_layout)
 
-        pitch_min_layout = QHBoxLayout()
-        pitch_min_layout.addWidget(QLabel("Pitch Min"))
-        pitch_min_layout.addWidget(self.pitch_min_input)
-        v_right_layout.addLayout(pitch_min_layout)
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(QLabel("Pitch Min"))
+        h_layout.addWidget(self.pitch_min_input)
+        v_right_layout.addLayout(h_layout)
 
-        pitch_max_layout = QHBoxLayout()
-        pitch_max_layout.addWidget(QLabel("Pitch Max"))
-        pitch_max_layout.addWidget(self.pitch_max_input)
-        v_right_layout.addLayout(pitch_max_layout)
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(QLabel("Pitch Max"))
+        h_layout.addWidget(self.pitch_max_input)
+        v_right_layout.addLayout(h_layout)
 
         v_right_layout.addWidget(SectionDivider("Time Offsets"))
 
-        apply_time_offsets_layout = QHBoxLayout()
-        apply_time_offsets_layout.addWidget(QLabel("Apply Time Offsets"))
-        apply_time_offsets_layout.addStretch()
-        apply_time_offsets_layout.addWidget(self.apply_time_offsets_checkbox)
-        v_right_layout.addLayout(apply_time_offsets_layout)
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(QLabel("Apply Time Offsets"))
+        h_layout.addStretch()
+        h_layout.addWidget(self.apply_time_offsets_checkbox)
+        v_right_layout.addLayout(h_layout)
 
-        start_time_layout = QHBoxLayout()
-        start_time_layout.addWidget(QLabel("Start Time Offset"))
-        start_time_layout.addWidget(self.start_time_input)
-        v_right_layout.addLayout(start_time_layout)
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(QLabel("Start Time Offset"))
+        h_layout.addWidget(self.start_time_input)
+        v_right_layout.addLayout(h_layout)
 
         end_time_layout = QHBoxLayout()
         end_time_layout.addWidget(QLabel("End Time Offset"))
         end_time_layout.addWidget(self.end_time_input)
         v_right_layout.addLayout(end_time_layout)
 
+        v_right_layout.addWidget(SectionDivider("Fade In/Out"))
+        
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(QLabel("Fade In Enabled"))
+        h_layout.addStretch()
+        h_layout.addWidget(self.fade_in_checkbox)
+        v_right_layout.addLayout(h_layout)
+
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(QLabel("Fade In Color"))
+        h_layout.addWidget(self.fade_in_color)
+        v_right_layout.addLayout(h_layout)
+
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(QLabel("Fade In Time"))
+        h_layout.addWidget(self.fade_in_time)
+        v_right_layout.addLayout(h_layout)
+
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(QLabel("Fade Out Enabled"))
+        h_layout.addStretch()
+        h_layout.addWidget(self.fade_out_checkbox)
+        v_right_layout.addLayout(h_layout)
+
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(QLabel("Fade Out Color"))
+        h_layout.addWidget(self.fade_out_color)
+        v_right_layout.addLayout(h_layout)
+
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(QLabel("Fade Out Time"))
+        h_layout.addWidget(self.fade_out_time)
+        v_right_layout.addLayout(h_layout)
+
         v_right_layout.addStretch()
 
-        h_layout.addLayout(v_left_layout, 1)
-        h_layout.addLayout(v_right_layout, 1)
+        root_h_layout.addLayout(v_left_layout, 1)
+        root_h_layout.addLayout(v_right_layout, 1)
 
-        content_layout.addLayout(h_layout)
+        content_layout.addLayout(root_h_layout)
         
         scroll_area.setWidget(content)
 
@@ -345,22 +379,30 @@ class ConfigTab(QWidget):
         self.note_play_color_button.setColor(self.vis_config.note_play_color)
 
         self.auto_calc_pitch_bounds_checkbox.setChecked(self.vis_config.auto_calc_pitch_bounds)
-
         self.pitch_min_input.setDisabled(self.vis_config.auto_calc_pitch_bounds)
         self.pitch_min_input.setRange(0, self.vis_config.manual_pitch_max)
         self.pitch_min_input.setValue(self.vis_config.get_min_pitch() if self.vis_config.auto_calc_pitch_bounds else self.vis_config.manual_pitch_min)
-
         self.pitch_max_input.setDisabled(self.vis_config.auto_calc_pitch_bounds)
         self.pitch_max_input.setRange(self.vis_config.manual_pitch_min, 127)
         self.pitch_max_input.setValue(self.vis_config.get_max_pitch() if self.vis_config.auto_calc_pitch_bounds else self.vis_config.manual_pitch_max)  
 
         self.apply_time_offsets_checkbox.setChecked(self.vis_config.apply_time_offsets)
-
         self.start_time_input.setDisabled(not self.vis_config.apply_time_offsets)
         self.start_time_input.setValue(self.vis_config.start_time_offset)
-
         self.end_time_input.setDisabled(not self.vis_config.apply_time_offsets)
         self.end_time_input.setValue(self.vis_config.end_time_offset)  
+
+        self.fade_in_checkbox.setChecked(self.vis_config.fade_in_enabled)
+        self.fade_in_color.setColor(self.vis_config.fade_in_color)
+        self.fade_in_color.setDisabled(not self.vis_config.fade_in_enabled)
+        self.fade_in_time.setValue(self.vis_config.fade_in_time)
+        self.fade_in_time.setDisabled(not self.vis_config.fade_in_enabled)
+
+        self.fade_out_checkbox.setChecked(self.vis_config.fade_out_enabled)
+        self.fade_out_color.setColor(self.vis_config.fade_out_color)
+        self.fade_out_color.setDisabled(not self.vis_config.fade_out_enabled)
+        self.fade_out_time.setValue(self.vis_config.fade_out_time)
+        self.fade_out_time.setDisabled(not self.vis_config.fade_out_enabled)
 
         self.block_changes_callback = False
 
@@ -401,7 +443,13 @@ class ConfigTab(QWidget):
         self.vis_config.apply_time_offsets = self.apply_time_offsets_checkbox.isChecked()
         self.vis_config.start_time_offset = self.start_time_input.value()
         self.vis_config.end_time_offset = self.end_time_input.value()
-        
+
+        self.vis_config.fade_in_enabled = self.fade_in_checkbox.isChecked()
+        self.vis_config.fade_in_color = self.fade_in_color.getColor()
+        self.vis_config.fade_in_time = self.fade_in_time.value()
+        self.vis_config.fade_out_enabled = self.fade_out_checkbox.isChecked()
+        self.vis_config.fade_out_color = self.fade_out_color.getColor()
+        self.vis_config.fade_out_time = self.fade_out_time.value()
 
     # callbacks
 
