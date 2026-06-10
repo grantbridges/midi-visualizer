@@ -24,8 +24,9 @@ History
   6 - Auto-calc pitch bounds & manual values
   7 - BG details, play audio flag, & time offsets
   8 - BG video props
+  9 - Fade In/Out; Playhead thickness and alpha
 '''
-VIS_CONFIG_SCHEMA_VERSION = 8
+VIS_CONFIG_SCHEMA_VERSION = 9
 
 '''
 Top level construct containing all visualizing info
@@ -56,11 +57,13 @@ class VisConfig:
     export_format: RenderFormat = RenderFormat.MP4
     export_resolution: Resolution = Resolution.FullHD
 
-    # -- Display Props --
+    # -- Playhead Props --
     show_playhead: bool = True
     # ratio of view area width playhead's located at - 0 to 1 (0 is far left, 1 is far right)
     playhead_pos_ratio: float = 0.5 
     playhead_color: RGB = Color.LIGHT_GRAY
+    playhead_alpha: int = 255
+    playhead_thickness: int = 1
     # ratio of vertical compression of midi area - 0 to 1 (1 is maximally crunched)
     vertical_padding_ratio = 0.15 
     # ratio of vertical offset positioning - -1 to 1 (-1 is top, 0 center, 1 bottom)
@@ -70,6 +73,14 @@ class VisConfig:
     # halfway from playhead to left edge, etc. It makes sense, trust me.
     note_fadeout_ratio: float = 0.5
     note_play_color: RGB = Color.WHITE
+
+    # -- Fade In --
+    fade_in_enabled: bool = False
+    fade_in_color: bool = Color.BLACK
+    fade_in_time: float = 1.0 # sec
+    fade_out_enabled: bool = False
+    fade_out_color: bool = Color.BLACK
+    fade_out_time: float = 1.0 # sec
 
     # -- Pitch Range --
     auto_calc_pitch_bounds: bool = True
@@ -123,41 +134,52 @@ class VisConfig:
         print(f'VisConfig | Saving config to "{path}"')
 
         data = {
-            "schemaVersion": VIS_CONFIG_SCHEMA_VERSION,
-            "trackName": self.track_name,
+            "schema_version": VIS_CONFIG_SCHEMA_VERSION,
+            "track_name": self.track_name,
             "fps": self.fps,
 
-            "bgMode": self.bg_mode.name,
-            "bgColor": list(self.bg_color),
-            "bgImageFilepath": self.bg_image_filepath,
-            "bgVideoFilepath": self.bg_video_filepath,
+            "bg_mode": self.bg_mode.name,
+            "bg_color": list(self.bg_color),
+            "bg_image_filepath": self.bg_image_filepath,
+            "bg_video_filepath": self.bg_video_filepath,
 
-            "bgVideoTimeOffset": self.bg_video_time_offset,
-            "bgVideoLoop": self.bg_video_loop,
+            "bg_video_time_offset": self.bg_video_time_offset,
+            "bg_video_loop": self.bg_video_loop,
 
-            "playAudio": self.play_audio,
-            "audioFilepath": self.audio_filepath,
+            "play_audio": self.play_audio,
+            "audio_filepath": self.audio_filepath,
 
-            "exportDir": self.export_dir,
-            "exportFilename": self.export_filename,
-            "exportFormat": self.export_format.name,
-            "exportResolution": self.export_resolution.name,
+            "export_dir": self.export_dir,
+            "export_filename": self.export_filename,
+            "export_format": self.export_format.name,
+            "export_resolution": self.export_resolution.name,
 
-            "showPlayhead": self.show_playhead,
-            "playheadPosRatio": self.playhead_pos_ratio,
-            "playheadColor": list(self.playhead_color),
-            "verticalPaddingRatio": self.vertical_padding_ratio,
-            "verticalOffsetRatio": self.vertical_offset_ratio,
-            "noteFadeoutRatio": self.note_fadeout_ratio,
-            "notePlayColor": list(self.note_play_color),
-            "autoCalcPitchBounds": self.auto_calc_pitch_bounds,
-            "manualPitchMin": self.manual_pitch_min,
-            "manualPitchMax": self.manual_pitch_max,
-            "applyTimeOffsets": self.apply_time_offsets,
-            "startTimeOffset": self.start_time_offset,
-            "endTimeOffset": self.end_time_offset,
+            "show_playhead": self.show_playhead,
+            "playhead_pos_ratio": self.playhead_pos_ratio,
+            "playhead_color": list(self.playhead_color),
+            "playhead_alpha": self.playhead_alpha,
+            "playhead_thickness": self.playhead_thickness,
 
-            "trackGroups": [
+            "vertical_padding_ratio": self.vertical_padding_ratio,
+            "vertical_offset_ratio": self.vertical_offset_ratio,
+            "note_fadeout_ratio": self.note_fadeout_ratio,
+            "note_play_color": list(self.note_play_color),
+
+            "fade_in_enabled": self.fade_in_enabled,
+            "fade_in_color": list(self.fade_in_color),
+            "fade_in_time": self.fade_in_time,
+            "fade_out_enabled": self.fade_out_enabled,
+            "fade_out_color": list(self.fade_out_color),
+            "fade_out_time": self.fade_out_time,
+
+            "auto_calc_pitch_bounds": self.auto_calc_pitch_bounds,
+            "manual_pitch_min": self.manual_pitch_min,
+            "manual_pitch_max": self.manual_pitch_max,
+            "apply_time_offsets": self.apply_time_offsets,
+            "start_time_offset": self.start_time_offset,
+            "end_time_offset": self.end_time_offset,
+
+            "track_groups": [
                 track_group.save()
                 for track_group in self.track_groups
             ],
@@ -179,25 +201,25 @@ class VisConfig:
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
 
-            schema_version = data["schemaVersion"]
+            schema_version = data["schema_version"]
 
             config = VisConfig()
 
-            config.track_name = data["trackName"]
+            config.track_name = data["track_name"]
             config.fps = data["fps"]
 
-            config.bg_color = tuple(data["bgColor"])
+            config.bg_color = tuple(data["bg_color"])
             
-            config.audio_filepath = data["audioFilepath"]
+            config.audio_filepath = data["audio_filepath"]
 
-            config.export_dir = data["exportDir"]
-            config.export_filename = data["exportFilename"]
-            config.export_format = RenderFormat[data["exportFormat"]]
-            config.export_resolution = Resolution[data["exportResolution"]]
+            config.export_dir = data["export_dir"]
+            config.export_filename = data["export_filename"]
+            config.export_format = RenderFormat[data["export_format"]]
+            config.export_resolution = Resolution[data["export_resolution"]]
 
-            config.vertical_padding_ratio = data["verticalPaddingRatio"]
-            config.vertical_offset_ratio = data["verticalOffsetRatio"]
-            config.playhead_pos_ratio = data["playheadPosRatio"]
+            config.vertical_padding_ratio = data["vertical_padding_ratio"]
+            config.vertical_offset_ratio = data["vertical_offset_ratio"]
+            config.playhead_pos_ratio = data["playhead_pos_ratio"]
 
             config.tracks = [
                 Track.load(track_data, schema_version)
@@ -205,38 +227,48 @@ class VisConfig:
             ]
 
             if schema_version >= 2:
-                config.show_playhead = data["showPlayhead"]
-                config.playhead_color = data["playheadColor"]
+                config.show_playhead = data["show_playhead"]
+                config.playhead_color = data["playhead_color"]
 
             if schema_version >= 3:
-                config.note_fadeout_ratio = data["noteFadeoutRatio"]
-                config.note_play_color = data["notePlayColor"]
+                config.note_fadeout_ratio = data["note_fadeout_ratio"]
+                config.note_play_color = data["note_play_color"]
 
             if schema_version >= 4:
                 config.track_groups = [
                     TrackGroup.load(track_data, schema_version)
-                    for track_data in data["trackGroups"]
+                    for track_data in data["track_groups"]
                 ]
 
             if schema_version >= 6:
-                config.auto_calc_pitch_bounds = data["autoCalcPitchBounds"]
-                config.manual_pitch_min = data["manualPitchMin"]
-                config.manual_pitch_max = data["manualPitchMax"]
+                config.auto_calc_pitch_bounds = data["auto_calc_pitch_bounds"]
+                config.manual_pitch_min = data["manual_pitch_min"]
+                config.manual_pitch_max = data["manual_pitch_max"]
 
             if schema_version >= 7:
-                config.bg_mode = BackgroundMode[data["bgMode"]]
-                config.bg_image_filepath = data["bgImageFilepath"]
-                config.bg_video_filepath = data["bgVideoFilepath"]
+                config.bg_mode = BackgroundMode[data["bg_mode"]]
+                config.bg_image_filepath = data["bg_image_filepath"]
+                config.bg_video_filepath = data["bg_video_filepath"]
 
-                config.play_audio = data["playAudio"]
+                config.play_audio = data["play_audio"]
 
-                config.apply_time_offsets = data["applyTimeOffsets"]
-                config.start_time_offset = data["startTimeOffset"]
-                config.end_time_offset = data["endTimeOffset"]
+                config.apply_time_offsets = data["apply_time_offsets"]
+                config.start_time_offset = data["start_time_offset"]
+                config.end_time_offset = data["end_time_offset"]
 
             if schema_version >= 8:
-                config.bg_video_time_offset = data["bgVideoTimeOffset"]
-                config.bg_video_loop = data["bgVideoLoop"]
+                config.bg_video_time_offset = data["bg_video_time_offset"]
+                config.bg_video_loop = data["bg_video_loop"]
+
+            if schema_version >= 9:
+                config.playhead_alpha = data["playhead_alpha"]
+                config.playhead_thickness = data["playhead_thickness"]
+                config.fade_in_enabled = data["fade_in_enabled"]
+                config.fade_in_color = tuple(data["fade_in_color"])
+                config.fade_in_time = data["fade_in_time"]
+                config.fade_out_enabled = data["fade_out_enabled"]
+                config.fade_out_color = tuple(data["fade_out_color"])
+                config.fade_out_time = data["fade_out_time"]
 
             return config
         except Exception as ex:

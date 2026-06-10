@@ -47,7 +47,7 @@ class Track:
     def save(self) -> dict:
         return {
             "name": self.name,
-            "groupId": str(self.group_id) if self.group_id else None,
+            "group_id": str(self.group_id) if self.group_id else None,
             "notes": {
                 # break down note data into comma separated strings for tighter storage
                 "pitches": ",".join(str(note.pitch) for note in self.notes),
@@ -87,7 +87,7 @@ class Track:
         ]
 
         if schema_version >= 4:
-            group_id = data["groupId"]
+            group_id = data["group_id"]
             track.group_id = UUID(group_id) if group_id else None
 
         return track

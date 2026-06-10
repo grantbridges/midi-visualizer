@@ -27,9 +27,9 @@ class TrackGroup:
             "visible": self.visible,
             "color": list(self.color),
             "alpha": self.alpha,
-            "barHeightRatio": self.bar_height_ratio,
-            "barSecAcrossScreen": self.bar_sec_across_screen,
-            "pitchOffset": self.pitch_offset,
+            "bar_height_ratio": self.bar_height_ratio,
+            "bar_sec_across_screen": self.bar_sec_across_screen,
+            "pitch_offset": self.pitch_offset,
         }
     
     @staticmethod
@@ -41,11 +41,11 @@ class TrackGroup:
         track_group.visible = data["visible"]
         track_group.color = tuple(data["color"])
         track_group.alpha = data["alpha"]
-        track_group.bar_height_ratio = data["barHeightRatio"]
-        track_group.bar_sec_across_screen = data["barSecAcrossScreen"]
+        track_group.bar_height_ratio = data["bar_height_ratio"]
+        track_group.bar_sec_across_screen = data["bar_sec_across_screen"]
 
         if schema_version >= 5:
-            track_group.pitch_offset = data["pitchOffset"]
+            track_group.pitch_offset = data["pitch_offset"]
 
         return track_group
     

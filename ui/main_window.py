@@ -394,6 +394,7 @@ class MainWindow(QMainWindow):
         # import into local working model
         self.vis_config = VisConfig.create_from_midi_data(Path(midi_path).stem, midi_data)
         self.vis_config.init()
+        self.load_config_resources()
 
         # update active project entry
         user_settings.active_project_path = None
@@ -539,6 +540,7 @@ class MainWindow(QMainWindow):
         # update local working model
         self.vis_config = vis_config
         self.vis_config.init()
+        self.load_config_resources()
 
         # update active project entry
         user_settings.active_project_path = load_path
