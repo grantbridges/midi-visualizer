@@ -301,8 +301,6 @@ class MainWindow(QMainWindow):
         # notify preview tab to redraw
         self.preview_widget.model_changed()
 
-        self.refresh_ui()
-
     def on_tracks_changed(self):
         self.update_model()
 

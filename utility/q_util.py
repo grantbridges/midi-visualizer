@@ -8,6 +8,10 @@ class QUtil:
     @staticmethod
     def rgb_to_qcolor(rgb: RGB) -> QColor:
         return QColor(*rgb)
+    
+    @staticmethod
+    def rgb_to_qcolor_a(rgb: RGB, alpha: int) -> QColor:
+        return QColor(*rgb, a=alpha)
 
     @staticmethod
     def qcolor_to_rgb(color: QColor) -> RGB:

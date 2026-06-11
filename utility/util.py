@@ -1,4 +1,4 @@
-from common import RGB
+from common import RGB, Color
 
 class Util:
     def __new__(cls):
@@ -15,6 +15,28 @@ class Util:
         # perceived brightness
         brightness = (0.299 * r) + (0.587 * g) + (0.114 * b)
         return (0, 0, 0) if brightness > 160 else (255, 255, 255)
+    
+    @staticmethod
+    def mix_colors(a: RGB, b: RGB, amount: float) -> RGB:
+        """
+        amount: 0.0 = all a
+                1.0 = all b
+        """
+        amount = max(0.0, min(1.0, amount))
+
+        return (
+            Util.clamp(int(a[0] + (b[0] - a[0]) * amount), 0, 255),
+            Util.clamp(int(a[1] + (b[1] - a[1]) * amount), 0, 255),
+            Util.clamp(int(a[2] + (b[2] - a[2]) * amount), 0, 255),
+        )
+
+    @staticmethod
+    def lighten_color(color: RGB, amount: float) -> RGB:
+        return Util.mix_colors(color, Color.WHITE, amount)
+
+    @staticmethod
+    def darken_color(color: RGB, amount: float) -> RGB:
+        return Util.mix_colors(color, Color.BLACK, amount)
     
     @staticmethod
     def clamp(val, min_val, max_val):

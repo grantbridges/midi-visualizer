@@ -39,6 +39,14 @@ class PreviewWidget(QWidget):
         self.pitch_min: int = 0
         self.pitch_max: int = 0
 
+        self.show_expanded: bool = False
+        self.preview_padding_min = -100
+        self.preview_padding_max = 100
+
+        # set by parent on resize events
+        self.screen_width: int = 1
+        self.screen_height: int = 1
+
         # create controls
         self.play_btn = QPushButton("Play")
         self.play_btn.clicked.connect(self._toggle_play)
@@ -50,6 +58,8 @@ class PreviewWidget(QWidget):
         self.loop_checkbox = QCheckBox("Loop")
         self.loop_checkbox.setChecked(user_settings.loop_preview)
         self.loop_checkbox.toggled.connect(self._on_loop_toggled)
+        self.expand_btn = QPushButton("⇅")
+        self.expand_btn.clicked.connect(self._toggle_expanded)
 
         # create button
         self.settings_btn = QPushButton("⚙")
@@ -88,6 +98,8 @@ class PreviewWidget(QWidget):
         # top_row_layout.addWidget(self.mute_checkbox) # TODO when audio preview is supported
         top_row_layout.addWidget(self.loop_checkbox)
         top_row_layout.addStretch()
+        top_row_layout.addWidget(self.expand_btn)
+        top_row_layout.addStretch()
         top_row_layout.addWidget(self.settings_btn)
         v_layout.addLayout(top_row_layout)
 
@@ -98,9 +110,14 @@ class PreviewWidget(QWidget):
         v_layout.addWidget(self.preview_canvas)
 
     def handle_resize(self, screen_width: int, screen_height: int):
-        self.preview_canvas.setFixedWidth(screen_width)
-        self.preview_canvas.setFixedHeight(screen_height / 2 - 100)
+        self.screen_width = screen_width
+        self.screen_height = screen_height
+        self._update_canvas_size()
 
+    def _update_canvas_size(self):
+        self.preview_canvas.setFixedWidth(self.screen_width)
+        self.preview_canvas.setFixedHeight(self.screen_height / 2 + self._get_preview_padding())
+        
     def model_changed(self):
         if self.vis_config is not None:
             if self.current_fps != self.vis_config.fps:
@@ -201,6 +218,13 @@ class PreviewWidget(QWidget):
     def _on_loop_toggled(self, checked: bool):
         user_settings.loop_preview = checked
         user_settings.save()
+
+    def _toggle_expanded(self):
+        self.show_expanded = not self.show_expanded
+        self._update_canvas_size()
+
+    def _get_preview_padding(self) -> int:
+        return self.preview_padding_max if self.show_expanded else self.preview_padding_min
 
     def _create_settings_action(self, label: str, property_name: str) -> QAction:
         action = QAction(label, self)

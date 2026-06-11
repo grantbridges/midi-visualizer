@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from typing import List
-from PySide6.QtGui import QPainter, QPen
+from PySide6.QtGui import QBrush, QLinearGradient, QPainter, QPen
 from PySide6.QtCore import QRect, Qt
 from common import Const, Color, RGB
 from models import VisConfig, BackgroundMode, Note
@@ -90,21 +90,21 @@ class MidiRenderUtil:
                 ))
 
         # draw midi bars
+        painter.setPen(Qt.NoPen)
         for track in tracks:
             pixels_per_sec = rect.width() / track.bar_sec_across_screen
 
             for note in track.notes:
                 # x and width calc
-                x = playhead_x + (note.start - current_time) * pixels_per_sec
-                w = note.duration * pixels_per_sec
+                x = int(playhead_x + (note.start - current_time) * pixels_per_sec)
+                w = int(note.duration * pixels_per_sec)
                 x_right = x + w
-
-                if x > rect.width():
-                    # note hasn't entered visible area yet - skip rendering
+                if x > rect.width() or x_right < 0:
+                    # note isn't in visible area - skip rendering
                     continue
 
                 # convert bar height ratio to pixels
-                bar_height = rect.height() * track.bar_height_ratio * (1 - vis_config.vertical_padding_ratio)
+                bar_height = int(rect.height() * track.bar_height_ratio * (1 - vis_config.vertical_padding_ratio))
                 bar_height = max(bar_height, 1) # min of 1 pixel
 
                 # y and height calc
@@ -122,38 +122,40 @@ class MidiRenderUtil:
                 color = track.color
                 alpha = track.alpha
 
-                if x_right >= 0:
-                    radius = int(bar_height * 0)
+                # start fading out only after the whole note has passed the playhead
+                if x_right <= playhead_x:
+                    fade_start_x = playhead_x - note_fade_distance
+                    alpha = alpha * ((x_right - fade_start_x) / note_fade_distance)
+                    alpha = max(0, min(255, alpha))
 
-                    # start fading out only after the whole note has passed the playhead
-                    if x_right <= playhead_x:
-                        fade_start_x = playhead_x - note_fade_distance
-                        alpha = alpha * ((x_right - fade_start_x) / note_fade_distance)
-                        alpha = max(0, min(255, alpha))
+                # -- under glow --
+                if x < playhead_x:
+                    glow_w = min(playhead_x, x_right) - x
+                    color_glow = Util.lighten_color(color, 0.75)
+                    qcolor = QUtil.rgb_to_qcolor_a(color_glow, int(alpha / 6))
+                    painter.setBrush(qcolor)
+                    radius = int(bar_height * 2)
+                    pad = min(int(bar_height / 2), 2)
+                    painter.drawRoundedRect(x-pad, y-pad, glow_w + pad*2, h + pad*2, radius, radius)
 
-                    # left side of playhead - show play color
-                    if x < playhead_x:
-                        played_x = x
-                        played_w = min(x_right, playhead_x) - x
+                # -- note bar --
+                qcolor = QUtil.rgb_to_qcolor_a(color, alpha)
+                color_light = Util.lighten_color(color, 0.4)
+                qcolor_light = QUtil.rgb_to_qcolor_a(color_light, alpha)
+                gradient = QLinearGradient(x, y, x, y + h)
+                gradient.setColorAt(0.0, qcolor_light)
+                gradient.setColorAt(0.5, qcolor)                
+                painter.setBrush(QBrush(gradient))
+                painter.drawRect(x, y, w, h)
 
-                        if played_w > 0:
-                            qcolor = QUtil.rgb_to_qcolor(vis_config.note_play_color)
-                            qcolor.setAlpha(alpha)
-                            painter.setBrush(qcolor)
-                            painter.setPen(Qt.NoPen)
-                            painter.drawRoundedRect(played_x, y, played_w, h, radius, radius)
+                # -- highlight --
+                if x < playhead_x:
+                    glow_w = min(playhead_x, x_right) - x
+                    color_glow = Util.lighten_color(color, 0.75)
+                    qcolor = QUtil.rgb_to_qcolor_a(color_glow, int(alpha / 2))
+                    painter.setBrush(qcolor)
+                    painter.drawRect(x, y, glow_w, h)
 
-                    # right side of playhead - show track color
-                    if x_right > playhead_x:
-                        color_x = max(x, playhead_x)
-                        color_w = x_right - color_x
-
-                        if color_w > 0:
-                            qcolor = QUtil.rgb_to_qcolor(color)
-                            qcolor.setAlpha(alpha)
-                            painter.setBrush(qcolor)
-                            painter.setPen(Qt.NoPen)
-                            painter.drawRoundedRect(color_x, y, color_w, h, radius, radius)
 
     @staticmethod
     def draw_fade_overlay(painter: QPainter, current_time: float, start_time: float, end_time: float, vis_config: VisConfig, rect: QRect):

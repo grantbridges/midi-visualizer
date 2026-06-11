@@ -499,3 +499,4 @@ class ConfigTab(QWidget):
     def _on_changes(self):
         if not self.block_changes_callback:
             self.on_changes_callback()
+            self.refresh_ui()
