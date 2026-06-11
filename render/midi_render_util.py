@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import List
 from PySide6.QtGui import QBrush, QLinearGradient, QPainter, QPen
-from PySide6.QtCore import QRect, Qt
+from PySide6.QtCore import QRect, QRectF, Qt
 from common import Const, Color, RGB
 from models import VisConfig, BackgroundMode, Note
 from render.video_provider import video_provider
@@ -174,11 +174,33 @@ class MidiRenderUtil:
         x_right = x + w
         glow_w = min(playhead_x, x_right) - x
         color_glow = Util.lighten_color(color, 0.75)
-        qcolor = QUtil.rgb_to_qcolor_a(color_glow, int(alpha / 6))
-        painter.setBrush(qcolor)
-        radius = int(bar_height * 2)
-        pad = int(bar_height / 2)
-        painter.drawRoundedRect(x-pad, y-pad, glow_w + pad*2, h + pad*2, radius, radius)
+
+        pad_y: float = bar_height * 0.8 # TODO: configure glow distance (0.00 - 2.00)
+
+        glow_rect = QRectF(
+            x,
+            y - pad_y,
+            glow_w,
+            h + pad_y * 2,
+        )
+
+        gradient = QLinearGradient(
+            glow_rect.left(),
+            glow_rect.top(),
+            glow_rect.left(),
+            glow_rect.bottom(),
+        )
+
+        gradient.setColorAt(0.0, QUtil.rgb_to_qcolor_a(color_glow, 0))
+        gradient.setColorAt(0.5, QUtil.rgb_to_qcolor_a(color_glow, int(alpha * 0.33))) # TODO: configure glow intesity (0.00 - 1.00)
+        gradient.setColorAt(1.0, QUtil.rgb_to_qcolor_a(color_glow, 0))
+
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(QBrush(gradient))
+
+        #radius = bar_height
+        #painter.drawRoundedRect(glow_rect, radius, radius)
+        painter.drawRect(glow_rect)
 
     @staticmethod
     def _draw_note(painter: QPainter, x: int, y: int, w: int, h: int, color: RGB, alpha: int):

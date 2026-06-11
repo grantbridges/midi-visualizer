@@ -347,7 +347,7 @@ class MainWindow(QMainWindow):
         height = new_size.height()
 
         if self.preview_widget is not None:
-            self.preview_widget.handle_resize(width, height)
+            self.preview_widget.handle_resize()
 
         super().resizeEvent(event)
 

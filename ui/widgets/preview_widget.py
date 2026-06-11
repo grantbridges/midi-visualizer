@@ -39,13 +39,9 @@ class PreviewWidget(QWidget):
         self.pitch_min: int = 0
         self.pitch_max: int = 0
 
-        self.show_expanded: bool = False
+        self.show_expanded: bool = True
         self.preview_padding_min = -100
         self.preview_padding_max = 100
-
-        # set by parent on resize events
-        self.screen_width: int = 1
-        self.screen_height: int = 1
 
         # create controls
         self.play_btn = QPushButton("Play")
@@ -85,6 +81,8 @@ class PreviewWidget(QWidget):
 
         self.preview_canvas = PreviewCanvas(parent=self)
 
+        self._update_canvas_size()
+
     def shutdown(self):
         self.timer.stop()
 
@@ -109,14 +107,12 @@ class PreviewWidget(QWidget):
 
         v_layout.addWidget(self.preview_canvas)
 
-    def handle_resize(self, screen_width: int, screen_height: int):
-        self.screen_width = screen_width
-        self.screen_height = screen_height
+    def handle_resize(self):
         self._update_canvas_size()
 
     def _update_canvas_size(self):
-        self.preview_canvas.setFixedWidth(self.screen_width)
-        self.preview_canvas.setFixedHeight(self.screen_height / 2 + self._get_preview_padding())
+        self.preview_canvas.setFixedWidth(self.window().width())
+        self.preview_canvas.setFixedHeight(self.window().height() / 2 + self._get_preview_padding())
         
     def model_changed(self):
         if self.vis_config is not None:
