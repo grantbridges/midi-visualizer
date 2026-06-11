@@ -130,31 +130,14 @@ class MidiRenderUtil:
 
                 # -- under glow --
                 if x < playhead_x:
-                    glow_w = min(playhead_x, x_right) - x
-                    color_glow = Util.lighten_color(color, 0.75)
-                    qcolor = QUtil.rgb_to_qcolor_a(color_glow, int(alpha / 6))
-                    painter.setBrush(qcolor)
-                    radius = int(bar_height * 2)
-                    pad = min(int(bar_height / 2), 2)
-                    painter.drawRoundedRect(x-pad, y-pad, glow_w + pad*2, h + pad*2, radius, radius)
+                    MidiRenderUtil._draw_note_glow(painter, playhead_x, x, y, w, h, color, alpha, bar_height)
 
                 # -- note bar --
-                qcolor = QUtil.rgb_to_qcolor_a(color, alpha)
-                color_light = Util.lighten_color(color, 0.4)
-                qcolor_light = QUtil.rgb_to_qcolor_a(color_light, alpha)
-                gradient = QLinearGradient(x, y, x, y + h)
-                gradient.setColorAt(0.0, qcolor_light)
-                gradient.setColorAt(0.5, qcolor)                
-                painter.setBrush(QBrush(gradient))
-                painter.drawRect(x, y, w, h)
+                MidiRenderUtil._draw_note(painter, x, y, w, h, color, alpha)
 
                 # -- highlight --
                 if x < playhead_x:
-                    glow_w = min(playhead_x, x_right) - x
-                    color_glow = Util.lighten_color(color, 0.75)
-                    qcolor = QUtil.rgb_to_qcolor_a(color_glow, int(alpha / 2))
-                    painter.setBrush(qcolor)
-                    painter.drawRect(x, y, glow_w, h)
+                    MidiRenderUtil._draw_note_highlight(painter, playhead_x, x, y, w, h, color, alpha)
 
 
     @staticmethod
@@ -185,3 +168,34 @@ class MidiRenderUtil:
                 qcolor.setAlpha(alpha)
                 painter.fillRect(rect, qcolor)
 
+    # -- Helpers
+    @staticmethod
+    def _draw_note_glow(painter: QPainter, playhead_x: int, x: int, y: int, w: int, h: int, color: RGB, alpha: int, bar_height: int):
+        x_right = x + w
+        glow_w = min(playhead_x, x_right) - x
+        color_glow = Util.lighten_color(color, 0.75)
+        qcolor = QUtil.rgb_to_qcolor_a(color_glow, int(alpha / 6))
+        painter.setBrush(qcolor)
+        radius = int(bar_height * 2)
+        pad = int(bar_height / 2)
+        painter.drawRoundedRect(x-pad, y-pad, glow_w + pad*2, h + pad*2, radius, radius)
+
+    @staticmethod
+    def _draw_note(painter: QPainter, x: int, y: int, w: int, h: int, color: RGB, alpha: int):
+        qcolor = QUtil.rgb_to_qcolor_a(color, alpha)
+        color_light = Util.lighten_color(color, 0.4)
+        qcolor_light = QUtil.rgb_to_qcolor_a(color_light, alpha)
+        gradient = QLinearGradient(x, y, x, y + h)
+        gradient.setColorAt(0.0, qcolor_light)
+        gradient.setColorAt(0.5, qcolor)                
+        painter.setBrush(QBrush(gradient))
+        painter.drawRect(x, y, w, h)
+        
+    @staticmethod
+    def _draw_note_highlight(painter: QPainter, playhead_x: int, x: int, y: int, w: int, h: int, color: RGB, alpha: int):
+        x_right = x + w
+        highlight_w = min(playhead_x, x_right) - x
+        color_highlight = Util.lighten_color(color, 0.75)
+        qcolor = QUtil.rgb_to_qcolor_a(color_highlight, int(alpha / 2))
+        painter.setBrush(qcolor)
+        painter.drawRect(x, y, highlight_w, h)
