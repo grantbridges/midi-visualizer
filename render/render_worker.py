@@ -128,29 +128,32 @@ class RenderWorker(QObject):
         if cancel_event.is_set():
             return
 
-        current_time = job.start_time + job.frame_index / job.vis_config.fps
+        try:
+            current_time = job.start_time + job.frame_index / job.vis_config.fps
 
-        image = QImage(job.width, job.height, QImage.Format_ARGB32)
-        image.fill(Qt.transparent)
-        painter = QPainter(image)
-        painter.setRenderHint(QPainter.Antialiasing)
-        rect = QRect(0, 0, job.width, job.height)
+            image = QImage(job.width, job.height, QImage.Format_ARGB32)
+            image.fill(Qt.transparent)
+            painter = QPainter(image)
+            painter.setRenderHint(QPainter.Antialiasing)
+            rect = QRect(0, 0, job.width, job.height)
 
-        if job.vis_config.bg_mode == BackgroundMode.Color:
-            MidiRenderUtil.draw_color_background(painter, current_time, job.vis_config, rect)
-            # don't handle other BG types here - those will get layered in during video construction
-        
-        MidiRenderUtil.draw_notes(painter, current_time, job.vis_config, job.pitch_min, job.pitch_max, rect)
-        MidiRenderUtil.draw_fade_overlay(painter, current_time, job.start_time, job.end_time, job.vis_config, rect)
-        
-        painter.end()
+            if job.vis_config.bg_mode == BackgroundMode.Color:
+                MidiRenderUtil.draw_color_background(painter, job.vis_config, rect)
+                # don't handle other BG types here - those will get layered in during video construction
+            
+            MidiRenderUtil.draw_notes(painter, current_time, job.vis_config, job.pitch_min, job.pitch_max, rect)
+            MidiRenderUtil.draw_fade_overlay(painter, current_time, job.start_time, job.end_time, job.vis_config, rect)
+            
+            painter.end()
 
-        if cancel_event.is_set():
-            return
+            if cancel_event.is_set():
+                return
 
-        # save image file to disk
-        path = Path(job.frames_dir).joinpath(f"frame_{job.frame_index:05d}.png")
-        image.save(str(path))
+            # save image file to disk
+            path = Path(job.frames_dir).joinpath(f"frame_{job.frame_index:05d}.png")
+            image.save(str(path))
+        except Exception as e:
+            print(f'Render Frame | Error | {e}')
 
         return job.frame_index
     
