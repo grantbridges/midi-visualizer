@@ -1,4 +1,6 @@
 from dataclasses import dataclass, field
+import math
+import random
 from typing import List
 from PySide6.QtGui import QBrush, QLinearGradient, QPainter, QPen
 from PySide6.QtCore import QRect, QRectF, Qt
@@ -64,8 +66,7 @@ class MidiRenderUtil:
 
         # draw playhead line that notes will cross when they "play"
         if vis_config.show_playhead:
-            color = QUtil.rgb_to_qcolor(vis_config.playhead_color)
-            color.setAlpha(vis_config.playhead_alpha)
+            color = QUtil.rgb_to_qcolor(vis_config.playhead_color, vis_config.playhead_alpha)
             pen = QPen(color)
             pen.setWidth(vis_config.playhead_thickness_ratio * rect.width())
             painter.setPen(pen)
@@ -135,6 +136,12 @@ class MidiRenderUtil:
                 # -- note bar --
                 MidiRenderUtil._draw_note(painter, x, y, w, h, color, alpha)
 
+                # -- note sparks --
+                MidiRenderUtil._draw_note_sparks(
+                    painter, playhead_x, note.pitch, note.start, center_y, bar_height, pixels_per_sec,
+                    current_time, color, alpha, vis_config.note_highlight_intensity, rect
+                )
+
                 # -- highlight --
                 if x < playhead_x and vis_config.note_highlight_enabled:
                     MidiRenderUtil._draw_note_highlight(painter, playhead_x, x, y, w, h, color, alpha, vis_config.note_highlight_intensity)
@@ -151,8 +158,7 @@ class MidiRenderUtil:
                 alpha = int(255 * (1.0 - t))
                 alpha = Util.clamp(alpha, 0, 255)
 
-                qcolor = QUtil.rgb_to_qcolor(vis_config.fade_in_color)
-                qcolor.setAlpha(alpha)
+                qcolor = QUtil.rgb_to_qcolor(vis_config.fade_in_color, alpha)
                 painter.fillRect(rect, qcolor)
 
         if vis_config.fade_out_enabled and vis_config.fade_out_time > 0:
@@ -164,8 +170,7 @@ class MidiRenderUtil:
                 alpha = int(255 * t)
                 alpha = Util.clamp(alpha, 0, 255)
 
-                qcolor = QUtil.rgb_to_qcolor(vis_config.fade_out_color)
-                qcolor.setAlpha(alpha)
+                qcolor = QUtil.rgb_to_qcolor(vis_config.fade_out_color, alpha)
                 painter.fillRect(rect, qcolor)
 
     # -- Helpers
@@ -196,9 +201,9 @@ class MidiRenderUtil:
             glow_rect.bottom(),
         )
 
-        gradient.setColorAt(0.0, QUtil.rgb_to_qcolor_a(color_glow, 0))
-        gradient.setColorAt(0.5, QUtil.rgb_to_qcolor_a(color_glow, int(alpha * glow_intensity))) # TODO: configure glow intesity (0.00 - 1.00)
-        gradient.setColorAt(1.0, QUtil.rgb_to_qcolor_a(color_glow, 0))
+        gradient.setColorAt(0.0, QUtil.rgb_to_qcolor(color_glow, 0))
+        gradient.setColorAt(0.5, QUtil.rgb_to_qcolor(color_glow, int(alpha * glow_intensity))) # TODO: configure glow intesity (0.00 - 1.00)
+        gradient.setColorAt(1.0, QUtil.rgb_to_qcolor(color_glow, 0))
 
         painter.setPen(Qt.NoPen)
         painter.setBrush(QBrush(gradient))
@@ -209,25 +214,98 @@ class MidiRenderUtil:
 
     @staticmethod
     def _draw_note(painter: QPainter, x: int, y: int, w: int, h: int, color: RGB, alpha: int):
-        qcolor = QUtil.rgb_to_qcolor_a(color, alpha)
+        qcolor = QUtil.rgb_to_qcolor(color, alpha)
         color_light = Util.lighten_color(color, 0.4)
-        qcolor_light = QUtil.rgb_to_qcolor_a(color_light, alpha)
+        qcolor_light = QUtil.rgb_to_qcolor(color_light, alpha)
         gradient = QLinearGradient(x, y, x, y + h)
         gradient.setColorAt(0.0, qcolor_light)
-        gradient.setColorAt(0.5, qcolor)                
+        gradient.setColorAt(0.5, qcolor)       
+        painter.setPen(Qt.NoPen)
         painter.setBrush(QBrush(gradient))
         painter.drawRect(x, y, w, h)
+        
+
+    @staticmethod
+    def _draw_note_sparks(
+        painter: QPainter, 
+        playhead_x: float, 
+        note_pitch: int,
+        note_start_time: float,
+        note_center_y: float,
+        bar_height_px: float,
+        bar_px_per_sec: float,
+        current_time: float, 
+        color: RGB, 
+        alpha: int, 
+        highlight_intensity: float,
+        rect: QRect
+    ):
+        # how long has it been since note has been played?
+        anim_time = current_time - note_start_time
+        if anim_time < 0:
+            return # only spark once we've played the note
+        
+        rect_size = math.hypot(rect.width(), rect.height())
+
+        # value controls
+        start_dist_ratio = 0.005
+        start_length_ratio = 0.006
+        thickness_ratio = 0.002
+        spark_count = 3
+        shrink_ratio = 12 # higher => shrinks faster
+        max_angle_d = 50
+        speed_ratio = 0.12
+        draw_as_line = False
+
+        start_dist_px = rect_size * start_dist_ratio # TODO - function of bar height
+        start_length_px = rect_size * start_length_ratio # TODO - function of bar height
+        thickness_px = rect_size * thickness_ratio # TODO - function of bar height
+        speed_px_per_sec = rect_size * speed_ratio # TODO - function of bar height AND bar speed
+
+        # calculate length of sparks - shrinks the more time has passed
+        length_px = start_length_px - anim_time * shrink_ratio
+        if length_px <= 0:
+            return # too small - skip
+
+        for i in range(spark_count):
+            # calculate angle of spark using deterministic random value seeded by note 
+            # properties and spark count
+            seed = note_pitch * note_start_time + 100 * i
+            angle_d = random.Random(seed).uniform(-max_angle_d, max_angle_d)
+            angle = math.radians(angle_d)
+
+            # calculate positions
+            x1 = playhead_x - (start_dist_px + speed_px_per_sec * anim_time) * math.cos(angle)
+            y1 = note_center_y - (start_dist_px + speed_px_per_sec * anim_time) * math.sin(angle)
+            x2 = x1 - length_px * math.cos(angle)
+            y2 = y1 - length_px * math.sin(angle)
+
+            # draw
+            color_highlight = Util.lighten_color(color, highlight_intensity)
+            qcolor = QUtil.rgb_to_qcolor(color_highlight, int(alpha / 2))
+            if draw_as_line:
+                pen = QPen(qcolor)
+                pen.setWidth(thickness_px)
+                painter.setPen(pen)
+                painter.drawLine(x1, y1, x2, y2)
+            else:
+                painter.setPen(Qt.NoPen)
+                painter.setBrush(qcolor)
+                painter.drawRect(x1, y1, (x2-x1), (y2-y1))
+
         
     @staticmethod
     def _draw_note_highlight(
         painter: QPainter, 
         playhead_x: int, 
         x: int, y: int, w: int, h: int, 
-        color: RGB, alpha: int, highlight_intensity: float
+        color: RGB, 
+        alpha: int, 
+        highlight_intensity: float
     ):
         x_right = x + w
         highlight_w = min(playhead_x, x_right) - x
         color_highlight = Util.lighten_color(color, highlight_intensity)
-        qcolor = QUtil.rgb_to_qcolor_a(color_highlight, int(alpha / 2))
-        painter.setBrush(qcolor)
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(QUtil.rgb_to_qcolor(color_highlight, int(alpha / 2)))
         painter.drawRect(x, y, highlight_w, h)

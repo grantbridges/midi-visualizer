@@ -85,8 +85,7 @@ class PreviewCanvas(QWidget):
         y_max = self.rect().height() - vert_padding + vert_offset
 
         # draw pitches
-        color = QUtil.rgb_to_qcolor(Util.invert_color(self.vis_config.bg_color))
-        color.setAlpha(200)
+        color = QUtil.rgb_to_qcolor(Util.invert_color(self.vis_config.bg_color), 200)
 
         # draw vertical padding guides
         pen = QPen(color)
@@ -113,8 +112,7 @@ class PreviewCanvas(QWidget):
         pmax = self.pitch_max
 
         # draw pitches
-        color = QUtil.rgb_to_qcolor(Util.invert_color(self.vis_config.bg_color))
-        color.setAlpha(30)
+        color = QUtil.rgb_to_qcolor(Util.invert_color(self.vis_config.bg_color), 30)
         pen = QPen(color)
         pen.setStyle(Qt.SolidLine)
         pen.setWidth(1)
@@ -133,12 +131,9 @@ class PreviewCanvas(QWidget):
                     if not track_group.visible:
                         continue
 
-                    color = QUtil.rgb_to_qcolor(track_group.color)
-                    color.setAlpha(200)
-                    pen_width = 1
-                    if self.selected_group_id == track_group.group_id:
-                        pen_width = 4
-                        color.setAlpha(255)
+                    is_selected = self.selected_group_id == track_group.group_id
+                    color = QUtil.rgb_to_qcolor(track_group.color, 255 if is_selected else 70)
+                    pen_width = 3 if is_selected else 1
                     pen = QPen(color)
                     pen.setStyle(Qt.SolidLine)
                     pen.setWidth(pen_width)
@@ -154,15 +149,10 @@ class PreviewCanvas(QWidget):
                     painter.drawLine(0, pitch_max_y, rect.width(), pitch_max_y)
 
                     # list track names
-                    # list track names
                     track_group_font_size = 8
                     track_font_size = 6
                     text_padding = 5
                     text_top = pitch_max_y + pen_width
-
-                    color = QUtil.rgb_to_qcolor(track_group.color)
-                    color.setAlpha(200)
-                    painter.setPen(color)
 
                     font = QFont(Const.PRIMARY_FONT, track_group_font_size, 200)
                     painter.setFont(font)
@@ -184,8 +174,7 @@ class PreviewCanvas(QWidget):
         if user_settings.show_time_display:
             # draw text time display
             time_display_font_size = 12
-            color = QUtil.rgb_to_qcolor(Color.WHITE)
-            color.setAlpha(200)
+            color = QUtil.rgb_to_qcolor(Color.WHITE, 200)
             font = QFont(Const.PRIMARY_FONT, time_display_font_size)
             painter.setPen(color)
             painter.setFont(font)
