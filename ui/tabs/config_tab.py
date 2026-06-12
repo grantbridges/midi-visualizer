@@ -18,10 +18,20 @@ from models import VisConfig, BackgroundMode
 from ui.common import ColorButton, SectionDivider
 
 class ConfigTab(QWidget):
-    def __init__(self, vis_config: VisConfig, on_changes_callback: object, parent=None):
+    def __init__(self, 
+        vis_config: VisConfig, 
+        on_changes_callback: object,
+        on_bg_video_selected_callback: object,
+        on_bg_image_selected_callback: object,
+        on_audio_selected_callback: object,
+        parent=None
+    ):
         super().__init__(parent)
 
         self.on_changes_callback = on_changes_callback
+        self.on_bg_video_selected_callback = on_bg_video_selected_callback
+        self.on_bg_image_selected_callback = on_bg_image_selected_callback
+        self.on_audio_selected_callback = on_audio_selected_callback
         self.vis_config = vis_config
 
         self.block_changes_callback: bool = False
@@ -545,9 +555,27 @@ class ConfigTab(QWidget):
 
         if audio_file:
             self.audio_file_input.setText(audio_file)
-            self._on_changes()
+            self._on_audio_selected()
 
     def _on_changes(self):
         if not self.block_changes_callback:
+            self.on_changes_callback()
+            self.refresh_ui()
+
+    def _on_bg_video_selected(self):
+        if not self.block_changes_callback:
+            self.on_bg_video_selected_callback()
+            self.on_changes_callback()
+            self.refresh_ui()
+
+    def _on_bg_image_selected(self):
+        if not self.block_changes_callback:
+            self.on_bg_image_selected_callback()
+            self.on_changes_callback()
+            self.refresh_ui()
+
+    def _on_audio_selected(self):
+        if not self.block_changes_callback:
+            self.on_audio_selected_callback()
             self.on_changes_callback()
             self.refresh_ui()

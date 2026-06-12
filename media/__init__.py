@@ -1,1 +1,2 @@
 from media.video_provider import video_provider
+from media.audio_provider import audio_provider

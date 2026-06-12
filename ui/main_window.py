@@ -23,7 +23,7 @@ from PySide6.QtGui import QAction, QKeySequence, QResizeEvent
 from common import Const
 from models import VisConfig, Track, Resolution, user_settings, BackgroundMode
 from render import RenderWorker
-from media import video_provider
+from media import video_provider, audio_provider
 from ui.tabs import ConfigTab, TrackGroupsTab, TracksTab
 from ui.widgets import PreviewWidget
 from ui.dialogs import (
@@ -104,7 +104,7 @@ class MainWindow(QMainWindow):
             if loaded_vis_config is not None:
                 self.vis_config = loaded_vis_config
                 self.vis_config.init()
-                self.load_config_resources()
+                self._load_config_resources()
             else:
                 QMessageBox.critical(self, "Load Failed", f"Unable to load previous project at {load_path}. See logs for details.")
 
@@ -162,9 +162,22 @@ class MainWindow(QMainWindow):
 
         # tabs
         self.tabs = QTabWidget()
-        self.config_tab = ConfigTab(self.vis_config, self.on_config_changed)
-        self.track_groups_tab = TrackGroupsTab(self.vis_config, self.on_config_changed, self.on_track_group_selected)
-        self.tracks_tab = TracksTab(self.vis_config, self.on_config_changed)
+        self.config_tab = ConfigTab(
+            self.vis_config, 
+            self.on_config_changed, 
+            self.on_bg_video_changed, 
+            self.on_bg_image_changed, 
+            self.on_audio_changed
+        )
+        self.track_groups_tab = TrackGroupsTab(
+            self.vis_config, 
+            self.on_config_changed, 
+            self.on_track_group_selected
+        )
+        self.tracks_tab = TracksTab(
+            self.vis_config, 
+            self.on_config_changed
+        )
         self.tabs.addTab(self.config_tab, "Config")
         self.tabs.addTab(self.track_groups_tab, "Track Groups")
         self.tabs.addTab(self.tracks_tab, "Tracks")
@@ -274,20 +287,56 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Save failed", f"Failed to save config: {str(e)}")
             return False
         
-    def load_config_resources(self):
+    def _load_config_resources(self):
+        # will only load each of these if present
+        self._load_video()
+        self._load_image()
+        self._load_audio()
+
+    def _load_video(self):
         try:
             QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+            video_provider.clear()
             has_video = (
-                self.vis_config.bg_mode == BackgroundMode.Video
-                and bool(self.vis_config.bg_video_filepath)
+                bool(self.vis_config.bg_video_filepath)
                 and Path(self.vis_config.bg_video_filepath).is_file()
             )
 
             if has_video:
-                video_provider.clear()
                 video_provider.load(self.vis_config.bg_video_filepath)
         except Exception as e:
             QMessageBox.critical(self, "Load Failed", f"Failed to load video: {str(e)}")
+        finally:
+            QApplication.restoreOverrideCursor()
+    
+    def _load_image(self):
+        try:
+            QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+            # TODO clear loaded image
+            has_image = (
+                bool(self.vis_config.bg_image_filepath)
+                and Path(self.vis_config.bg_image_filepath).is_file()
+            )
+
+            # TODO load image
+        except Exception as e:
+            QMessageBox.critical(self, "Load Failed", f"Failed to load image: {str(e)}")
+        finally:
+            QApplication.restoreOverrideCursor()
+    
+    def _load_audio(self):
+        try:
+            QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+            audio_provider.clear()
+            has_audio = (
+                bool(self.vis_config.audio_filepath)
+                and Path(self.vis_config.audio_filepath).is_file()
+            )
+
+            if has_audio:
+                audio_provider.load(self.vis_config.audio_filepath)
+        except Exception as e:
+            QMessageBox.critical(self, "Load Failed", f"Failed to load audio: {str(e)}")
         finally:
             QApplication.restoreOverrideCursor()
 
@@ -301,6 +350,15 @@ class MainWindow(QMainWindow):
 
         # notify preview tab to redraw
         self.preview_widget.model_changed()
+
+    def on_audio_changed(self):
+        self._load_audio()
+
+    def on_bg_image_changed(self):
+        self._load_image()
+
+    def on_bg_video_changed(self):
+        self._load_video()
 
     def on_tracks_changed(self):
         self.update_model()
@@ -393,7 +451,7 @@ class MainWindow(QMainWindow):
         # import into local working model
         self.vis_config = VisConfig.create_from_midi_data(Path(midi_path).stem, midi_data)
         self.vis_config.init()
-        self.load_config_resources()
+        self._load_config_resources()
 
         # update active project entry
         user_settings.active_project_path = None
@@ -539,7 +597,7 @@ class MainWindow(QMainWindow):
         # update local working model
         self.vis_config = vis_config
         self.vis_config.init()
-        self.load_config_resources()
+        self._load_config_resources()
 
         # update active project entry
         user_settings.active_project_path = load_path
