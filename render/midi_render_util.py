@@ -129,15 +129,15 @@ class MidiRenderUtil:
                     alpha = max(0, min(255, alpha))
 
                 # -- under glow --
-                if x < playhead_x:
-                    MidiRenderUtil._draw_note_glow(painter, playhead_x, x, y, w, h, color, alpha, bar_height)
+                if x < playhead_x and vis_config.note_glow_enabled:
+                    MidiRenderUtil._draw_note_glow(painter, playhead_x, x, y, w, h, color, alpha, bar_height, vis_config.note_glow_size, vis_config.note_glow_intensity)
 
                 # -- note bar --
                 MidiRenderUtil._draw_note(painter, x, y, w, h, color, alpha)
 
                 # -- highlight --
-                if x < playhead_x:
-                    MidiRenderUtil._draw_note_highlight(painter, playhead_x, x, y, w, h, color, alpha)
+                if x < playhead_x and vis_config.note_highlight_enabled:
+                    MidiRenderUtil._draw_note_highlight(painter, playhead_x, x, y, w, h, color, alpha, vis_config.note_highlight_intensity)
 
 
     @staticmethod
@@ -170,12 +170,17 @@ class MidiRenderUtil:
 
     # -- Helpers
     @staticmethod
-    def _draw_note_glow(painter: QPainter, playhead_x: int, x: int, y: int, w: int, h: int, color: RGB, alpha: int, bar_height: int):
+    def _draw_note_glow(
+        painter: QPainter, 
+        playhead_x: int, 
+        x: int, y: int, w: int, h: int, color: RGB, alpha: int, 
+        bar_height: int, glow_size: float, glow_intensity: float
+    ):
         x_right = x + w
         glow_w = min(playhead_x, x_right) - x
         color_glow = Util.lighten_color(color, 0.75)
 
-        pad_y: float = bar_height * 0.8 # TODO: configure glow distance (0.00 - 2.00)
+        pad_y: float = bar_height * glow_size
 
         glow_rect = QRectF(
             x,
@@ -192,7 +197,7 @@ class MidiRenderUtil:
         )
 
         gradient.setColorAt(0.0, QUtil.rgb_to_qcolor_a(color_glow, 0))
-        gradient.setColorAt(0.5, QUtil.rgb_to_qcolor_a(color_glow, int(alpha * 0.33))) # TODO: configure glow intesity (0.00 - 1.00)
+        gradient.setColorAt(0.5, QUtil.rgb_to_qcolor_a(color_glow, int(alpha * glow_intensity))) # TODO: configure glow intesity (0.00 - 1.00)
         gradient.setColorAt(1.0, QUtil.rgb_to_qcolor_a(color_glow, 0))
 
         painter.setPen(Qt.NoPen)
@@ -214,10 +219,15 @@ class MidiRenderUtil:
         painter.drawRect(x, y, w, h)
         
     @staticmethod
-    def _draw_note_highlight(painter: QPainter, playhead_x: int, x: int, y: int, w: int, h: int, color: RGB, alpha: int):
+    def _draw_note_highlight(
+        painter: QPainter, 
+        playhead_x: int, 
+        x: int, y: int, w: int, h: int, 
+        color: RGB, alpha: int, highlight_intensity: float
+    ):
         x_right = x + w
         highlight_w = min(playhead_x, x_right) - x
-        color_highlight = Util.lighten_color(color, 0.75)
+        color_highlight = Util.lighten_color(color, highlight_intensity)
         qcolor = QUtil.rgb_to_qcolor_a(color_highlight, int(alpha / 2))
         painter.setBrush(qcolor)
         painter.drawRect(x, y, highlight_w, h)

@@ -77,8 +77,18 @@ class ConfigTab(QWidget):
 
         self.note_fadeout_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.00, singleStep=.01)
         self.note_fadeout_input.valueChanged.connect(self._on_changes)
-        self.note_play_color_button = ColorButton()
-        self.note_play_color_button.valueChanged.connect(self._on_changes)
+
+        self.note_glow_checkbox = QCheckBox()
+        self.note_glow_checkbox.toggled.connect(self._on_changes)
+        self.note_glow_size_input = QDoubleSpinBox(decimals=2, minimum=0.00, maximum=2.0, singleStep=0.01)
+        self.note_glow_size_input.valueChanged.connect(self._on_changes)
+        self.note_glow_intensity_input = QDoubleSpinBox(decimals=2, minimum=0.00, maximum=1.00, singleStep=0.01)
+        self.note_glow_intensity_input.valueChanged.connect(self._on_changes)
+
+        self.note_highlight_checkbox = QCheckBox()
+        self.note_highlight_checkbox.toggled.connect(self._on_changes)
+        self.note_highlight_intensity_input = QDoubleSpinBox(decimals=2, minimum=0.00, maximum=1.00, singleStep=0.01)
+        self.note_highlight_intensity_input.valueChanged.connect(self._on_changes)
 
         self.auto_calc_pitch_bounds_checkbox = QCheckBox()
         self.auto_calc_pitch_bounds_checkbox.toggled.connect(self._on_changes)
@@ -256,8 +266,30 @@ class ConfigTab(QWidget):
         v_right_layout.addLayout(h_layout)
 
         h_layout = QHBoxLayout()
-        h_layout.addWidget(QLabel("Note Play Color"))
-        h_layout.addWidget(self.note_play_color_button)
+        h_layout.addWidget(QLabel("Note Highlight Enabled"))
+        h_layout.addStretch()
+        h_layout.addWidget(self.note_highlight_checkbox)
+        v_right_layout.addLayout(h_layout)
+
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(QLabel("Note Highlight Intensity"))
+        h_layout.addWidget(self.note_highlight_intensity_input)
+        v_right_layout.addLayout(h_layout)
+
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(QLabel("Note Glow Enabled"))
+        h_layout.addStretch()
+        h_layout.addWidget(self.note_glow_checkbox)
+        v_right_layout.addLayout(h_layout)
+
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(QLabel("Note Glow Size"))
+        h_layout.addWidget(self.note_glow_size_input)
+        v_right_layout.addLayout(h_layout)
+
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(QLabel("Note Glow Intensity"))
+        h_layout.addWidget(self.note_glow_intensity_input)
         v_right_layout.addLayout(h_layout)
 
         v_right_layout.addWidget(SectionDivider("Pitch Settings"))
@@ -368,15 +400,28 @@ class ConfigTab(QWidget):
 
         self.show_playhead_checkbox.setChecked(self.vis_config.show_playhead)
         self.playhead_color_button.setColor(self.vis_config.playhead_color)
+        self.playhead_color_button.setDisabled(not self.vis_config.show_playhead)
         self.playhead_alpha_input.setValue(self.vis_config.playhead_alpha)
+        self.playhead_alpha_input.setDisabled(not self.vis_config.show_playhead)
         self.playhead_thickness_input.setValue(self.vis_config.playhead_thickness_ratio)
+        self.playhead_thickness_input.setDisabled(not self.vis_config.show_playhead)
         self.playhead_pos_input.setValue(self.vis_config.playhead_pos_ratio)
+        self.playhead_pos_input.setDisabled(not self.vis_config.show_playhead)
 
         self.vertical_padding_input.setValue(self.vis_config.vertical_padding_ratio)
         self.vertical_offset_input.setValue(self.vis_config.vertical_offset_ratio)
 
         self.note_fadeout_input.setValue(self.vis_config.note_fadeout_ratio)
-        self.note_play_color_button.setColor(self.vis_config.note_play_color)
+
+        self.note_glow_checkbox.setChecked(self.vis_config.note_glow_enabled)
+        self.note_glow_size_input.setValue(self.vis_config.note_glow_size)
+        self.note_glow_size_input.setDisabled(not self.vis_config.note_glow_enabled)
+        self.note_glow_intensity_input.setValue(self.vis_config.note_glow_intensity)
+        self.note_glow_intensity_input.setDisabled(not self.vis_config.note_glow_enabled)
+
+        self.note_highlight_checkbox.setChecked(self.vis_config.note_highlight_enabled)
+        self.note_highlight_intensity_input.setValue(self.vis_config.note_highlight_intensity)
+        self.note_highlight_intensity_input.setDisabled(not self.vis_config.note_highlight_enabled)
 
         self.auto_calc_pitch_bounds_checkbox.setChecked(self.vis_config.auto_calc_pitch_bounds)
         self.pitch_min_input.setDisabled(self.vis_config.auto_calc_pitch_bounds)
@@ -432,7 +477,13 @@ class ConfigTab(QWidget):
         self.vis_config.vertical_offset_ratio = self.vertical_offset_input.value()
 
         self.vis_config.note_fadeout_ratio = self.note_fadeout_input.value()
-        self.vis_config.note_play_color = self.note_play_color_button.getColor()
+
+        self.vis_config.note_glow_enabled = self.note_glow_checkbox.isChecked()
+        self.vis_config.note_glow_size = self.note_glow_size_input.value()
+        self.vis_config.note_glow_intensity = self.note_glow_intensity_input.value()
+
+        self.vis_config.note_highlight_enabled = self.note_highlight_checkbox.isChecked()
+        self.vis_config.note_highlight_intensity = self.note_highlight_intensity_input.value()
 
         if not self.vis_config.auto_calc_pitch_bounds:
             self.vis_config.manual_pitch_min = self.pitch_min_input.value()

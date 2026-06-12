@@ -25,8 +25,10 @@ History
   7 - BG details, play audio flag, & time offsets
   8 - BG video props
   9 - Fade In/Out; Playhead thickness and alpha
+  10 - Note glow
+  11 - Note highlight
 '''
-VIS_CONFIG_SCHEMA_VERSION = 9
+VIS_CONFIG_SCHEMA_VERSION = 11
 
 '''
 Top level construct containing all visualizing info
@@ -72,7 +74,15 @@ class VisConfig:
     # 1 means fade out over full distance to left edge, 0.5 means fade out to 
     # halfway from playhead to left edge, etc. It makes sense, trust me.
     note_fadeout_ratio: float = 0.5
-    note_play_color: RGB = Color.WHITE
+
+    # -- Note Glow --
+    note_glow_enabled: bool = True
+    note_glow_size: float = 0.8 # ratio of computed bar height - applies to y padding
+    note_glow_intensity: float = 0.33
+
+    # -- Note Highlight --
+    note_highlight_enabled: bool = True
+    note_highlight_intensity: float = 0.75 # ratio on alpha
 
     # -- Fade In --
     fade_in_enabled: bool = False
@@ -163,7 +173,12 @@ class VisConfig:
             "vertical_padding_ratio": self.vertical_padding_ratio,
             "vertical_offset_ratio": self.vertical_offset_ratio,
             "note_fadeout_ratio": self.note_fadeout_ratio,
-            "note_play_color": list(self.note_play_color),
+
+            "note_glow_enabled": self.note_glow_enabled,
+            "note_glow_size": self.note_glow_size,
+            "note_glow_intensity": self.note_glow_intensity,
+            "note_highlight_enabled": self.note_highlight_enabled,
+            "note_highlight_intensity": self.note_highlight_intensity,
 
             "fade_in_enabled": self.fade_in_enabled,
             "fade_in_color": list(self.fade_in_color),
@@ -232,7 +247,6 @@ class VisConfig:
 
             if schema_version >= 3:
                 config.note_fadeout_ratio = data["note_fadeout_ratio"]
-                config.note_play_color = data["note_play_color"]
 
             if schema_version >= 4:
                 config.track_groups = [
@@ -269,6 +283,15 @@ class VisConfig:
                 config.fade_out_enabled = data["fade_out_enabled"]
                 config.fade_out_color = tuple(data["fade_out_color"])
                 config.fade_out_time = data["fade_out_time"]
+
+            if schema_version >= 10:
+                config.note_glow_enabled = data["note_glow_enabled"]
+                config.note_glow_size = data["note_glow_size"]
+                config.note_glow_intensity = data["note_glow_intensity"]
+
+            if schema_version >= 11:
+                config.note_highlight_enabled = data["note_highlight_enabled"]
+                config.note_highlight_intensity = data["note_highlight_intensity"]
 
             return config
         except Exception as ex:
