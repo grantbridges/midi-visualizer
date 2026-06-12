@@ -100,7 +100,7 @@ class VisConfig:
     # -- Time Range --
     apply_time_offsets: bool = True
     start_time_offset: float = 0.0
-    end_time_offset: float = 1.0
+    end_time_offset: float = 0.0
 
     # children
     tracks: List[Track] = field(default_factory=list)

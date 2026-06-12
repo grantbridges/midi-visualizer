@@ -174,14 +174,14 @@ class PreviewWidget(QWidget):
                 elapsed_sec = self.play_timer.elapsed() / 1000.0
                 self.current_time = self.play_start_visual_time + elapsed_sec
 
-                if self.current_time >= 0.0 and not audio_provider.is_playing():
-                    audio_provider.play_at(self.current_time)
-
                 if self.current_time > self.end_time:
                     if user_settings.loop_preview:
                         self._set_current_time(self.start_time)
                     else:
                         self._stop()
+                
+                if self.current_time >= 0.0 and not audio_provider.is_playing():
+                    audio_provider.play_at(self.current_time)
 
             self._update_slider_position()
             self._refresh_canvas()

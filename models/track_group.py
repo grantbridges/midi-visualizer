@@ -17,7 +17,7 @@ class TrackGroup:
     # 0 - 1, ratio of midi region height
     bar_height_ratio: float = .02
     # seconds for bar to fully cross screen
-    bar_sec_across_screen: float = 3.0 
+    bar_sec_across_screen: float = 7.0 
     pitch_offset: int = 0 # -127 - 127
 
     def save(self) -> dict:

@@ -38,7 +38,8 @@ class AudioProvider(QObject):
 
     def play_at(self, seconds: float):
         self.seek_seconds(seconds)
-        self.play()
+        if not self.is_playing():
+            self.play()
 
     def pause(self):
         self.player.pause()
