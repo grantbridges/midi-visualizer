@@ -266,7 +266,7 @@ class PreviewWidget(QWidget):
         self.refresh_ui()
 
     def _set_current_time(self, time: float):
-        self.current_time = self.start_time
+        self.current_time = time
 
         # reset when this "play" context started from
         self.play_start_visual_time = self.current_time

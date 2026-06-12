@@ -2,11 +2,13 @@ from dataclasses import dataclass, field
 import cv2
 from PySide6.QtGui import QImage
 
+from utility.util import Util
+
 @dataclass
 class VideoProvider:
     frames: list[QImage] = field(default_factory=list)
     fps: float = 0.0
-    duration_s: float = 0.0 # seconds
+    duration_s: float = 0.0
 
     def init(self):
         pass
@@ -23,13 +25,13 @@ class VideoProvider:
         cap = cv2.VideoCapture(video_path)
 
         if not cap.isOpened():
-            raise ValueError(f"Could not open video file: {video_path}")
+            raise ValueError(f"VideoProvider | Error | Could not open video file: {video_path}")
         
         self.fps = cap.get(cv2.CAP_PROP_FPS)
         frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
         if self.fps <= 0:
-            raise ValueError("Video FPS could not be determined")
+            raise ValueError("VideoProvider | Error | Video FPS could not be determined")
 
         self.duration_s = frame_count / self.fps
 
@@ -44,13 +46,13 @@ class VideoProvider:
             h, w, ch = frame_rgb.shape
             bytes_per_line = ch * w
 
-            image = QImage(frame_rgb.data, w, h, bytes_per_line, QImage.Format_RGB888).copy()  # important: detach from numpy buffer
+            image = QImage(frame_rgb.data, w, h, bytes_per_line, QImage.Format_RGB888).copy()
             self.frames.append(image)
 
         cap.release()
 
         if not self.frames:
-            raise ValueError("No frames were loaded from video")
+            raise ValueError("VideoProvider | Error | No frames were loaded from video")
     
     def get_frame(self, time_s: float, loop: bool) -> QImage | None:
         if not self.frames or self.duration_s <= 0:
@@ -66,7 +68,7 @@ class VideoProvider:
         t = time_s % self.duration_s
 
         index = int(t * self.fps)
-        index = max(0, min(len(self.frames) - 1, index))
+        index = Util.clamp(len(self.frames) - 1, 0, index)
 
         return self.frames[index]
 
