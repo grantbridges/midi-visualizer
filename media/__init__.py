@@ -1,0 +1,1 @@
+from media.video_provider import video_provider

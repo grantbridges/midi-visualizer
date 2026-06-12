@@ -4,7 +4,7 @@ from PySide6.QtGui import QBrush, QLinearGradient, QPainter, QPen
 from PySide6.QtCore import QRect, QRectF, Qt
 from common import Const, Color, RGB
 from models import VisConfig, BackgroundMode, Note
-from render.video_provider import video_provider
+from media import video_provider
 from utility import QUtil
 from utility.util import Util
 

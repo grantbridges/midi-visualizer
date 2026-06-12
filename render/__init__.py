@@ -1,3 +1,2 @@
 from render.midi_render_util import MidiRenderUtil
 from render.render_worker import RenderWorker
-from render.video_provider import video_provider

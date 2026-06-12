@@ -22,7 +22,8 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QAction, QKeySequence, QResizeEvent
 from common import Const
 from models import VisConfig, Track, Resolution, user_settings, BackgroundMode
-from render import RenderWorker, video_provider
+from render import RenderWorker
+from media import video_provider
 from ui.tabs import ConfigTab, TrackGroupsTab, TracksTab
 from ui.widgets import PreviewWidget
 from ui.dialogs import (
