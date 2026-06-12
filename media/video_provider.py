@@ -8,13 +8,16 @@ class VideoProvider:
     fps: float = 0.0
     duration_s: float = 0.0 # seconds
 
+    def init(self):
+        pass
+
     def clear(self):
         self.frames = []
         self.fps = 0.0
         self.duration_s = 0.0
 
     # loads provided video into array of frames
-    def load(self, video_path: str):
+    def load_video(self, video_path: str):
         self.frames.clear()
 
         cap = cv2.VideoCapture(video_path)

@@ -4,6 +4,7 @@ from PySide6.QtCore import QObject, QUrl
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 
 from utility import Util
+from models import user_settings
 
 class AudioProvider(QObject):
     def __init__(self, parent=None):
@@ -15,11 +16,17 @@ class AudioProvider(QObject):
         self.player = QMediaPlayer(self)
         self.player.setAudioOutput(self.audio_output)
 
+    def init(self):
+        self.refresh_mute_state()
+
+    def refresh_mute_state(self):
+        self.set_muted(user_settings.mute_audio)
+
     def clear(self):
         self.player.stop()
         self.player.setSource(QUrl())
 
-    def load(self, audio_path: str):
+    def load_audio(self, audio_path: str):
         if Path(audio_path).is_file():
             self.player.setSource(QUrl.fromLocalFile(audio_path))
 

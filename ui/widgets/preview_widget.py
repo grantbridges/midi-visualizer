@@ -1,8 +1,6 @@
-from enum import Enum
-import time
 from uuid import UUID
-from PySide6.QtCore import Qt, QTimer, QRect
-from PySide6.QtGui import QAction, QFont, QPainter, QColor, QPen
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
     QMenu,
     QWidget,
@@ -12,11 +10,10 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QSlider,
 )
-from common import Const, Color
 from models import VisConfig, user_settings
-from render import MidiRenderUtil
-from utility import QUtil, Util
+from utility import Util
 from ui.widgets.preview_canvas import PreviewCanvas
+from media import audio_provider
 
 class PreviewWidget(QWidget):
     def __init__(self, vis_config: VisConfig, parent=None):
@@ -39,7 +36,6 @@ class PreviewWidget(QWidget):
         self.pitch_min: int = 0
         self.pitch_max: int = 0
 
-        self.show_expanded: bool = True
         self.preview_padding_min = -100
         self.preview_padding_max = 100
 
@@ -93,8 +89,8 @@ class PreviewWidget(QWidget):
         top_row_layout = QHBoxLayout()
         top_row_layout.addWidget(self.play_btn)
         top_row_layout.addWidget(self.reset_btn)
-        # top_row_layout.addWidget(self.mute_checkbox) # TODO when audio preview is supported
         top_row_layout.addWidget(self.loop_checkbox)
+        top_row_layout.addWidget(self.mute_checkbox)
         top_row_layout.addStretch()
         top_row_layout.addWidget(self.expand_btn)
         top_row_layout.addStretch()
@@ -168,6 +164,9 @@ class PreviewWidget(QWidget):
             if self.playing == True:
                 self.current_time += 1 / float(self.vis_config.fps) # iterate one frame
 
+                if self.current_time >= 0.0 and not audio_provider.is_playing():
+                    audio_provider.play_at(self.current_time)
+
                 if self.current_time > self.end_time:
                     if user_settings.loop_preview:
                         self.current_time = self.start_time
@@ -195,6 +194,7 @@ class PreviewWidget(QWidget):
 
     def _reset(self):
         self.current_time = self.start_time
+        audio_provider.stop() # will restart on tick
         self._update_slider_position()
         self._refresh_canvas()
 
@@ -211,16 +211,19 @@ class PreviewWidget(QWidget):
         user_settings.mute_audio = checked
         user_settings.save()
 
+        audio_provider.refresh_mute_state()
+
     def _on_loop_toggled(self, checked: bool):
         user_settings.loop_preview = checked
         user_settings.save()
 
     def _toggle_expanded(self):
-        self.show_expanded = not self.show_expanded
+        user_settings.expanded_preview = not user_settings.expanded_preview
+        user_settings.save()
         self._update_canvas_size()
 
     def _get_preview_padding(self) -> int:
-        return self.preview_padding_max if self.show_expanded else self.preview_padding_min
+        return self.preview_padding_max if user_settings.expanded_preview else self.preview_padding_min
 
     def _create_settings_action(self, label: str, property_name: str) -> QAction:
         action = QAction(label, self)
@@ -244,14 +247,18 @@ class PreviewWidget(QWidget):
     def _on_slider_changed(self, value):
         # only apply if this is a user-driven movement
         if self.slider.isSliderDown():
+            if audio_provider.is_playing():
+                audio_provider.stop()
+
             t_norm = value / 1000
             self.current_time = self.start_time + t_norm * (self.end_time - self.start_time)
             self._refresh_canvas()
 
     def _play(self):
-        self.playing = True      
+        self.playing = True
         self.refresh_ui()
 
     def _stop(self):
         self.playing = False
+        audio_provider.stop()
         self.refresh_ui()

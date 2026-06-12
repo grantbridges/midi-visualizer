@@ -118,6 +118,7 @@ class MainWindow(QMainWindow):
             self.init_default_view()
 
         self.resize(1200, 900)
+
         #self.showFullScreen()
 
     def init_default_view(self):
@@ -303,7 +304,7 @@ class MainWindow(QMainWindow):
             )
 
             if has_video:
-                video_provider.load(self.vis_config.bg_video_filepath)
+                video_provider.load_video(self.vis_config.bg_video_filepath)
         except Exception as e:
             QMessageBox.critical(self, "Load Failed", f"Failed to load video: {str(e)}")
         finally:
@@ -334,7 +335,7 @@ class MainWindow(QMainWindow):
             )
 
             if has_audio:
-                audio_provider.load(self.vis_config.audio_filepath)
+                audio_provider.load_audio(self.vis_config.audio_filepath)
         except Exception as e:
             QMessageBox.critical(self, "Load Failed", f"Failed to load audio: {str(e)}")
         finally:
