@@ -1,5 +1,5 @@
 from uuid import UUID
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import Qt, QTimer, QElapsedTimer
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
     QMenu,
@@ -20,9 +20,6 @@ class PreviewWidget(QWidget):
         super().__init__(parent)
 
         self.vis_config = vis_config
-        self.current_fps = 60
-        if self.vis_config is not None:
-            self.current_fps = self.vis_config.fps
 
         self.playing = False
         self.start_time = 0.0
@@ -30,7 +27,10 @@ class PreviewWidget(QWidget):
         self.current_time = 0.0
         self.timer = QTimer(self)
         self.timer.timeout.connect(self._on_tick)
-        self.timer.start(int(1000 / self.current_fps))
+        self.timer.start(20)
+
+        self.play_timer = QElapsedTimer()
+        self.play_start_visual_time = 0.0
 
         # computed and cached for quick lookup
         self.pitch_min: int = 0
@@ -112,12 +112,6 @@ class PreviewWidget(QWidget):
         
     def model_changed(self):
         if self.vis_config is not None:
-            if self.current_fps != self.vis_config.fps:
-                # reset timer with new fps
-                self.current_fps = self.vis_config.fps
-                self.timer.stop()
-                self.timer.start(int(1000 / self.current_fps))
-
             self.pitch_min = self.vis_config.get_min_pitch()
             self.pitch_max = self.vis_config.get_max_pitch()
 
@@ -138,12 +132,12 @@ class PreviewWidget(QWidget):
                     self.end_time += 1 # prevent divide by 0
 
                 if was_time_at_start:
-                    self.current_time = self.start_time
+                    self._set_current_time(self.start_time)
                 elif was_time_at_end:
-                    self.current_time = self.end_time
+                    self._set_current_time(self.end_time)
                 else:
                     # apply clamping to ensure current time stays in bounds
-                    self.current_time = Util.clamp(self.current_time, self.start_time, self.end_time)
+                    self._set_current_time(Util.clamp(self.current_time, self.start_time, self.end_time))
 
                 self._update_slider_position()
 
@@ -162,14 +156,16 @@ class PreviewWidget(QWidget):
         # only update widget if playing and user isn't dragging slider
         if self.playing and not self.slider.isSliderDown():
             if self.playing == True:
-                self.current_time += 1 / float(self.vis_config.fps) # iterate one frame
+                # calculate current time from how long has elapsed since play start
+                elapsed_sec = self.play_timer.elapsed() / 1000.0
+                self.current_time = self.play_start_visual_time + elapsed_sec
 
                 if self.current_time >= 0.0 and not audio_provider.is_playing():
                     audio_provider.play_at(self.current_time)
 
                 if self.current_time > self.end_time:
                     if user_settings.loop_preview:
-                        self.current_time = self.start_time
+                        self._set_current_time(self.start_time)
                     else:
                         self._stop()
 
@@ -191,14 +187,6 @@ class PreviewWidget(QWidget):
             self._play()
         else:
             self._stop()
-
-    def _reset(self):
-        self.current_time = self.start_time
-        audio_provider.stop() # will restart on tick
-        self._update_slider_position()
-        self._refresh_canvas()
-
-        self.refresh_ui()
 
     def _update_slider_position(self):
         # set slider position from current time
@@ -248,17 +236,38 @@ class PreviewWidget(QWidget):
         # only apply if this is a user-driven movement
         if self.slider.isSliderDown():
             if audio_provider.is_playing():
-                audio_provider.stop()
+                audio_provider.stop() # will resume during tick
 
             t_norm = value / 1000
-            self.current_time = self.start_time + t_norm * (self.end_time - self.start_time)
+            self._set_current_time(self.start_time + t_norm * (self.end_time - self.start_time))
+
             self._refresh_canvas()
 
     def _play(self):
         self.playing = True
+
+        self.play_start_visual_time = self.current_time
+        self.play_timer.restart()
+
         self.refresh_ui()
 
     def _stop(self):
         self.playing = False
         audio_provider.stop()
         self.refresh_ui()
+
+    def _reset(self):
+        self._set_current_time(self.start_time)
+
+        audio_provider.stop() # will restart on tick
+        self._update_slider_position()
+        self._refresh_canvas()
+
+        self.refresh_ui()
+
+    def _set_current_time(self, time: float):
+        self.current_time = self.start_time
+
+        # reset when this "play" context started from
+        self.play_start_visual_time = self.current_time
+        self.play_timer.restart()
