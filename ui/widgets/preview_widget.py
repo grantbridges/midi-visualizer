@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QCheckBox,
     QSlider,
+    QDoubleSpinBox
 )
 from models import VisConfig, user_settings
 from utility import Util
@@ -50,6 +51,11 @@ class PreviewWidget(QWidget):
         self.loop_checkbox = QCheckBox("Loop")
         self.loop_checkbox.setChecked(user_settings.loop_preview)
         self.loop_checkbox.toggled.connect(self._on_loop_toggled)
+        self.step_input = QDoubleSpinBox(decimals=2, value = 0.05, minimum=0.01, maximum=10.00, singleStep=0.01, suffix=" sec")
+        self.step_fwd_btn = QPushButton("⏭")
+        self.step_fwd_btn.clicked.connect(lambda: self._step(self.step_input.value()))
+        self.step_back_btn = QPushButton("⏮")
+        self.step_back_btn.clicked.connect(lambda: self._step(-1 * self.step_input.value()))
         self.expand_btn = QPushButton("⇅")
         self.expand_btn.clicked.connect(self._toggle_expanded)
 
@@ -86,12 +92,18 @@ class PreviewWidget(QWidget):
         # layout controls
         v_layout = QVBoxLayout(self)
 
+        group_spacing = 25
         top_row_layout = QHBoxLayout()
         top_row_layout.addWidget(self.play_btn)
         top_row_layout.addWidget(self.reset_btn)
         top_row_layout.addWidget(self.loop_checkbox)
+        top_row_layout.addSpacing(group_spacing)
+        top_row_layout.addWidget(self.step_back_btn)
+        top_row_layout.addWidget(self.step_fwd_btn)
+        top_row_layout.addWidget(self.step_input)
+        top_row_layout.addSpacing(group_spacing)
         top_row_layout.addWidget(self.mute_checkbox)
-        top_row_layout.addStretch()
+        top_row_layout.addSpacing(group_spacing)
         top_row_layout.addWidget(self.expand_btn)
         top_row_layout.addStretch()
         top_row_layout.addWidget(self.settings_btn)
@@ -146,6 +158,8 @@ class PreviewWidget(QWidget):
 
     def refresh_ui(self):
         self.play_btn.setText("▶ Play" if not self.playing else "⏹ Stop")
+        self.step_back_btn.setDisabled(self.playing)
+        self.step_fwd_btn.setDisabled(self.playing)
 
     def set_selected_group_id(self, group_id: UUID | None):
         self.preview_canvas.set_selected_group_id(group_id)
@@ -187,6 +201,16 @@ class PreviewWidget(QWidget):
             self._play()
         else:
             self._stop()
+    
+    def _step(self, time_inc: float):
+        step_to_time = self.current_time + time_inc
+        step_to_time = Util.clamp(step_to_time, self.start_time, self.end_time)
+
+        if step_to_time is not self.current_time: 
+            self._set_current_time(step_to_time)
+            self._update_slider_position()
+            self._refresh_canvas()
+            self.refresh_ui()
 
     def _update_slider_position(self):
         # set slider position from current time
