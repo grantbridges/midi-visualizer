@@ -79,6 +79,9 @@ class ExportOptionsDialog(QDialog):
         self.resolution_combo.addItem("Full HD (1080p)", Resolution.FullHD)
         self.resolution_combo.addItem("Quad HD (1440p)", Resolution.QuadHD)
         self.resolution_combo.addItem("4K (2160p)", Resolution.UltraHD)
+        self.resolution_combo.addItem("Vertical HD (1080p)", Resolution.VerticalHD)
+        self.resolution_combo.addItem("Square HD (1080p)", Resolution.SquareHD)
+        self.resolution_combo.addItem("Portrait Feed", Resolution.PortraitFeed)
 
         # initialize resolution dropdown
         index = self.resolution_combo.findData(vis_config.export_resolution)

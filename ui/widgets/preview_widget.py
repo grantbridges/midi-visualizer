@@ -160,6 +160,7 @@ class PreviewWidget(QWidget):
         self.play_btn.setText("▶ Play" if not self.playing else "⏹ Stop")
         self.step_back_btn.setDisabled(self.playing)
         self.step_fwd_btn.setDisabled(self.playing)
+        self.step_input.setDisabled(self.playing)
 
     def set_selected_group_id(self, group_id: UUID | None):
         self.preview_canvas.set_selected_group_id(group_id)
