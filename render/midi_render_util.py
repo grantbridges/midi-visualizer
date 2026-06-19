@@ -282,7 +282,8 @@ class MidiRenderUtil:
 
             # draw
             color_highlight = Util.lighten_color(color, highlight_intensity)
-            qcolor = QUtil.rgb_to_qcolor(color_highlight, int(alpha / 2))
+            #qcolor = QUtil.rgb_to_qcolor(color_highlight, int(alpha / 2))
+            qcolor = QUtil.rgb_to_qcolor(color_highlight, int(alpha))
             if draw_as_line:
                 pen = QPen(qcolor)
                 pen.setWidth(thickness_px)
@@ -291,7 +292,7 @@ class MidiRenderUtil:
             else:
                 painter.setPen(Qt.NoPen)
                 painter.setBrush(qcolor)
-                painter.drawRect(x1, y1, (x2-x1), (y2-y1))
+                painter.drawRect(x1, y1, length_px, length_px)
 
         
     @staticmethod
