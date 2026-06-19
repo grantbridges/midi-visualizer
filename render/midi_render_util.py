@@ -232,7 +232,7 @@ class MidiRenderUtil:
         note_pitch: int,
         note_start_time: float,
         note_center_y: float,
-        bar_height_px: float,
+        bar_height_px: int,
         bar_px_per_sec: float,
         current_time: float, 
         color: RGB, 
@@ -242,37 +242,40 @@ class MidiRenderUtil:
     ):
         # how long has it been since note has been played?
         anim_time = current_time - note_start_time
-        if anim_time < 0:
+        if anim_time <= 0:
             return # only spark once we've played the note
         
         rect_size = math.hypot(rect.width(), rect.height())
 
         # value controls
         start_dist_ratio = 0.005
-        start_length_ratio = 0.006
+        start_length_ratio = 0.004
         thickness_ratio = 0.002
-        spark_count = 3
-        shrink_ratio = 12 # higher => shrinks faster
+        spark_count = random.randint(2, 3)
+        #spark_count = 1
         max_angle_d = 50
-        speed_ratio = 0.12
+        time_to_fade_sec = .6
         draw_as_line = False
 
-        start_dist_px = rect_size * start_dist_ratio # TODO - function of bar height
-        start_length_px = rect_size * start_length_ratio # TODO - function of bar height
+        start_dist_px = rect_size * start_dist_ratio * max(bar_height_px / 5, 1)
+        start_length_px = rect_size * start_length_ratio * max(bar_height_px / 6, .8)
         thickness_px = rect_size * thickness_ratio # TODO - function of bar height
-        speed_px_per_sec = rect_size * speed_ratio # TODO - function of bar height AND bar speed
 
         # calculate length of sparks - shrinks the more time has passed
-        length_px = start_length_px - anim_time * shrink_ratio
-        if length_px <= 0:
+        length_px = start_length_px * (1 - anim_time / time_to_fade_sec)
+        if length_px < 1:
             return # too small - skip
+        print(length_px)
 
         for i in range(spark_count):
             # calculate angle of spark using deterministic random value seeded by note 
             # properties and spark count
-            seed = note_pitch * note_start_time + 100 * i
-            angle_d = random.Random(seed).uniform(-max_angle_d, max_angle_d)
+            seed = random.Random(note_pitch * note_start_time + 100 * i)
+            angle_d = seed.uniform(-max_angle_d, max_angle_d)
             angle = math.radians(angle_d)
+
+            speed_rand = seed.uniform(bar_px_per_sec * .8, bar_px_per_sec * 1.2)
+            speed_px_per_sec = speed_rand
 
             # calculate positions
             x1 = playhead_x - (start_dist_px + speed_px_per_sec * anim_time) * math.cos(angle)
@@ -282,8 +285,8 @@ class MidiRenderUtil:
 
             # draw
             color_highlight = Util.lighten_color(color, highlight_intensity)
-            #qcolor = QUtil.rgb_to_qcolor(color_highlight, int(alpha / 2))
-            qcolor = QUtil.rgb_to_qcolor(color_highlight, int(alpha))
+            qcolor = QUtil.rgb_to_qcolor(color_highlight, int(alpha / 2))
+            #qcolor = QUtil.rgb_to_qcolor(color_highlight, int(alpha))
             if draw_as_line:
                 pen = QPen(qcolor)
                 pen.setWidth(thickness_px)
@@ -292,7 +295,7 @@ class MidiRenderUtil:
             else:
                 painter.setPen(Qt.NoPen)
                 painter.setBrush(qcolor)
-                painter.drawRect(x1, y1, length_px, length_px)
+                painter.drawRect(x1 - length_px / 2, y1 - length_px / 2, length_px, length_px)
 
         
     @staticmethod
