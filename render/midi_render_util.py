@@ -111,7 +111,7 @@ class MidiRenderUtil:
                 bar_height_px = max(bar_height_px, 1) # min of 1 pixel
 
                 # y and height calc
-                center_y = MidiRenderUtil.pitch_to_y(
+                note_center_y = MidiRenderUtil.pitch_to_y(
                     note.pitch + track.pitch_offset,
                     pitch_min,
                     pitch_max,
@@ -119,7 +119,7 @@ class MidiRenderUtil:
                     vis_config.vertical_padding_ratio,
                     vis_config.vertical_offset_ratio,
                 )
-                y = center_y - bar_height_px / 2
+                y = note_center_y - bar_height_px / 2
                 h = bar_height_px
 
                 color = track.color
@@ -131,23 +131,23 @@ class MidiRenderUtil:
                     alpha = alpha * ((x_right - fade_start_x) / note_fade_distance)
                     alpha = max(0, min(255, alpha))
 
+                # -- note sparks --
+                if vis_config.note_sparks_enabled and track.note_sparks_enabled:
+                    MidiRenderUtil._draw_note_sparks(
+                        painter, vis_config, playhead_x, note.pitch, note.start, note_center_y, bar_height_px, pixels_per_sec,
+                        current_time, color, alpha
+                    )
+
                 # -- under glow --
                 if x < playhead_x and vis_config.note_glow_enabled:
-                    MidiRenderUtil._draw_note_glow(painter, playhead_x, x, y, w, h, color, alpha, bar_height_px, vis_config.note_glow_size, vis_config.note_glow_intensity)
+                    MidiRenderUtil._draw_note_glow(painter, vis_config, playhead_x, x, y, w, h, color, alpha, bar_height_px)
 
                 # -- note bar --
                 MidiRenderUtil._draw_note(painter, x, y, w, h, color, alpha)
 
-                # -- note sparks --
-                if vis_config.note_sparks_enabled and track.note_sparks_enabled:
-                    MidiRenderUtil._draw_note_sparks(
-                        painter, vis_config, playhead_x, note.pitch, note.start, center_y, bar_height_px, pixels_per_sec,
-                        current_time, color, alpha, rect
-                    )
-
                 # -- highlight --
                 if x < playhead_x and vis_config.note_highlight_enabled:
-                    MidiRenderUtil._draw_note_highlight(painter, playhead_x, x, y, w, h, color, alpha, vis_config.note_highlight_intensity)
+                    MidiRenderUtil._draw_note_highlight(painter, vis_config, playhead_x, x, y, w, h, color, alpha)
 
 
     @staticmethod
@@ -179,24 +179,19 @@ class MidiRenderUtil:
     # -- Helpers
     @staticmethod
     def _draw_note_glow(
-        painter: QPainter, 
-        playhead_x: int, 
+        painter: QPainter, vis_config: VisConfig, playhead_x: int, 
         x: int, y: int, w: int, h: int, color: RGB, alpha: int, 
-        bar_height: int, glow_size: float, glow_intensity: float
+        bar_height: int
     ):
         x_right = x + w
         glow_w = min(playhead_x, x_right) - x
         color_glow = Util.lighten_color(color, 0.75)
 
-        pad_y: float = bar_height * glow_size
+        # padding for how far glow extends vertically
+        pad_y: float = bar_height * vis_config.note_glow_size
 
-        glow_rect = QRectF(
-            x,
-            y - pad_y,
-            glow_w,
-            h + pad_y * 2,
-        )
-
+        # draw rect for glow area and define linear gradient over it
+        glow_rect = QRectF(x, y - pad_y, glow_w, h + pad_y * 2)
         gradient = QLinearGradient(
             glow_rect.left(),
             glow_rect.top(),
@@ -204,15 +199,14 @@ class MidiRenderUtil:
             glow_rect.bottom(),
         )
 
+        # set linear gradient from top to bottom
         gradient.setColorAt(0.0, QUtil.rgb_to_qcolor(color_glow, 0))
-        gradient.setColorAt(0.5, QUtil.rgb_to_qcolor(color_glow, int(alpha * glow_intensity))) # TODO: configure glow intesity (0.00 - 1.00)
+        gradient.setColorAt(0.5, QUtil.rgb_to_qcolor(color_glow, int(alpha * vis_config.note_glow_intensity)))
         gradient.setColorAt(1.0, QUtil.rgb_to_qcolor(color_glow, 0))
 
+        # draw glow
         painter.setPen(Qt.NoPen)
         painter.setBrush(QBrush(gradient))
-
-        #radius = bar_height
-        #painter.drawRoundedRect(glow_rect, radius, radius)
         painter.drawRect(glow_rect)
 
     @staticmethod
@@ -240,25 +234,15 @@ class MidiRenderUtil:
         bar_px_per_sec: float,
         current_time: float,
         color: RGB, 
-        alpha: int,
-        rect: QRect
+        alpha: int
     ):
         # how long has it been since note has been played?
         anim_time = current_time - note_start_time
         if anim_time <= 0:
             return # only spark once we've played the note
         
-        rect_size = math.hypot(rect.width(), rect.height())
-
-        # value controls
-        thickness_ratio = 0.002
-        draw_as_line = False
-
-        #start_dist_px = rect_size * vis_config.note_sparks_start_dist_ratio * max(bar_height_px / 5, 1)
-        start_dist_px = bar_height_px
-        #start_length_px = rect_size * vis_config.note_sparks_start_length_ratio * max(bar_height_ratio * rect.height() / 6, .8)
-        start_length_px = bar_height_px
-        thickness_px = rect_size * thickness_ratio # TODO - function of bar height
+        start_dist_px = bar_height_px * vis_config.note_sparks_start_dist_ratio
+        start_length_px = bar_height_px * vis_config.note_sparks_start_length_ratio
 
         # calculate length of sparks - shrinks the more time has passed
         length_px = start_length_px * (1 - anim_time / vis_config.note_sparks_time_to_fade_sec)
@@ -272,41 +256,41 @@ class MidiRenderUtil:
             angle_d = seed.uniform(-vis_config.note_sparks_max_angle_deg, vis_config.note_sparks_max_angle_deg)
             angle = math.radians(angle_d)
 
+            # randomize speed a bit
             speed_rand = seed.uniform(bar_px_per_sec, bar_px_per_sec * 1.2)
             speed_px_per_sec = speed_rand
 
-            # calculate positions
-            x1 = playhead_x - (start_dist_px + speed_px_per_sec * anim_time) * math.cos(angle)
-            y1 = note_center_y - (start_dist_px + speed_px_per_sec * anim_time) * math.sin(angle)
+            # calculate positions, adjusted over animation period
+            x = playhead_x - (start_dist_px + speed_px_per_sec * anim_time) * math.cos(angle)
+            y = note_center_y - (start_dist_px + speed_px_per_sec * anim_time) * math.sin(angle)
 
-            # draw
+            # draw (lighter)
             color_highlight = Util.lighten_color(color, vis_config.note_highlight_intensity)
             qcolor = QUtil.rgb_to_qcolor(color_highlight, int(alpha / 2))
-            if draw_as_line:
-                x2 = x1 - length_px * math.cos(angle)
-                y2 = y1 - length_px * math.sin(angle)
-                pen = QPen(qcolor)
-                pen.setWidth(thickness_px)
-                painter.setPen(pen)
-                painter.drawLine(x1, y1, x2, y2)
-            else:
-                painter.setPen(Qt.NoPen)
-                painter.setBrush(qcolor)
-                painter.drawRect(x1 - length_px / 2, y1 - length_px / 2, length_px, length_px)
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(qcolor)
+            painter.drawRect(x - length_px / 2, y - length_px / 2, length_px, length_px)
+
+            # old code for drawing as line - boxes look cleaner but 
+            # leaving this here in case I ever want to try it out again
+            # x2 = x - length_px * math.cos(angle)
+            # y2 = y - length_px * math.sin(angle)
+            # pen = QPen(qcolor)
+            # pen.setWidth(1)
+            # painter.setPen(pen)
+            # painter.drawLine(x, y, x2, y2)
 
         
     @staticmethod
     def _draw_note_highlight(
-        painter: QPainter, 
-        playhead_x: int, 
-        x: int, y: int, w: int, h: int, 
-        color: RGB, 
-        alpha: int, 
-        highlight_intensity: float
+        painter: QPainter, vis_config: VisConfig, 
+        playhead_x: int, x: int, y: int, w: int, h: int, 
+        color: RGB, alpha: int
     ):
+        # draw transparent overlay over played note area to brighten
         x_right = x + w
         highlight_w = min(playhead_x, x_right) - x
-        color_highlight = Util.lighten_color(color, highlight_intensity)
+        color_highlight = Util.lighten_color(color, vis_config.note_highlight_intensity)
         painter.setPen(Qt.NoPen)
         painter.setBrush(QUtil.rgb_to_qcolor(color_highlight, int(alpha / 2)))
         painter.drawRect(x, y, highlight_w, h)
