@@ -127,10 +127,7 @@ class PreviewCanvas(QWidget):
 
             # draw pitch guide lines for each track group
             if user_settings.show_track_groups:
-                for track_group in self.vis_config.track_groups:
-                    if not track_group.visible:
-                        continue
-
+                for track_group in self.vis_config.get_visible_track_groups():
                     is_selected = self.selected_group_id == track_group.group_id
                     color = QUtil.rgb_to_qcolor(track_group.color, 255 if is_selected else 70)
                     pen_width = 3 if is_selected else 1

@@ -74,11 +74,11 @@ class MidiRenderUtil:
 
         # build render tracks
         tracks: List[RenderTrack] = []
-        track_groups = vis_config.track_groups[::-1]
-        for tg in track_groups:
-            if not tg.visible:
-                continue
 
+        # iterate backwards so first groups are drawn on top
+        track_groups = vis_config.get_visible_track_groups()[::-1] 
+
+        for tg in track_groups:
             group_tracks = vis_config.get_tracks_by_group_id(tg.group_id)
             for t in group_tracks:
                 tracks.append(RenderTrack(

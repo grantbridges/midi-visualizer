@@ -27,8 +27,9 @@ History
   9 - Fade In/Out; Playhead thickness and alpha
   10 - Note glow
   11 - Note highlight
+  12 - Track group solo; note sparks config
 '''
-VIS_CONFIG_SCHEMA_VERSION = 11
+VIS_CONFIG_SCHEMA_VERSION = 12
 
 '''
 Top level construct containing all visualizing info
@@ -83,6 +84,15 @@ class VisConfig:
     # -- Note Highlight --
     note_highlight_enabled: bool = True
     note_highlight_intensity: float = 0.75 # ratio on alpha
+
+    # -- Note Sparks --
+    note_sparks_enabled: bool = True
+    note_sparks_start_dist_ratio: float = 0.005
+    note_sparks_start_length_ratio: float = 0.004
+    note_sparks_thickness_ratio = 0.002
+    note_sparks_count = 3
+    note_sparks_max_angle_deg = 50
+    note_sparks_time_to_fade_sec = .6
 
     # -- Fade In --
     fade_in_enabled: bool = False
@@ -173,6 +183,14 @@ class VisConfig:
             "vertical_padding_ratio": self.vertical_padding_ratio,
             "vertical_offset_ratio": self.vertical_offset_ratio,
             "note_fadeout_ratio": self.note_fadeout_ratio,
+
+            "note_sparks_enabled": self.note_sparks_enabled,
+            "note_sparks_start_dist_ratio": self.note_sparks_start_dist_ratio,
+            "note_sparks_start_length_ratio": self.note_sparks_start_length_ratio,
+            "note_sparks_thickness_ratio": self.note_sparks_thickness_ratio,
+            "note_sparks_count": self.note_sparks_count,
+            "note_sparks_max_angle_deg": self.note_sparks_max_angle_deg,
+            "note_sparks_time_to_fade_sec": self.note_sparks_time_to_fade_sec,
 
             "note_glow_enabled": self.note_glow_enabled,
             "note_glow_size": self.note_glow_size,
@@ -293,6 +311,15 @@ class VisConfig:
                 config.note_highlight_enabled = data["note_highlight_enabled"]
                 config.note_highlight_intensity = data["note_highlight_intensity"]
 
+            if schema_version >= 12:
+                config.note_sparks_enabled = data["note_sparks_enabled"]
+                config.note_sparks_start_dist_ratio = data["note_sparks_start_dist_ratio"]
+                config.note_sparks_start_length_ratio = data["note_sparks_start_length_ratio"]
+                config.note_sparks_thickness_ratio = data["note_sparks_thickness_ratio"]
+                config.note_sparks_count = data["note_sparks_count"]
+                config.note_sparks_max_angle_deg = data["note_sparks_max_angle_deg"]
+                config.note_sparks_time_to_fade_sec = data["note_sparks_time_to_fade_sec"]
+
             return config
         except Exception as ex:
             print(f"VisConfig | Error while loading config: {str(ex)}")
@@ -360,13 +387,21 @@ class VisConfig:
     
     def get_visible_tracks(self) -> List[Track]:
         tracks = []
-        for tg in self.track_groups:
-            if tg.visible:
-                tracks.extend(
-                    self.get_tracks_by_group_id(tg.group_id)
-                )
+
+        for tg in self.get_visible_track_groups():
+            tracks.extend(self.get_tracks_by_group_id(tg.group_id))
 
         return tracks
+    
+    def get_visible_track_groups(self) -> List[TrackGroup]:
+        track_groups = []
+
+        has_solo = sum(tg.solo for tg in self.track_groups) > 0
+        for tg in self.track_groups:
+            if (has_solo and tg.solo) or (not has_solo and tg.visible):
+                track_groups.append(tg)
+
+        return track_groups
     
     def get_min_pitch(self) -> int:
         if not self.auto_calc_pitch_bounds:
@@ -377,10 +412,7 @@ class VisConfig:
     def get_calculated_min_pitch(self) -> int:
         values = []
 
-        for group in self.track_groups:
-            if not group.visible:
-                continue
-
+        for group in self.get_visible_track_groups():
             for track in self.get_tracks_by_group_id(group.group_id):
                 values.append(track.pitch_min + group.pitch_offset)
 
@@ -403,10 +435,7 @@ class VisConfig:
     def get_calculated_max_pitch(self) -> int:
         values = []
 
-        for group in self.track_groups:
-            if not group.visible:
-                continue
-
+        for group in self.get_visible_track_groups():
             for track in self.get_tracks_by_group_id(group.group_id):
                 values.append(track.pitch_max + group.pitch_offset)
 
@@ -439,8 +468,7 @@ class VisConfig:
     def get_max_sec_across_screen(self) -> float:
         values = [
             tg.bar_sec_across_screen
-            for tg in self.track_groups
-            if tg.visible
+            for tg in self.get_visible_track_groups()
         ]
         return max(values) if values else 0.0
     

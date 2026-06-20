@@ -37,7 +37,11 @@ class TrackGroupsTab(QWidget):
         self.clear_selection_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         self.clear_selection_btn.clicked.connect(self._on_clear_selection)
 
-        self.track_columns = ["", "", "Name", "Visible", "Color", "Alpha", "Bar Height", "Speed", "Pitch Offset", ""]
+        self.clear_solo_btn = QPushButton("Clear Solo")
+        self.clear_solo_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+        self.clear_solo_btn.clicked.connect(self._on_clear_solo)
+
+        self.track_columns = ["", "", "Name", "Solo", "Visible", "Color", "Alpha", "Sparks", "Bar Height", "Speed", "Pitch Offset", ""]
         self.table = QTableWidget(0, len(self.track_columns))
         self.table.setHorizontalHeaderLabels(self.track_columns)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
@@ -56,12 +60,14 @@ class TrackGroupsTab(QWidget):
         btns_layout = QHBoxLayout()
         btns_layout.addWidget(self.add_row_btn)
         btns_layout.addWidget(self.clear_selection_btn)
+        btns_layout.addWidget(self.clear_solo_btn)
         btns_layout.addStretch()
         v_layout.addLayout(btns_layout)
         v_layout.addWidget(self.table)
 
     def refresh_ui(self):
         self._refresh_clear_selection_btn()
+        self._refresh_clear_solo_btn()
 
         # prevent callbacks while populating table
         self.table.blockSignals(True)
@@ -93,6 +99,12 @@ class TrackGroupsTab(QWidget):
             self.table.setItem(row, col, name_cell)
             col += 1
 
+            # solo
+            checkbox = TableCheckbox(track_group.solo)
+            checkbox.valueChanged.connect(lambda checked, row=row: self._on_solo_changed(row, checked))
+            self.table.setCellWidget(row, col, checkbox)
+            col += 1
+
             # visible
             checkbox = TableCheckbox(track_group.visible)
             checkbox.valueChanged.connect(lambda checked, row=row: self._on_visible_changed(row, checked))
@@ -111,6 +123,12 @@ class TrackGroupsTab(QWidget):
             alpha.setValue(track_group.alpha)
             alpha.valueChanged.connect(lambda alpha, row=row: self._on_alpha_changed(row, alpha))
             self.table.setCellWidget(row, col, alpha)
+            col += 1
+
+            # sparks
+            checkbox = TableCheckbox(track_group.note_sparks_enabled)
+            checkbox.valueChanged.connect(lambda checked, row=row: self._on_sparks_changed(row, checked))
+            self.table.setCellWidget(row, col, checkbox)
             col += 1
 
             # bar height ratio
@@ -169,6 +187,10 @@ class TrackGroupsTab(QWidget):
         row = self.table.currentRow()
         self.clear_selection_btn.setDisabled(row == -1)
 
+    def _refresh_clear_solo_btn(self):
+        solo_count = sum(tg.solo for tg in self.track_groups)
+        self.clear_solo_btn.setDisabled(solo_count == 0)
+
     # Callbacks
     def _on_add_group(self):
         track_group = TrackGroup(name = f"Group {len(self.track_groups)+1}")
@@ -182,6 +204,13 @@ class TrackGroupsTab(QWidget):
         self.table.setCurrentCell(-1, -1)
 
         self._refresh_clear_selection_btn()
+
+    def _on_clear_solo(self):
+        for tg in self.track_groups:
+            tg.solo = False
+        
+        self.refresh_ui()
+        self.on_changes_callback()
 
     def _on_remove_group(self, row: int):
         if 0 <= row < len(self.track_groups):
@@ -212,8 +241,7 @@ class TrackGroupsTab(QWidget):
 
         track_group = self.track_groups[row]
 
-        if col == 2:
-            # name
+        if col == self.track_columns.index("Name"):
             track_group.name = item.text()
         else:
             print(f"TrackGroupsTab | Warning: OnItemChanged for unhandled column: {self.track_columns[col]} (index: {col})")
@@ -228,6 +256,17 @@ class TrackGroupsTab(QWidget):
             self.on_track_group_selected_callback(None)
 
         self._refresh_clear_selection_btn()
+        
+    def _on_solo_changed(self, row: int, checked: bool):
+        if self.table.signalsBlocked():
+            return
+        
+        track_group = self.track_groups[row]
+        track_group.solo = checked
+
+        self._refresh_clear_solo_btn()
+
+        self.on_changes_callback()
         
     def _on_visible_changed(self, row: int, checked: bool):
         if self.table.signalsBlocked():
@@ -251,6 +290,14 @@ class TrackGroupsTab(QWidget):
         
         track_group = self.track_groups[row]
         track_group.alpha = alpha
+        self.on_changes_callback()
+    
+    def _on_sparks_changed(self, row: int, checked: bool):
+        if self.table.signalsBlocked():
+            return
+        
+        track_group = self.track_groups[row]
+        track_group.note_sparks_enabled = checked
         self.on_changes_callback()
 
     def _on_bar_height_changed(self, row: int, value: float):
