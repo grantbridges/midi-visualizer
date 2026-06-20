@@ -252,7 +252,6 @@ class MidiRenderUtil:
         start_length_ratio = 0.004
         thickness_ratio = 0.002
         spark_count = 3
-        #spark_count = 1
         max_angle_d = 50
         time_to_fade_sec = .6
         draw_as_line = False
