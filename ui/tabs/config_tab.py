@@ -526,7 +526,7 @@ class ConfigTab(QWidget):
 
         if image_file:
             self.bg_image_file_input.setText(image_file)
-            self._on_changes()
+            self._on_bg_image_selected()
 
 
     def _browse_bg_video_file(self):
@@ -541,7 +541,7 @@ class ConfigTab(QWidget):
 
         if video_file:
             self.bg_video_file_input.setText(video_file)
-            self._on_changes()
+            self._on_bg_video_selected()
 
     def _browse_audio_file(self):
         default_filepath = self.vis_config.audio_filepath or ""
