@@ -141,7 +141,7 @@ class MidiRenderUtil:
                 # -- note sparks --
                 if vis_config.note_sparks_enabled and track.note_sparks_enabled:
                     MidiRenderUtil._draw_note_sparks(
-                        painter, vis_config, playhead_x, note.pitch, note.start, center_y, bar_height, pixels_per_sec,
+                        painter, vis_config, playhead_x, note.pitch, note.start, center_y, track.bar_height_ratio, pixels_per_sec,
                         current_time, color, alpha, rect
                     )
 
@@ -236,7 +236,7 @@ class MidiRenderUtil:
         note_pitch: int,
         note_start_time: float,
         note_center_y: float,
-        bar_height_px: int,
+        bar_height_ratio: float,
         bar_px_per_sec: float,
         current_time: float,
         color: RGB, 
@@ -251,16 +251,12 @@ class MidiRenderUtil:
         rect_size = math.hypot(rect.width(), rect.height())
 
         # value controls
-        # start_dist_ratio = 0.005
-        # start_length_ratio = 0.004
         thickness_ratio = 0.002
-        # spark_count = 3
-        # max_angle_d = 50
-        # time_to_fade_sec = .6
         draw_as_line = False
 
-        start_dist_px = rect_size * vis_config.note_sparks_start_dist_ratio * max(bar_height_px / 5, 1)
-        start_length_px = rect_size * vis_config.note_sparks_start_length_ratio * max(bar_height_px / 6, .8)
+        # TODO - the px values aren't rendering correctly in the export - need ratios
+        start_dist_px = rect_size * vis_config.note_sparks_start_dist_ratio * max(bar_height_ratio * rect.height() / 5, 1)
+        start_length_px = rect_size * vis_config.note_sparks_start_length_ratio * max(bar_height_ratio * rect.height() / 6, .8)
         thickness_px = rect_size * thickness_ratio # TODO - function of bar height
 
         # calculate length of sparks - shrinks the more time has passed
@@ -281,14 +277,13 @@ class MidiRenderUtil:
             # calculate positions
             x1 = playhead_x - (start_dist_px + speed_px_per_sec * anim_time) * math.cos(angle)
             y1 = note_center_y - (start_dist_px + speed_px_per_sec * anim_time) * math.sin(angle)
-            x2 = x1 - length_px * math.cos(angle)
-            y2 = y1 - length_px * math.sin(angle)
 
             # draw
             color_highlight = Util.lighten_color(color, vis_config.note_highlight_intensity)
             qcolor = QUtil.rgb_to_qcolor(color_highlight, int(alpha / 2))
-            #qcolor = QUtil.rgb_to_qcolor(color_highlight, int(alpha))
             if draw_as_line:
+                x2 = x1 - length_px * math.cos(angle)
+                y2 = y1 - length_px * math.sin(angle)
                 pen = QPen(qcolor)
                 pen.setWidth(thickness_px)
                 painter.setPen(pen)
