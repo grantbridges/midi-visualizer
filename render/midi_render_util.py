@@ -251,7 +251,7 @@ class MidiRenderUtil:
         start_dist_ratio = 0.005
         start_length_ratio = 0.004
         thickness_ratio = 0.002
-        spark_count = random.randint(2, 3)
+        spark_count = 3
         #spark_count = 1
         max_angle_d = 50
         time_to_fade_sec = .6
@@ -265,7 +265,6 @@ class MidiRenderUtil:
         length_px = start_length_px * (1 - anim_time / time_to_fade_sec)
         if length_px < 1:
             return # too small - skip
-        print(length_px)
 
         for i in range(spark_count):
             # calculate angle of spark using deterministic random value seeded by note 
