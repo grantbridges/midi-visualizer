@@ -107,8 +107,8 @@ class MidiRenderUtil:
                     continue
 
                 # convert bar height ratio to pixels
-                bar_height = int(rect.height() * track.bar_height_ratio * (1 - vis_config.vertical_padding_ratio))
-                bar_height = max(bar_height, 1) # min of 1 pixel
+                bar_height_px = int(rect.height() * track.bar_height_ratio * (1 - vis_config.vertical_padding_ratio))
+                bar_height_px = max(bar_height_px, 1) # min of 1 pixel
 
                 # y and height calc
                 center_y = MidiRenderUtil.pitch_to_y(
@@ -119,8 +119,8 @@ class MidiRenderUtil:
                     vis_config.vertical_padding_ratio,
                     vis_config.vertical_offset_ratio,
                 )
-                y = center_y - bar_height / 2
-                h = bar_height
+                y = center_y - bar_height_px / 2
+                h = bar_height_px
 
                 color = track.color
                 alpha = track.alpha
@@ -133,7 +133,7 @@ class MidiRenderUtil:
 
                 # -- under glow --
                 if x < playhead_x and vis_config.note_glow_enabled:
-                    MidiRenderUtil._draw_note_glow(painter, playhead_x, x, y, w, h, color, alpha, bar_height, vis_config.note_glow_size, vis_config.note_glow_intensity)
+                    MidiRenderUtil._draw_note_glow(painter, playhead_x, x, y, w, h, color, alpha, bar_height_px, vis_config.note_glow_size, vis_config.note_glow_intensity)
 
                 # -- note bar --
                 MidiRenderUtil._draw_note(painter, x, y, w, h, color, alpha)
@@ -141,7 +141,7 @@ class MidiRenderUtil:
                 # -- note sparks --
                 if vis_config.note_sparks_enabled and track.note_sparks_enabled:
                     MidiRenderUtil._draw_note_sparks(
-                        painter, vis_config, playhead_x, note.pitch, note.start, center_y, track.bar_height_ratio, pixels_per_sec,
+                        painter, vis_config, playhead_x, note.pitch, note.start, center_y, bar_height_px, pixels_per_sec,
                         current_time, color, alpha, rect
                     )
 
@@ -236,7 +236,7 @@ class MidiRenderUtil:
         note_pitch: int,
         note_start_time: float,
         note_center_y: float,
-        bar_height_ratio: float,
+        bar_height_px: float,
         bar_px_per_sec: float,
         current_time: float,
         color: RGB, 
@@ -254,9 +254,10 @@ class MidiRenderUtil:
         thickness_ratio = 0.002
         draw_as_line = False
 
-        # TODO - the px values aren't rendering correctly in the export - need ratios
-        start_dist_px = rect_size * vis_config.note_sparks_start_dist_ratio * max(bar_height_ratio * rect.height() / 5, 1)
-        start_length_px = rect_size * vis_config.note_sparks_start_length_ratio * max(bar_height_ratio * rect.height() / 6, .8)
+        #start_dist_px = rect_size * vis_config.note_sparks_start_dist_ratio * max(bar_height_px / 5, 1)
+        start_dist_px = bar_height_px
+        #start_length_px = rect_size * vis_config.note_sparks_start_length_ratio * max(bar_height_ratio * rect.height() / 6, .8)
+        start_length_px = bar_height_px
         thickness_px = rect_size * thickness_ratio # TODO - function of bar height
 
         # calculate length of sparks - shrinks the more time has passed
@@ -271,7 +272,7 @@ class MidiRenderUtil:
             angle_d = seed.uniform(-vis_config.note_sparks_max_angle_deg, vis_config.note_sparks_max_angle_deg)
             angle = math.radians(angle_d)
 
-            speed_rand = seed.uniform(bar_px_per_sec * .8, bar_px_per_sec * 1.2)
+            speed_rand = seed.uniform(bar_px_per_sec, bar_px_per_sec * 1.2)
             speed_px_per_sec = speed_rand
 
             # calculate positions

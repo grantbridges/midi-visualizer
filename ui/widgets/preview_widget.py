@@ -30,7 +30,7 @@ class PreviewWidget(QWidget):
         self.timer.timeout.connect(self._on_tick)
         self.timer.start(20)
 
-        self.audio_sync_tolerance_sec: float = 0.1
+        self.audio_sync_tolerance_sec: float = 0.25
 
         self.play_timer = QElapsedTimer()
         self.play_start_visual_time = 0.0
