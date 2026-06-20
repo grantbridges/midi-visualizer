@@ -17,6 +17,7 @@ class RenderTrack:
     bar_height_ratio: float = .05
     bar_sec_across_screen: float = 2.0
     pitch_offset: int = 0
+    note_sparks_enabled: bool = False
     notes: List[Note] = field(default_factory=list)
 
 class MidiRenderUtil:
@@ -87,6 +88,7 @@ class MidiRenderUtil:
                     bar_height_ratio = tg.bar_height_ratio,
                     bar_sec_across_screen = tg.bar_sec_across_screen,
                     pitch_offset=tg.pitch_offset,
+                    note_sparks_enabled=tg.note_sparks_enabled,
                     notes = t.notes
                 ))
 
@@ -137,10 +139,11 @@ class MidiRenderUtil:
                 MidiRenderUtil._draw_note(painter, x, y, w, h, color, alpha)
 
                 # -- note sparks --
-                MidiRenderUtil._draw_note_sparks(
-                    painter, playhead_x, note.pitch, note.start, center_y, bar_height, pixels_per_sec,
-                    current_time, color, alpha, vis_config.note_highlight_intensity, rect
-                )
+                if vis_config.note_sparks_enabled and track.note_sparks_enabled:
+                    MidiRenderUtil._draw_note_sparks(
+                        painter, vis_config, playhead_x, note.pitch, note.start, center_y, bar_height, pixels_per_sec,
+                        current_time, color, alpha, rect
+                    )
 
                 # -- highlight --
                 if x < playhead_x and vis_config.note_highlight_enabled:
@@ -228,16 +231,16 @@ class MidiRenderUtil:
     @staticmethod
     def _draw_note_sparks(
         painter: QPainter, 
+        vis_config: VisConfig,
         playhead_x: float, 
         note_pitch: int,
         note_start_time: float,
         note_center_y: float,
         bar_height_px: int,
         bar_px_per_sec: float,
-        current_time: float, 
+        current_time: float,
         color: RGB, 
-        alpha: int, 
-        highlight_intensity: float,
+        alpha: int,
         rect: QRect
     ):
         # how long has it been since note has been played?
@@ -248,28 +251,28 @@ class MidiRenderUtil:
         rect_size = math.hypot(rect.width(), rect.height())
 
         # value controls
-        start_dist_ratio = 0.005
-        start_length_ratio = 0.004
+        # start_dist_ratio = 0.005
+        # start_length_ratio = 0.004
         thickness_ratio = 0.002
-        spark_count = 3
-        max_angle_d = 50
-        time_to_fade_sec = .6
+        # spark_count = 3
+        # max_angle_d = 50
+        # time_to_fade_sec = .6
         draw_as_line = False
 
-        start_dist_px = rect_size * start_dist_ratio * max(bar_height_px / 5, 1)
-        start_length_px = rect_size * start_length_ratio * max(bar_height_px / 6, .8)
+        start_dist_px = rect_size * vis_config.note_sparks_start_dist_ratio * max(bar_height_px / 5, 1)
+        start_length_px = rect_size * vis_config.note_sparks_start_length_ratio * max(bar_height_px / 6, .8)
         thickness_px = rect_size * thickness_ratio # TODO - function of bar height
 
         # calculate length of sparks - shrinks the more time has passed
-        length_px = start_length_px * (1 - anim_time / time_to_fade_sec)
+        length_px = start_length_px * (1 - anim_time / vis_config.note_sparks_time_to_fade_sec)
         if length_px < 1:
             return # too small - skip
 
-        for i in range(spark_count):
+        for i in range(vis_config.note_sparks_count):
             # calculate angle of spark using deterministic random value seeded by note 
             # properties and spark count
             seed = random.Random(note_pitch * note_start_time + 100 * i)
-            angle_d = seed.uniform(-max_angle_d, max_angle_d)
+            angle_d = seed.uniform(-vis_config.note_sparks_max_angle_deg, vis_config.note_sparks_max_angle_deg)
             angle = math.radians(angle_d)
 
             speed_rand = seed.uniform(bar_px_per_sec * .8, bar_px_per_sec * 1.2)
@@ -282,7 +285,7 @@ class MidiRenderUtil:
             y2 = y1 - length_px * math.sin(angle)
 
             # draw
-            color_highlight = Util.lighten_color(color, highlight_intensity)
+            color_highlight = Util.lighten_color(color, vis_config.note_highlight_intensity)
             qcolor = QUtil.rgb_to_qcolor(color_highlight, int(alpha / 2))
             #qcolor = QUtil.rgb_to_qcolor(color_highlight, int(alpha))
             if draw_as_line:
