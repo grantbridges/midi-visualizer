@@ -474,6 +474,13 @@ class VisConfig:
     
     def get_exported_filepath(self) -> Path:
         return Path(self.export_dir) / f"{self.export_filename}.{self.export_format.value}"
+    
+    def has_audio(self) -> bool:
+        return (
+            self.play_audio
+            and bool(self.audio_filepath)
+            and Path(self.audio_filepath).is_file()
+        )
 
     # Helpers
 

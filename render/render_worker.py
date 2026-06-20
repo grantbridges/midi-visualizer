@@ -162,11 +162,7 @@ class RenderWorker(QObject):
         loop_video = vis_config.bg_video_loop
         bg_video_start_delay_sec = midi_delay_ms / 1000 + vis_config.bg_video_time_offset
 
-        has_audio = (
-            vis_config.play_audio
-            and bool(vis_config.audio_filepath)
-            and Path(vis_config.audio_filepath).is_file()
-        )
+        has_audio = vis_config.has_audio()
 
         has_bg_video = (
             vis_config.bg_mode == BackgroundMode.Video

@@ -30,6 +30,8 @@ class PreviewWidget(QWidget):
         self.timer.timeout.connect(self._on_tick)
         self.timer.start(20)
 
+        self.audio_sync_tolerance_sec: float = 0.1
+
         self.play_timer = QElapsedTimer()
         self.play_start_visual_time = 0.0
 
@@ -161,6 +163,7 @@ class PreviewWidget(QWidget):
         self.step_back_btn.setDisabled(self.playing)
         self.step_fwd_btn.setDisabled(self.playing)
         self.step_input.setDisabled(self.playing)
+        self.mute_checkbox.setDisabled(not self.vis_config.has_audio())
 
     def set_selected_group_id(self, group_id: UUID | None):
         self.preview_canvas.set_selected_group_id(group_id)
@@ -181,8 +184,23 @@ class PreviewWidget(QWidget):
                     else:
                         self._stop()
                 
-                if self.current_time >= 0.0 and not audio_provider.is_playing():
-                    audio_provider.play_at(self.current_time)
+                if self.vis_config.has_audio():
+                    if self.current_time >= 0.0:
+                        if not audio_provider.is_playing():
+                            audio_provider.play_at(self.current_time)
+                        else:
+                            # check if audio has fallen out of sync with timing and re-sync
+                            audio_out_of_sync_sec = abs(audio_provider.get_position_seconds() - self.current_time)
+                            if audio_out_of_sync_sec >= self.audio_sync_tolerance_sec:
+                                print(f"PreviewWidget | Audio out of sync by {audio_out_of_sync_sec:.2f} sec - resyncing")
+                                audio_provider.seek_seconds(self.current_time)
+                    else:
+                        if audio_provider.is_playing():
+                            audio_provider.stop()
+                else:
+                    if audio_provider.is_playing():
+                        audio_provider.stop()
+
 
             self._update_slider_position()
             self._refresh_canvas()
