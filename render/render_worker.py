@@ -13,6 +13,13 @@ import shutil
 import os
 import subprocess
 
+# If True and using a BG image, generate a fresh QImage from the 
+# provided BG image filepath on each frame. Otherwise, layer in the
+# image during video encoding. The latter is far more efficeint,
+# but if we ever want to do fancier things with background images,
+# we'll need to do the per-frame drawing.
+RENDER_BG_IMAGE_EACH_FRAME = False
+
 @dataclass(frozen=True)
 class RenderFrameJobInput:
     frame_index: int
@@ -141,7 +148,8 @@ class RenderWorker(QObject):
                 MidiRenderUtil.draw_color_background(painter, job.vis_config, rect)
             elif job.vis_config.bg_mode == BackgroundMode.Image:
                 has_bg_image = (
-                    bool(job.vis_config.bg_image_filepath)
+                    RENDER_BG_IMAGE_EACH_FRAME
+                    and bool(job.vis_config.bg_image_filepath)
                     and Path(job.vis_config.bg_image_filepath).is_file()
                 )
                 if has_bg_image:
@@ -172,11 +180,20 @@ class RenderWorker(QObject):
 
         has_audio = vis_config.has_audio()
 
+        has_bg_image = (
+            not RENDER_BG_IMAGE_EACH_FRAME
+            and vis_config.bg_mode == BackgroundMode.Image
+            and bool(vis_config.bg_image_filepath)
+            and Path(vis_config.bg_image_filepath).is_file()
+        )
+
         has_bg_video = (
             vis_config.bg_mode == BackgroundMode.Video
             and bool(vis_config.bg_video_filepath)
             and Path(vis_config.bg_video_filepath).is_file()
         )
+
+        has_background = has_bg_image or has_bg_video
 
         cmd = [
             "ffmpeg",
@@ -188,8 +205,18 @@ class RenderWorker(QObject):
         ]
 
         input_index = 1
+        bg_image_input_index = None
         bg_video_input_index = None
         audio_input_index = None
+
+        if has_bg_image:
+            bg_image_input_index = input_index
+            input_index += 1
+
+            cmd += [
+                "-loop", "1",
+                "-i", str(vis_config.bg_image_filepath),
+            ]
 
         if has_bg_video:
             if loop_video:
@@ -212,13 +239,10 @@ class RenderWorker(QObject):
 
         filter_parts = []
 
-        # If using video background:
-        # - create a transparent base using the rendered frame sequence
-        # - draw bg video onto that base
-        # - draw MIDI overlay frames on top
-        if has_bg_video:
+        if has_background:
             width, height = vis_config.export_resolution.value
 
+            # MIDI overlay frames + transparent timing base
             filter_parts.append(
                 "[0:v]format=rgba,split=2[midi][base0]"
             )
@@ -227,17 +251,31 @@ class RenderWorker(QObject):
                 "[base0]colorchannelmixer=aa=0[base]"
             )
 
-            filter_parts.append(
-                f"[{bg_video_input_index}:v]"
-                f"scale={width}:{height},"
-                f"setsar=1,"
-                f"setpts=PTS+{bg_video_start_delay_sec}/TB,"
-                f"format=rgba"
-                f"[bg]"
-            )
+            if has_bg_image:
+                filter_parts.append(
+                    f"[{bg_image_input_index}:v]"
+                    f"scale={width}:{height},"
+                    f"setsar=1,"
+                    f"format=rgba"
+                    f"[bg]"
+                )
 
-            # when looping, we need "shortest" so video won't loop forever
-            shortest_flag = 1 if loop_video else 0
+                # bg image is looped/infinite, so shortest=1 is important
+                shortest_flag = 1
+
+            elif has_bg_video:
+                filter_parts.append(
+                    f"[{bg_video_input_index}:v]"
+                    f"scale={width}:{height},"
+                    f"setsar=1,"
+                    f"setpts=PTS+{bg_video_start_delay_sec}/TB,"
+                    f"format=rgba"
+                    f"[bg]"
+                )
+
+                # when looping, we need shortest so video won't loop forever
+                shortest_flag = 1 if loop_video else 0
+
             filter_parts.append(
                 f"[base][bg]overlay=0:0:eof_action=repeat:shortest={shortest_flag}[bgbase]"
             )
@@ -258,7 +296,7 @@ class RenderWorker(QObject):
                 ";".join(filter_parts),
             ]
 
-            if has_bg_video:
+            if has_background:
                 cmd += ["-map", "[v]"]
             else:
                 cmd += ["-map", "0:v"]
