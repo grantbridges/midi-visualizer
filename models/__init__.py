@@ -6,3 +6,4 @@ from models.resolution import Resolution
 from models.render_format import RenderFormat
 from models.user_settings import user_settings
 from models.bg_mode import BackgroundMode
+from models.orientation import Orientation

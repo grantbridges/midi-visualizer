@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from uuid import UUID
 import pretty_midi
 from common import Color, RGB
+from models.orientation import Orientation
 from models.track_group import TrackGroup
 from models.track import Track
 from models.note import Note
@@ -29,8 +30,9 @@ History
   11 - Note highlight
   12 - Track group solo; note sparks config
   13 - Note fadeout enabled; background tint props
+  14 - Orientation
 '''
-VIS_CONFIG_SCHEMA_VERSION = 13
+VIS_CONFIG_SCHEMA_VERSION = 14
 
 '''
 Top level construct containing all visualizing info
@@ -39,6 +41,7 @@ Top level construct containing all visualizing info
 class VisConfig:
     # -- Track Props --
     track_name: str = ""
+    orientation: Orientation = Orientation.Landscape
 
     # -- Background Props --
     bg_mode: BackgroundMode = BackgroundMode.Color
@@ -166,6 +169,7 @@ class VisConfig:
         data = {
             "schema_version": VIS_CONFIG_SCHEMA_VERSION,
             "track_name": self.track_name,
+            "orientation": self.orientation.name,
 
             "bg_mode": self.bg_mode.name,
             "bg_color": list(self.bg_color),
@@ -345,6 +349,9 @@ class VisConfig:
                 config.bg_tint_color = data["bg_tint_color"]
                 config.bg_tint_alpha = data["bg_tint_alpha"]
                 config.note_fadeout_enabled = data["note_fadeout_enabled"]
+
+            if schema_version >= 14:
+                config.orientation = Orientation[data["orientation"]]
 
             return config
         except Exception as ex:

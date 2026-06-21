@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
     QFileDialog
 )
 
-from models import VisConfig, BackgroundMode
+from models import VisConfig, BackgroundMode, Orientation
 from ui.common import ColorButton, LayoutUtil
 
 class ConfigTab(QWidget):
@@ -39,6 +39,11 @@ class ConfigTab(QWidget):
         # create controls
         self.track_name = QLineEdit()
         self.track_name.editingFinished.connect(self._on_changes)
+
+        self.orientation_combo = QComboBox()
+        for mode in Orientation:
+            self.orientation_combo.addItem(mode.name, mode)
+        self.orientation_combo.currentIndexChanged.connect(self._on_changes)
 
         self.bg_mode_combo = QComboBox()
         for mode in BackgroundMode:
@@ -148,6 +153,7 @@ class ConfigTab(QWidget):
 
         LayoutUtil.section(column, "Track Props")
         LayoutUtil.line_edit(column, "Track Name", self.track_name)
+        LayoutUtil.combobox(column, "Orientation", self.orientation_combo)
 
         LayoutUtil.section(column, "Audio")
         LayoutUtil.checkbox(column, "Use Audio", self.use_audio_checkbox)
@@ -216,6 +222,9 @@ class ConfigTab(QWidget):
         self.block_changes_callback = True # prevent "change" callbacks from triggering while we set values
 
         self.track_name.setText(self.vis_config.track_name)
+
+        index = self.orientation_combo.findData(self.vis_config.orientation)
+        self.orientation_combo.setCurrentIndex(index)
 
         index = self.bg_mode_combo.findData(self.vis_config.bg_mode)
         self.bg_mode_combo.setCurrentIndex(index)
@@ -286,6 +295,7 @@ class ConfigTab(QWidget):
     def update_model(self):
         # pull UI values out of controls and set on model
         self.vis_config.track_name = self.track_name.text()
+        self.vis_config.orientation = self.orientation_combo.currentData()
 
         self.vis_config.bg_mode = self.bg_mode_combo.currentData()
         self.vis_config.bg_color = self.bg_color_button.getColor()
