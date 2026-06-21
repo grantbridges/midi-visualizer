@@ -120,24 +120,8 @@ class PreviewWidget(QWidget):
     def handle_resize(self):
         self._update_canvas_size()
 
-    def _update_canvas_size(self):
-        # max area the preview can fill
-        max_width = self.window().width()
-        max_height = int(self.window().height() / 2 + self._get_preview_padding())
-
-        # shape preview area to fit orientation
-        aspect_width, aspect_height = self.vis_config.orientation
-        aspect_ratio = aspect_width / aspect_height
-
-        preview_width = max_width
-        preview_height = int(preview_width / aspect_ratio)
-
-        if preview_height > max_height:
-            preview_height = max_height
-            preview_width = int(preview_height * aspect_ratio)
-
-        self.preview_canvas.setFixedWidth(preview_width)
-        self.preview_canvas.setFixedHeight(preview_height)
+    def handle_export_starting(self):
+        self._stop()
         
     def model_changed(self):
         if self.vis_config is not None:
@@ -221,6 +205,25 @@ class PreviewWidget(QWidget):
 
             self._update_slider_position()
             self._refresh_canvas()
+
+    def _update_canvas_size(self):
+        # max area the preview can fill
+        max_width = self.window().width()
+        max_height = int(self.window().height() / 2 + self._get_preview_padding())
+
+        # shape preview area to fit orientation
+        aspect_width, aspect_height = self.vis_config.orientation
+        aspect_ratio = aspect_width / aspect_height
+
+        preview_width = max_width
+        preview_height = int(preview_width / aspect_ratio)
+
+        if preview_height > max_height:
+            preview_height = max_height
+            preview_width = int(preview_height * aspect_ratio)
+
+        self.preview_canvas.setFixedWidth(preview_width)
+        self.preview_canvas.setFixedHeight(preview_height)
 
     def _refresh_canvas(self):
         self.preview_canvas.refresh(

@@ -640,6 +640,10 @@ class MainWindow(QMainWindow):
         export_dialog = ExportOptionsDialog(vis_config=self.vis_config, parent=self)
 
         if export_dialog.exec() == QDialog.Accepted:
+            if self.preview_widget is not None:
+                # notify preview widget to stop playback
+                self.preview_widget.handle_export_starting()
+
             options = export_dialog.get_options()
             self.vis_config.export_dir = options.output_dir
             self.vis_config.export_filename = options.filename
