@@ -11,9 +11,9 @@ from PySide6.QtWidgets import (
     QStyle,
     QSizePolicy
 )
-from common import RGB
+from common import RGB, Color
 from models import VisConfig, TrackGroup
-from utility import Util
+from utility import Util, QUtil
 from ui.common import ColorButton, TableCheckbox, TableSpinbox, TableDoubleSpinbox
 import copy
 
@@ -169,7 +169,7 @@ class TrackGroupsTab(QWidget):
             delete_btn = QPushButton()
             delete_btn.setIcon(style.standardIcon(QStyle.SP_TrashIcon))
             delete_btn.setFixedSize(32, 24)
-            delete_btn.setStyleSheet("QPushButton { background-color: #aa3333}") # red
+            QUtil.color_button(delete_btn, Color.DELETE_RED)
             delete_btn.clicked.connect(lambda _, row=row: self._on_remove_group(row))
 
             self.table.setCellWidget(row, col, delete_btn)
