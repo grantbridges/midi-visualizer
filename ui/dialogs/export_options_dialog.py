@@ -39,7 +39,7 @@ class ExportOptionsDialog(QDialog):
         output_dir = vis_config.export_dir if vis_config.export_dir else str(Path.home() / "Desktop")
         self.output_dir_input = QLineEdit(output_dir)
         self.output_dir_input.setReadOnly(True)
-        browse_btn = QPushButton("...")
+        browse_btn = QPushButton("…")
         browse_btn.clicked.connect(self.browse_output_dir)
 
         # Filename input

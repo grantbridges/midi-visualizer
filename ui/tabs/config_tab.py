@@ -49,12 +49,16 @@ class ConfigTab(QWidget):
         self.bg_color_button.valueChanged.connect(self._on_changes)
 
         self.bg_image_file_input = QLineEdit(readOnly=True)
-        self.bg_image_file_browse_btn = QPushButton("...")
+        self.bg_image_file_browse_btn = QPushButton("…")
         self.bg_image_file_browse_btn.clicked.connect(self._browse_bg_image_file)
+        self.bg_image_file_clear_btn = QPushButton("x")
+        self.bg_image_file_clear_btn.clicked.connect(self._clear_bg_image_file)
 
         self.bg_video_file_input = QLineEdit(readOnly=True)
-        self.bg_video_file_browse_btn = QPushButton("...")
+        self.bg_video_file_browse_btn = QPushButton("…")
         self.bg_video_file_browse_btn.clicked.connect(self._browse_bg_video_file)
+        self.bg_video_file_clear_btn = QPushButton("x")
+        self.bg_video_file_clear_btn.clicked.connect(self._clear_bg_video_file)
         self.bg_video_time_offset_input = QDoubleSpinBox(decimals=2, minimum=-10.0, maximum=10.0, singleStep=0.01, suffix=" sec")
         self.bg_video_time_offset_input.valueChanged.connect(self._on_changes)
         self.bg_video_loop_checkbox = QCheckBox()
@@ -70,8 +74,10 @@ class ConfigTab(QWidget):
         self.use_audio_checkbox = QCheckBox()
         self.use_audio_checkbox.toggled.connect(self._on_changes)
         self.audio_file_input = QLineEdit(readOnly=True)
-        self.audio_file_browse_btn = QPushButton("...")
+        self.audio_file_browse_btn = QPushButton("…")
         self.audio_file_browse_btn.clicked.connect(self._browse_audio_file)
+        self.audio_file_clear_btn = QPushButton("x")
+        self.audio_file_clear_btn.clicked.connect(self._clear_audio_file)
 
         self.show_playhead_checkbox = QCheckBox()
         self.show_playhead_checkbox.toggled.connect(self._on_changes)
@@ -145,13 +151,13 @@ class ConfigTab(QWidget):
 
         LayoutUtil.section(column, "Audio")
         LayoutUtil.checkbox(column, "Use Audio", self.use_audio_checkbox)
-        self.audio_file_row = LayoutUtil.file_picker(column, "Audio File", self.audio_file_input, self.audio_file_browse_btn)
+        self.audio_file_row = LayoutUtil.file_picker(column, "Audio File", self.audio_file_input, self.audio_file_browse_btn, self.audio_file_clear_btn)
 
         LayoutUtil.section(column, "Background")
         LayoutUtil.combobox(column, "Background Mode", self.bg_mode_combo)
         self.bg_color_row = LayoutUtil.button(column, "Background Color", self.bg_color_button)
-        self.bg_image_row = LayoutUtil.file_picker(column, "Background Image File", self.bg_image_file_input, self.bg_image_file_browse_btn)
-        self.bg_video_row = LayoutUtil.file_picker(column, "Background Video File", self.bg_video_file_input, self.bg_video_file_browse_btn)
+        self.bg_image_row = LayoutUtil.file_picker(column, "Background Image File", self.bg_image_file_input, self.bg_image_file_browse_btn, self.bg_image_file_clear_btn)
+        self.bg_video_row = LayoutUtil.file_picker(column, "Background Video File", self.bg_video_file_input, self.bg_video_file_browse_btn, self.bg_video_file_clear_btn)
 
         self.bg_video_time_offset_row = LayoutUtil.spinbox(column, "Background Video Time Offset", self.bg_video_time_offset_input)
         self.bg_video_loop_row = LayoutUtil.checkbox(column, "Background Video Loop", self.bg_video_loop_checkbox)
@@ -338,6 +344,9 @@ class ConfigTab(QWidget):
             self.bg_image_file_input.setText(image_file)
             self._on_bg_image_selected()
 
+    def _clear_bg_image_file(self):
+        self.bg_image_file_input.setText("")
+        self._on_bg_image_selected()
 
     def _browse_bg_video_file(self):
         default_filepath = self.vis_config.bg_video_filepath or ""
@@ -353,6 +362,10 @@ class ConfigTab(QWidget):
             self.bg_video_file_input.setText(video_file)
             self._on_bg_video_selected()
 
+    def _clear_bg_video_file(self):
+        self.bg_video_file_input.setText("")
+        self._on_bg_video_selected()
+
     def _browse_audio_file(self):
         default_filepath = self.vis_config.audio_filepath or ""
 
@@ -366,6 +379,10 @@ class ConfigTab(QWidget):
         if audio_file:
             self.audio_file_input.setText(audio_file)
             self._on_audio_selected()
+
+    def _clear_audio_file(self):
+        self.audio_file_input.setText("")
+        self._on_audio_selected()
 
     def _on_changes(self):
         if not self.block_changes_callback:

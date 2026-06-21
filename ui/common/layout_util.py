@@ -101,7 +101,7 @@ class LayoutUtil:
         return row
     
     @staticmethod
-    def file_picker(parent_layout: QBoxLayout, label: str, file_input: QLineEdit, browse_btn: QPushButton) -> QWidget:
+    def file_picker(parent_layout: QBoxLayout, label: str, file_input: QLineEdit, browse_btn: QPushButton, clear_btn: QPushButton | None = None) -> QWidget:
         row = QWidget()
         h_layout = QHBoxLayout(row)
         h_layout.setContentsMargins(0, 0, 0, 0)
@@ -109,5 +109,7 @@ class LayoutUtil:
         h_layout.addStretch()
         h_layout.addWidget(file_input)
         h_layout.addWidget(browse_btn)
+        if clear_btn is not None:
+            h_layout.addWidget(clear_btn)
         parent_layout.addWidget(row)
         return row
