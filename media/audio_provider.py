@@ -10,13 +10,13 @@ class AudioProvider(QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
 
+    def init(self):
         self.audio_output = QAudioOutput(self)
         self.audio_output.setVolume(1.0)
 
         self.player = QMediaPlayer(self)
         self.player.setAudioOutput(self.audio_output)
-
-    def init(self):
+        
         self.refresh_mute_state()
 
     def refresh_mute_state(self):
