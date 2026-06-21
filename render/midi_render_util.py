@@ -54,6 +54,9 @@ class MidiRenderUtil:
                 painter.drawImage(rect, frame)
             else:
                 painter.fillRect(rect, QUtil.rgb_to_qcolor(vis_config.bg_color))
+        else:
+            # none - do nothing
+            pass
 
     @staticmethod
     def draw_color_background(painter: QPainter, vis_config: VisConfig, rect: QRect):

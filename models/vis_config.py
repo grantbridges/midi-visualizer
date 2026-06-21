@@ -28,8 +28,9 @@ History
   10 - Note glow
   11 - Note highlight
   12 - Track group solo; note sparks config
+  13 - Note fadeout enabled; background tint props
 '''
-VIS_CONFIG_SCHEMA_VERSION = 12
+VIS_CONFIG_SCHEMA_VERSION = 13
 
 '''
 Top level construct containing all visualizing info
@@ -45,6 +46,10 @@ class VisConfig:
     bg_color: RGB = Color.DARKEST_GRAY
     bg_image_filepath: str = ""
     bg_video_filepath: str = ""
+
+    bg_tint_enabled: bool = False
+    bg_tint_color: RGB = Color.BLACK
+    bg_tint_alpha: int = 0
 
     # -- Video Props --
     bg_video_time_offset: float = 0.0
@@ -71,10 +76,12 @@ class VisConfig:
     vertical_padding_ratio = 0.15 
     # ratio of vertical offset positioning - -1 to 1 (-1 is top, 0 center, 1 bottom)
     vertical_offset_ratio = 0
+
+    # -- Note Fadeout --
     # Ratio of distance from playhead to left edge that note will fade out over - 0.01 to 1
     # 1 means fade out over full distance to left edge, 0.5 means fade out to 
     # halfway from playhead to left edge, etc. It makes sense, trust me.
-    # TODO - nahhh make this time based, ^ that's so confusing
+    note_fadeout_enabled: bool = True
     note_fadeout_ratio: float = 0.5 
 
     # -- Note Glow --
@@ -166,6 +173,10 @@ class VisConfig:
             "bg_image_filepath": self.bg_image_filepath,
             "bg_video_filepath": self.bg_video_filepath,
 
+            "bg_tint_enabled": self.bg_tint_enabled,
+            "bg_tint_color": list(self.bg_tint_color),
+            "bg_tint_alpha": self.bg_tint_alpha,
+
             "bg_video_time_offset": self.bg_video_time_offset,
             "bg_video_loop": self.bg_video_loop,
 
@@ -185,6 +196,8 @@ class VisConfig:
 
             "vertical_padding_ratio": self.vertical_padding_ratio,
             "vertical_offset_ratio": self.vertical_offset_ratio,
+
+            "note_fadeout_enabled": self.note_fadeout_enabled,
             "note_fadeout_ratio": self.note_fadeout_ratio,
 
             "note_sparks_enabled": self.note_sparks_enabled,
@@ -326,6 +339,12 @@ class VisConfig:
                 config.note_sparks_count = data["note_sparks_count"]
                 config.note_sparks_max_angle_deg = data["note_sparks_max_angle_deg"]
                 config.note_sparks_time_to_fade_sec = data["note_sparks_time_to_fade_sec"]
+
+            if schema_version >= 13:
+                config.bg_tint_enabled = data["bg_tint_enabled"]
+                config.bg_tint_color = data["bg_tint_color"]
+                config.bg_tint_alpha = data["bg_tint_alpha"]
+                config.note_fadeout_enabled = data["note_fadeout_enabled"]
 
             return config
         except Exception as ex:

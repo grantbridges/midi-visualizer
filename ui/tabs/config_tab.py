@@ -45,7 +45,7 @@ class ConfigTab(QWidget):
 
         self.bg_mode_combo = QComboBox()
         for mode in BackgroundMode:
-            self.bg_mode_combo.addItem(mode.name, mode)
+            self.bg_mode_combo.addItem(mode.value, mode)
         self.bg_mode_combo.currentIndexChanged.connect(self._on_changes)
 
         self.bg_color_button = ColorButton()
@@ -62,6 +62,13 @@ class ConfigTab(QWidget):
         self.bg_video_time_offset_input.valueChanged.connect(self._on_changes)
         self.bg_video_loop_checkbox = QCheckBox()
         self.bg_video_loop_checkbox.toggled.connect(self._on_changes)
+
+        self.bg_tint_checkbox = QCheckBox()
+        self.bg_tint_checkbox.toggled.connect(self._on_changes)
+        self.bg_tint_color_button = ColorButton()
+        self.bg_tint_color_button.valueChanged.connect(self._on_changes)
+        self.bg_tint_alpha_input = QSpinBox(minimum=0, maximum=255)
+        self.bg_tint_alpha_input.valueChanged.connect(self._on_changes)
 
         self.use_audio_checkbox = QCheckBox()
         self.use_audio_checkbox.toggled.connect(self._on_changes)
@@ -135,6 +142,7 @@ class ConfigTab(QWidget):
 
         # --- Left Column ---
         column = v_left_layout
+        
         LayoutUtil.section(column, "Track Props")
         LayoutUtil.line_edit(column, "Track Name", self.track_name)
         LayoutUtil.spinbox(column, "FPS", self.fps_input)
@@ -150,21 +158,27 @@ class ConfigTab(QWidget):
         self.bg_video_time_offset_row = LayoutUtil.spinbox(column, "Background Video Time Offset", self.bg_video_time_offset_input)
         self.bg_video_loop_row = LayoutUtil.checkbox(column, "Background Video Loop", self.bg_video_loop_checkbox)
 
-        LayoutUtil.section(column, "Playhead")
-        LayoutUtil.checkbox(column, "Show Playhead", self.show_playhead_checkbox)
-        LayoutUtil.button(column, "Playhead Color", self.playhead_color_button)
-        LayoutUtil.spinbox(column, "Playhead Alpha", self.playhead_alpha_input)
-        LayoutUtil.spinbox(column, "Playhead Thickness", self.playhead_thickness_input)
-        LayoutUtil.spinbox(column, "Playhead Position", self.playhead_pos_input)
+        LayoutUtil.checkbox(column, "Background Tint", self.bg_tint_checkbox)
+        LayoutUtil.button(column, "Background Tint Color", self.bg_tint_color_button)
+        LayoutUtil.spinbox(column, "Background Tint Alpha", self.bg_tint_alpha_input)
 
-        LayoutUtil.section(column, "Scaling/Position")
-        LayoutUtil.spinbox(column, "Vertical Padding", self.vertical_padding_input)
-        LayoutUtil.spinbox(column, "Vertical Offset", self.vertical_offset_input)
+        LayoutUtil.section(column, "Fade In/Out")
+        LayoutUtil.checkbox(column, "Fade In", self.fade_in_checkbox)
+        LayoutUtil.button(column, "Fade In Color", self.fade_in_color)
+        LayoutUtil.spinbox(column, "Fade In Time", self.fade_in_time)
+        LayoutUtil.checkbox(column, "Fade Out", self.fade_out_checkbox)
+        LayoutUtil.button(column, "Fade Out Color", self.fade_out_color)
+        LayoutUtil.spinbox(column, "Fade Out Time", self.fade_out_time)
 
         column.addStretch()
 
         # --- Right Column ---
         column = v_right_layout
+
+        LayoutUtil.section(column, "Scaling/Position")
+        LayoutUtil.spinbox(column, "Vertical Padding", self.vertical_padding_input)
+        LayoutUtil.spinbox(column, "Vertical Offset", self.vertical_offset_input)
+
         LayoutUtil.section(column, "Pitch Settings")
         LayoutUtil.checkbox(column, "Auto-Calc Pitch Min/Max", self.auto_calc_pitch_bounds_checkbox)
         LayoutUtil.spinbox(column, "Pitch Min", self.pitch_min_input)
@@ -175,13 +189,12 @@ class ConfigTab(QWidget):
         LayoutUtil.spinbox(column, "Start Time Offset", self.start_time_input)
         LayoutUtil.spinbox(column, "End Time Offset", self.end_time_input)
 
-        LayoutUtil.section(column, "Fade In/Out")
-        LayoutUtil.checkbox(column, "Fade In Enabled", self.fade_in_checkbox)
-        LayoutUtil.button(column, "Fade In Color", self.fade_in_color)
-        LayoutUtil.spinbox(column, "Fade In Time", self.fade_in_time)
-        LayoutUtil.checkbox(column, "Fade Out Enabled", self.fade_out_checkbox)
-        LayoutUtil.button(column, "Fade Out Color", self.fade_out_color)
-        LayoutUtil.spinbox(column, "Fade Out Time", self.fade_out_time)
+        LayoutUtil.section(column, "Playhead")
+        LayoutUtil.checkbox(column, "Show Playhead", self.show_playhead_checkbox)
+        LayoutUtil.button(column, "Playhead Color", self.playhead_color_button)
+        LayoutUtil.spinbox(column, "Playhead Alpha", self.playhead_alpha_input)
+        LayoutUtil.spinbox(column, "Playhead Thickness", self.playhead_thickness_input)
+        LayoutUtil.spinbox(column, "Playhead Position", self.playhead_pos_input)
 
         column.addStretch()
 
@@ -214,6 +227,12 @@ class ConfigTab(QWidget):
         self.bg_video_file_input.setText(self.vis_config.bg_video_filepath)
         self.bg_video_time_offset_input.setValue(self.vis_config.bg_video_time_offset)
         self.bg_video_loop_checkbox.setChecked(self.vis_config.bg_video_loop)
+
+        self.bg_tint_checkbox.setChecked(self.vis_config.bg_tint_enabled)
+        self.bg_tint_color_button.setColor(self.vis_config.bg_tint_color)
+        self.bg_tint_color_button.setDisabled(not self.vis_config.bg_tint_enabled)
+        self.bg_tint_alpha_input.setValue(self.vis_config.bg_tint_alpha)
+        self.bg_tint_alpha_input.setDisabled(not self.vis_config.bg_tint_enabled)
 
         self.use_audio_checkbox.setChecked(self.vis_config.play_audio)
         self.audio_file_input.setText(self.vis_config.audio_filepath)
@@ -272,6 +291,10 @@ class ConfigTab(QWidget):
 
         self.vis_config.bg_video_time_offset = self.bg_video_time_offset_input.value()
         self.vis_config.bg_video_loop = self.bg_video_loop_checkbox.isChecked()
+
+        self.vis_config.bg_tint_enabled = self.bg_tint_checkbox.isChecked()
+        self.vis_config.bg_tint_color = self.bg_tint_color_button.getColor()
+        self.vis_config.bg_tint_alpha = self.bg_tint_alpha_input.value()
 
         self.vis_config.play_audio = self.use_audio_checkbox.isChecked()
         self.vis_config.audio_filepath = self.audio_file_input.text()

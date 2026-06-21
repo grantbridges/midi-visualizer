@@ -26,6 +26,8 @@ class NotesTab(QWidget):
         self.block_changes_callback: bool = False
 
         # create controls
+        self.note_fadeout_checkbox = QCheckBox()
+        self.note_fadeout_checkbox.toggled.connect(self._on_changes)
         self.note_fadeout_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.00, singleStep=.01)
         self.note_fadeout_input.valueChanged.connect(self._on_changes)
 
@@ -83,7 +85,9 @@ class NotesTab(QWidget):
 
         # --- Left Column ---
         column = v_left_layout
-        LayoutUtil.section(column, "Style")
+
+        LayoutUtil.section(column, "Fade")
+        LayoutUtil.checkbox(column, "Fade Enabled", self.note_fadeout_checkbox)
         LayoutUtil.spinbox(column, "Fade Distance", self.note_fadeout_input)
 
         LayoutUtil.section(column, "Highlight & Glow")
@@ -97,6 +101,7 @@ class NotesTab(QWidget):
 
         # --- Right Column ---
         column = v_right_layout
+
         LayoutUtil.section(column, "Sparks")
         LayoutUtil.checkbox(column, "Sparks Enabled", self.note_sparks_checkbox)
         LayoutUtil.spinbox(column, "Start Distance", self.note_sparks_start_dist_input)
@@ -122,7 +127,9 @@ class NotesTab(QWidget):
     def refresh_ui(self):
         self.block_changes_callback = True # prevent "change" callbacks from triggering while we set values
 
+        self.note_fadeout_checkbox.setChecked(self.vis_config.note_fadeout_enabled)
         self.note_fadeout_input.setValue(self.vis_config.note_fadeout_ratio)
+        self.note_fadeout_input.setDisabled(not self.vis_config.note_fadeout_enabled)
 
         self.note_glow_checkbox.setChecked(self.vis_config.note_glow_enabled)
         self.note_glow_size_input.setValue(self.vis_config.note_glow_size)
@@ -157,6 +164,7 @@ class NotesTab(QWidget):
     def update_model(self):
         # pull UI values out of controls and set on model
         
+        self.vis_config.note_fadeout_enabled = self.note_fadeout_checkbox.isChecked()
         self.vis_config.note_fadeout_ratio = self.note_fadeout_input.value()
 
         self.vis_config.note_glow_enabled = self.note_glow_checkbox.isChecked()
