@@ -142,7 +142,7 @@ class ConfigTab(QWidget):
 
         # --- Left Column ---
         column = v_left_layout
-        
+
         LayoutUtil.section(column, "Track Props")
         LayoutUtil.line_edit(column, "Track Name", self.track_name)
         LayoutUtil.spinbox(column, "FPS", self.fps_input)
@@ -158,6 +158,7 @@ class ConfigTab(QWidget):
         self.bg_video_time_offset_row = LayoutUtil.spinbox(column, "Background Video Time Offset", self.bg_video_time_offset_input)
         self.bg_video_loop_row = LayoutUtil.checkbox(column, "Background Video Loop", self.bg_video_loop_checkbox)
 
+        LayoutUtil.section(column, "Background Tint")
         LayoutUtil.checkbox(column, "Background Tint", self.bg_tint_checkbox)
         LayoutUtil.button(column, "Background Tint Color", self.bg_tint_color_button)
         LayoutUtil.spinbox(column, "Background Tint Alpha", self.bg_tint_alpha_input)

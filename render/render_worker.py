@@ -140,7 +140,8 @@ class RenderWorker(QObject):
             if job.vis_config.bg_mode == BackgroundMode.Color:
                 MidiRenderUtil.draw_color_background(painter, job.vis_config, rect)
                 # don't handle other BG types here - those will get layered in during video construction
-            
+
+            MidiRenderUtil.draw_background_tint(painter, job.vis_config, rect)
             MidiRenderUtil.draw_notes(painter, current_time, job.vis_config, job.pitch_min, job.pitch_max, rect)
             MidiRenderUtil.draw_fade_overlay(painter, current_time, job.start_time, job.end_time, job.vis_config, rect)
             

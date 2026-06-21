@@ -61,6 +61,11 @@ class MidiRenderUtil:
     @staticmethod
     def draw_color_background(painter: QPainter, vis_config: VisConfig, rect: QRect):
         painter.fillRect(rect, QUtil.rgb_to_qcolor(vis_config.bg_color))
+
+    @staticmethod
+    def draw_background_tint(painter: QPainter, vis_config: VisConfig, rect: QRect):        
+        if vis_config.bg_tint_enabled:
+            painter.fillRect(rect, QUtil.rgb_to_qcolor(vis_config.bg_tint_color, vis_config.bg_tint_alpha))
     
     @staticmethod
     def draw_notes(painter: QPainter, current_time: float, vis_config: VisConfig, pitch_min: int, pitch_max:int, rect: QRect):
@@ -129,7 +134,7 @@ class MidiRenderUtil:
                 alpha = track.alpha
 
                 # start fading out only after the whole note has passed the playhead
-                if x_right <= playhead_x:
+                if vis_config.note_fadeout_enabled and x_right <= playhead_x:
                     fade_start_x = playhead_x - note_fade_distance
                     alpha = alpha * ((x_right - fade_start_x) / note_fade_distance)
                     alpha = max(0, min(255, alpha))

@@ -41,33 +41,16 @@ class PreviewCanvas(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
 
-        MidiRenderUtil.draw_preview_background(
-            painter, 
-            self.current_time, 
-            self.vis_config,
-            self.rect()
-        )
+        rect = self.rect()
+
+        MidiRenderUtil.draw_preview_background(painter, self.current_time, self.vis_config, rect)
+        MidiRenderUtil.draw_background_tint(painter, self.vis_config, rect)
 
         self._draw_guides(painter)
         self._draw_pitches(painter)
 
-        MidiRenderUtil.draw_notes(
-            painter, 
-            self.current_time, 
-            self.vis_config,
-            self.pitch_min, 
-            self.pitch_max, 
-            self.rect()
-        )
-
-        MidiRenderUtil.draw_fade_overlay(
-            painter,
-            self.current_time,
-            self.start_time,
-            self.end_time,
-            self.vis_config,
-            self.rect()
-        )
+        MidiRenderUtil.draw_notes(painter, self.current_time, self.vis_config, self.pitch_min, self.pitch_max, rect)
+        MidiRenderUtil.draw_fade_overlay(painter, self.current_time, self.start_time, self.end_time, self.vis_config, rect)
 
         self._draw_text(painter)
 
@@ -170,14 +153,17 @@ class PreviewCanvas(QWidget):
 
         if user_settings.show_time_display:
             # draw text time display
-            time_display_font_size = 12
+            time_display_font_size = 10
             color = QUtil.rgb_to_qcolor(Color.WHITE, 200)
             font = QFont(Const.PRIMARY_FONT, time_display_font_size)
             painter.setPen(color)
             painter.setFont(font)
-            m = s = 0
             sign = "-" if self.current_time < 0 else ""
             t_abs = abs(self.current_time)
-            m, s = divmod(int(t_abs), 60)
-            painter.drawText(QRect(text_top, text_padding, 100, time_display_font_size), f'{sign}{m:02d}:{s:02d}')
+            m = int(t_abs // 60)
+            s = t_abs % 60
+            painter.drawText(
+                QRect(text_top, text_padding, 130, time_display_font_size),
+                f"{sign}{m:02d}:{s:05.2f}"
+            )
             text_top += time_display_font_size + text_padding
