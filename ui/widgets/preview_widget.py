@@ -115,14 +115,29 @@ class PreviewWidget(QWidget):
         slider_bar_layout.addWidget(self.slider)
         v_layout.addLayout(slider_bar_layout)
 
-        v_layout.addWidget(self.preview_canvas)
+        v_layout.addWidget(self.preview_canvas, alignment=Qt.AlignCenter)
 
     def handle_resize(self):
         self._update_canvas_size()
 
     def _update_canvas_size(self):
-        self.preview_canvas.setFixedWidth(self.window().width())
-        self.preview_canvas.setFixedHeight(self.window().height() / 2 + self._get_preview_padding())
+        # max area the preview can fill
+        max_width = self.window().width()
+        max_height = int(self.window().height() / 2 + self._get_preview_padding())
+
+        # shape preview area to fit orientation
+        aspect_width, aspect_height = self.vis_config.orientation
+        aspect_ratio = aspect_width / aspect_height
+
+        preview_width = max_width
+        preview_height = int(preview_width / aspect_ratio)
+
+        if preview_height > max_height:
+            preview_height = max_height
+            preview_width = int(preview_height * aspect_ratio)
+
+        self.preview_canvas.setFixedWidth(preview_width)
+        self.preview_canvas.setFixedHeight(preview_height)
         
     def model_changed(self):
         if self.vis_config is not None:
@@ -155,6 +170,7 @@ class PreviewWidget(QWidget):
 
                 self._update_slider_position()
 
+        self._update_canvas_size() # in case orientation changed
         self._refresh_canvas()
         self.refresh_ui()
 
@@ -190,10 +206,11 @@ class PreviewWidget(QWidget):
                             audio_provider.play_at(self.current_time)
                         else:
                             # check if audio has fallen out of sync with timing and re-sync
-                            audio_out_of_sync_sec = abs(audio_provider.get_position_seconds() - self.current_time)
-                            if audio_out_of_sync_sec >= self.audio_sync_tolerance_sec:
-                                print(f"PreviewWidget | Audio out of sync by {audio_out_of_sync_sec:.2f} sec - resyncing")
-                                audio_provider.seek_seconds(self.current_time)
+                            if self.current_time <= audio_provider.get_duration_seconds():
+                                audio_out_of_sync_sec = abs(audio_provider.get_position_seconds() - self.current_time)
+                                if audio_out_of_sync_sec >= self.audio_sync_tolerance_sec:
+                                    print(f"PreviewWidget | Audio out of sync by {audio_out_of_sync_sec:.2f} sec - resyncing")
+                                    audio_provider.seek_seconds(self.current_time)
                     else:
                         if audio_provider.is_playing():
                             audio_provider.stop()

@@ -42,7 +42,7 @@ class ConfigTab(QWidget):
 
         self.orientation_combo = QComboBox()
         for mode in Orientation:
-            self.orientation_combo.addItem(mode.name, mode)
+            self.orientation_combo.addItem(str(mode), mode)
         self.orientation_combo.currentIndexChanged.connect(self._on_changes)
 
         self.bg_mode_combo = QComboBox()

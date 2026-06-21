@@ -8,7 +8,7 @@ class Const:
     PROJECT_EXT = "mvp" # midi visualizer project
 
     SCREEN_MIN_WIDTH = 800
-    SCREEN_MIN_HEIGHT = 600
+    SCREEN_MIN_HEIGHT = 775
 
     # visual
     PRIMARY_FONT = 'Arial'
