@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QMessageBox, QWidget
 from PySide6.QtGui import QFont, QPainter, QPen
 from PySide6.QtCore import QRect, Qt
 from common import Const, Color
@@ -41,18 +41,21 @@ class PreviewCanvas(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
 
-        rect = self.rect()
+        try:
+            rect = self.rect()
 
-        MidiRenderUtil.draw_preview_background(painter, self.current_time, self.vis_config, rect)
-        MidiRenderUtil.draw_background_tint(painter, self.vis_config, rect)
+            MidiRenderUtil.draw_preview_background(painter, self.current_time, self.vis_config, rect)
+            MidiRenderUtil.draw_background_tint(painter, self.vis_config, rect)
 
-        self._draw_guides(painter)
-        self._draw_pitches(painter)
+            self._draw_guides(painter)
+            self._draw_pitches(painter)
 
-        MidiRenderUtil.draw_notes(painter, self.current_time, self.vis_config, self.pitch_min, self.pitch_max, rect)
-        MidiRenderUtil.draw_fade_overlay(painter, self.current_time, self.start_time, self.end_time, self.vis_config, rect)
+            MidiRenderUtil.draw_notes(painter, self.current_time, self.vis_config, self.pitch_min, self.pitch_max, rect)
+            MidiRenderUtil.draw_fade_overlay(painter, self.current_time, self.start_time, self.end_time, self.vis_config, rect)
 
-        self._draw_text(painter)
+            self._draw_text(painter)
+        except Exception as e:
+            QMessageBox.critical(self, "Preview Failed", f"Preview render failed: {str(e)}")
 
     def _draw_guides(self, painter: QPainter):
         if not user_settings.show_guides:

@@ -378,18 +378,18 @@ class ConfigTab(QWidget):
 
     def _on_bg_video_selected(self):
         if not self.block_changes_callback:
-            self.on_bg_video_selected_callback()
             self.on_changes_callback()
+            self.on_bg_video_selected_callback()
             self.refresh_ui()
 
     def _on_bg_image_selected(self):
         if not self.block_changes_callback:
-            self.on_bg_image_selected_callback()
             self.on_changes_callback()
+            self.on_bg_image_selected_callback()
             self.refresh_ui()
 
     def _on_audio_selected(self):
         if not self.block_changes_callback:
-            self.on_audio_selected_callback()
             self.on_changes_callback()
+            self.on_audio_selected_callback()
             self.refresh_ui()

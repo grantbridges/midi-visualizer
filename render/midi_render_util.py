@@ -6,7 +6,7 @@ from PySide6.QtGui import QBrush, QLinearGradient, QPainter, QPen
 from PySide6.QtCore import QRect, QRectF, Qt
 from common import Const, Color, RGB
 from models import VisConfig, BackgroundMode, Note
-from media import video_provider
+from media import video_provider, image_provider
 from utility import QUtil
 from utility.util import Util
 
@@ -43,20 +43,21 @@ class MidiRenderUtil:
     @staticmethod
     def draw_preview_background(painter: QPainter, current_time: float, vis_config: VisConfig, rect: QRect, ignore_video: bool = False):
         # Note: only use this method for preview; bg renderer will only use color background
-        if vis_config.bg_mode == BackgroundMode.Color:
-            MidiRenderUtil.draw_color_background(painter, vis_config, rect)
-        elif vis_config.bg_mode == BackgroundMode.Image:
-            # TODO
-            pass
-        elif vis_config.bg_mode == BackgroundMode.Video:
-            frame = video_provider.get_frame(current_time - vis_config.bg_video_time_offset, loop=vis_config.bg_video_loop)
-            if frame is not None:
-                painter.drawImage(rect, frame)
-            else:
-                painter.fillRect(rect, QUtil.rgb_to_qcolor(vis_config.bg_color))
-        else:
-            # none - do nothing
-            pass
+        match vis_config.bg_mode:
+            case BackgroundMode.Color:
+                MidiRenderUtil.draw_color_background(painter, vis_config, rect)
+            case BackgroundMode.Image:
+                image = image_provider.get_image()
+                if image is not None:
+                    painter.drawImage(rect, image)
+            case BackgroundMode.Video:
+                frame = video_provider.get_frame(current_time - vis_config.bg_video_time_offset, loop=vis_config.bg_video_loop)
+                if frame is not None:
+                    painter.drawImage(rect, frame)
+            case BackgroundMode.NoBackground:
+                pass
+            case _:
+                raise ValueError(f"Unsupported background mode: {vis_config.bg_mode}")
 
     @staticmethod
     def draw_color_background(painter: QPainter, vis_config: VisConfig, rect: QRect):

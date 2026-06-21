@@ -104,12 +104,13 @@ class VideoProvider:
             return None
         
         if not loop:
+            # return first or last frame if at the end
             if time_s < 0.0:
                 return self.frames[0]
             elif time_s > self.duration_s:
                 return self.frames[-1]
 
-        # loop
+        # apply loop
         t = time_s % self.duration_s
 
         index = int(t * self.preview_fps)

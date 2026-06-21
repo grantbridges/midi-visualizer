@@ -23,7 +23,7 @@ from PySide6.QtGui import QAction, QKeySequence, QResizeEvent
 from common import Const
 from models import VisConfig, Track, Resolution, user_settings, BackgroundMode
 from render import RenderWorker
-from media import video_provider, audio_provider
+from media import video_provider, audio_provider, image_provider
 from ui.tabs import ConfigTab, TrackGroupsTab, TracksTab, NotesTab
 from ui.widgets import PreviewWidget
 from ui.dialogs import (
@@ -118,9 +118,8 @@ class MainWindow(QMainWindow):
         else:
             self.init_default_view()
 
-        self.resize(1200, 900)
-
-        #self.showFullScreen()
+        #self.resize(1200, 900)
+        self.showFullScreen()
 
     def init_default_view(self):
         central = QWidget()
@@ -331,13 +330,14 @@ class MainWindow(QMainWindow):
     def _load_image(self):
         try:
             QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
-            # TODO clear loaded image
+            image_provider.clear()
             has_image = (
                 bool(self.vis_config.bg_image_filepath)
                 and Path(self.vis_config.bg_image_filepath).is_file()
             )
 
-            # TODO load image
+            if has_image:
+                image_provider.load_image(self.vis_config.bg_image_filepath)
         except Exception as e:
             QMessageBox.critical(self, "Load Failed", f"Failed to load image: {str(e)}")
         finally:
