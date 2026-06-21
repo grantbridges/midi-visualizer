@@ -24,7 +24,7 @@ from common import Const
 from models import VisConfig, Track, Resolution, user_settings, BackgroundMode
 from render import RenderWorker
 from media import video_provider, audio_provider
-from ui.tabs import ConfigTab, TrackGroupsTab, TracksTab
+from ui.tabs import ConfigTab, TrackGroupsTab, TracksTab, NotesTab
 from ui.widgets import PreviewWidget
 from ui.dialogs import (
     ExportProgressDialog, 
@@ -46,6 +46,7 @@ class MainWindow(QMainWindow):
         self.config_tab: ConfigTab = None
         self.track_groups_tab: TrackGroupsTab = None
         self.tracks_tab: TracksTab = None
+        self.notes_tab: NotesTab = None
         self.preview_widget: PreviewWidget = None
 
         # used to notify user before exit that they have unsaved changes
@@ -156,6 +157,8 @@ class MainWindow(QMainWindow):
             self.track_groups_tab.deleteLater()
             self.tracks_tab.shutdown()
             self.tracks_tab.deleteLater()
+            self.notes_tab.shutdown()
+            self.notes_tab.deleteLater()
             self.preview_widget.shutdown()
             self.preview_widget.deleteLater()
 
@@ -179,9 +182,14 @@ class MainWindow(QMainWindow):
             self.vis_config, 
             self.on_config_changed
         )
-        self.tabs.addTab(self.config_tab, "Config")
+        self.notes_tab = NotesTab(
+            self.vis_config, 
+            self.on_config_changed
+        )
+        self.tabs.addTab(self.config_tab, "General")
         self.tabs.addTab(self.track_groups_tab, "Track Groups")
         self.tabs.addTab(self.tracks_tab, "Tracks")
+        self.tabs.addTab(self.notes_tab, "Note Effects")
         self.tabs.currentChanged.connect(self.on_tab_changed)
         
         # preview area
@@ -209,6 +217,7 @@ class MainWindow(QMainWindow):
         self.config_tab.layout_controls()
         self.track_groups_tab.layout_controls()
         self.tracks_tab.layout_controls()
+        self.notes_tab.layout_controls()
         self.preview_widget.layout_controls()
 
     def refresh_ui(self):
@@ -220,6 +229,8 @@ class MainWindow(QMainWindow):
                 self.track_groups_tab.refresh_ui()
             case 2:
                 self.tracks_tab.refresh_ui()
+            case 3:
+                self.notes_tab.refresh_ui()
 
         self.preview_widget.refresh_ui()
 
@@ -247,6 +258,7 @@ class MainWindow(QMainWindow):
         self.config_tab.update_model()
         self.track_groups_tab.update_model()
         self.tracks_tab.update_model()
+        self.notes_tab.update_model()
 
     # returns True on successful save
     def save_config(self, force_select_save_location: bool = False) -> bool:

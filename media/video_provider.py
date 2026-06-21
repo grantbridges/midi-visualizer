@@ -21,7 +21,7 @@ class VideoProvider:
 
     # preview limits
     preview_fps: float = 16.0
-    preview_res: Resolution = Resolution.Awful
+    preview_res: Resolution = Resolution.Low
     preview_res_pixels: int = 0 # computed on init
 
     def init(self):
@@ -34,9 +34,11 @@ class VideoProvider:
 
     # loads provided video into array of frames
     def load_video(self, video_path: str):
+        print(f"VideoProvider | Loading video data from \"{video_path}\"")
         self.clear()
 
         cap = cv2.VideoCapture(video_path)
+        cap.get(cv2.CAP_PROP_)
 
         if not cap.isOpened():
             raise ValueError(f"VideoProvider | Error | Could not open video file: {video_path}")
@@ -95,6 +97,8 @@ class VideoProvider:
 
         if not self.frames:
             raise ValueError("VideoProvider | Error | No frames were loaded from video")
+        
+        print(f"VideoProvider | Loaded video ({len(self.frames)} frames, {self.duration_s:.2f} sec)")
     
     def get_frame(self, time_s: float, loop: bool) -> QImage | None:
         if not self.frames or self.duration_s <= 0:

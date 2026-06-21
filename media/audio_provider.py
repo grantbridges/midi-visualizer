@@ -28,7 +28,9 @@ class AudioProvider(QObject):
 
     def load_audio(self, audio_path: str):
         if Path(audio_path).is_file():
+            print(f"AudioProvider | Loading audio from \"{audio_path}\"")
             self.player.setSource(QUrl.fromLocalFile(audio_path))
+            print(f"AudioProvider | Loaded audio")
 
     def is_playing(self) -> bool:
         return self.player.playbackState() == QMediaPlayer.PlayingState

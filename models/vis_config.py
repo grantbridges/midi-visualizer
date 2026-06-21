@@ -74,7 +74,8 @@ class VisConfig:
     # Ratio of distance from playhead to left edge that note will fade out over - 0.01 to 1
     # 1 means fade out over full distance to left edge, 0.5 means fade out to 
     # halfway from playhead to left edge, etc. It makes sense, trust me.
-    note_fadeout_ratio: float = 0.5
+    # TODO - nahhh make this time based, ^ that's so confusing
+    note_fadeout_ratio: float = 0.5 
 
     # -- Note Glow --
     note_glow_enabled: bool = True
