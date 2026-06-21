@@ -200,7 +200,7 @@ class MainWindow(QMainWindow):
 
         # initial model changed call to initialize stuff
         self.preview_widget.model_changed()
-        self.refresh_ui()
+        self.refresh_ui(True)
 
         self.initialized_editor_view = True
 
@@ -220,17 +220,23 @@ class MainWindow(QMainWindow):
         self.notes_tab.layout_controls()
         self.preview_widget.layout_controls()
 
-    def refresh_ui(self):
-        # refresh currently visibile tab
-        match self.tabs.currentIndex():
-            case 0:
-                self.config_tab.refresh_ui()
-            case 1:
-                self.track_groups_tab.refresh_ui()
-            case 2:
-                self.tracks_tab.refresh_ui()
-            case 3:
-                self.notes_tab.refresh_ui()
+    def refresh_ui(self, refresh_all: bool = False):
+        if refresh_all:
+            self.config_tab.refresh_ui()
+            self.track_groups_tab.refresh_ui()
+            self.tracks_tab.refresh_ui()
+            self.notes_tab.refresh_ui()
+        else:
+            # just refresh currently visibile tab
+            match self.tabs.currentIndex():
+                case 0:
+                    self.config_tab.refresh_ui()
+                case 1:
+                    self.track_groups_tab.refresh_ui()
+                case 2:
+                    self.tracks_tab.refresh_ui()
+                case 3:
+                    self.notes_tab.refresh_ui()
 
         self.preview_widget.refresh_ui()
 

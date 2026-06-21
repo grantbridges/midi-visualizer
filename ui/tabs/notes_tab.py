@@ -57,7 +57,7 @@ class NotesTab(QWidget):
         self.note_sparks_count_input.valueChanged.connect(self._on_changes)
         self.note_sparks_angle_input = QSpinBox(minimum=0, maximum=180, suffix="°")
         self.note_sparks_angle_input.valueChanged.connect(self._on_changes)
-        self.note_sparks_fade_time_input = QDoubleSpinBox(decimals=2, minimum=0.00, maximum=5.0, singleStep=0.01, suffix=" sec")
+        self.note_sparks_fade_time_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=5.0, singleStep=0.01, suffix=" sec")
         self.note_sparks_fade_time_input.valueChanged.connect(self._on_changes)
 
     def shutdown(self):
@@ -81,32 +81,34 @@ class NotesTab(QWidget):
         v_left_layout.setSpacing(2)
         v_right_layout.setSpacing(2)
 
-        # Left Column
-        LayoutUtil.layout_section(v_left_layout, "Style")
-        LayoutUtil.layout_spinbox(v_left_layout, "Fade Distance", self.note_fadeout_input)
+        # --- Left Column ---
+        column = v_left_layout
+        LayoutUtil.section(column, "Style")
+        LayoutUtil.spinbox(column, "Fade Distance", self.note_fadeout_input)
 
-        LayoutUtil.layout_section(v_left_layout, "Highlight & Glow")
-        LayoutUtil.layout_checkbox(v_left_layout, "Highlight Enabled", self.note_highlight_checkbox)
-        LayoutUtil.layout_spinbox(v_left_layout, "Highlight Intensity", self.note_highlight_intensity_input)
-        LayoutUtil.layout_checkbox(v_left_layout, "Glow Enabled", self.note_glow_checkbox)
-        LayoutUtil.layout_spinbox(v_left_layout, "Glow Size", self.note_glow_size_input)
-        LayoutUtil.layout_spinbox(v_left_layout, "Glow Intensity", self.note_glow_intensity_input)
+        LayoutUtil.section(column, "Highlight & Glow")
+        LayoutUtil.checkbox(column, "Highlight Enabled", self.note_highlight_checkbox)
+        LayoutUtil.spinbox(column, "Highlight Intensity", self.note_highlight_intensity_input)
+        LayoutUtil.checkbox(column, "Glow Enabled", self.note_glow_checkbox)
+        LayoutUtil.spinbox(column, "Glow Size", self.note_glow_size_input)
+        LayoutUtil.spinbox(column, "Glow Intensity", self.note_glow_intensity_input)
 
-        v_left_layout.addStretch()
+        column.addStretch()
 
-        # Right Column
-        LayoutUtil.layout_section(v_right_layout, "Sparks")
-        LayoutUtil.layout_checkbox(v_right_layout, "Sparks Enabled", self.note_sparks_checkbox)
-        LayoutUtil.layout_spinbox(v_right_layout, "Distance", self.note_sparks_start_dist_input)
-        LayoutUtil.layout_spinbox(v_right_layout, "Size", self.note_sparks_start_length_input)
-        LayoutUtil.layout_spinbox(v_right_layout, "Speed", self.note_sparks_speed_input)
-        LayoutUtil.layout_spinbox(v_right_layout, "Speed Range", self.note_sparks_speed_var_input)
-        LayoutUtil.layout_spinbox(v_right_layout, "Alpha Ratio", self.note_sparks_alpha_input)
-        LayoutUtil.layout_spinbox(v_right_layout, "Particle Count", self.note_sparks_count_input)
-        LayoutUtil.layout_spinbox(v_right_layout, "Angle", self.note_sparks_angle_input)
-        LayoutUtil.layout_spinbox(v_right_layout, "Fade Time", self.note_sparks_fade_time_input)
+        # --- Right Column ---
+        column = v_right_layout
+        LayoutUtil.section(column, "Sparks")
+        LayoutUtil.checkbox(column, "Sparks Enabled", self.note_sparks_checkbox)
+        LayoutUtil.spinbox(column, "Start Distance", self.note_sparks_start_dist_input)
+        LayoutUtil.spinbox(column, "Size", self.note_sparks_start_length_input)
+        LayoutUtil.spinbox(column, "Speed Min", self.note_sparks_speed_input)
+        LayoutUtil.spinbox(column, "Speed Max", self.note_sparks_speed_var_input)
+        LayoutUtil.spinbox(column, "Alpha Ratio", self.note_sparks_alpha_input)
+        LayoutUtil.spinbox(column, "Particle Count", self.note_sparks_count_input)
+        LayoutUtil.spinbox(column, "Angle", self.note_sparks_angle_input)
+        LayoutUtil.spinbox(column, "Fade Time", self.note_sparks_fade_time_input)
 
-        v_right_layout.addStretch()
+        column.addStretch()
 
         root_h_layout.addLayout(v_left_layout, 1)
         root_h_layout.addLayout(v_right_layout, 1)

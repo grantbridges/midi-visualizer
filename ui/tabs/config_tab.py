@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
 )
 
 from models import VisConfig, BackgroundMode
-from ui.common import ColorButton, SectionDivider
+from ui.common import ColorButton, LayoutUtil
 
 class ConfigTab(QWidget):
     def __init__(self, 
@@ -48,8 +48,8 @@ class ConfigTab(QWidget):
             self.bg_mode_combo.addItem(mode.name, mode)
         self.bg_mode_combo.currentIndexChanged.connect(self._on_changes)
 
-        self.bg_button = ColorButton()
-        self.bg_button.valueChanged.connect(self._on_changes)
+        self.bg_color_button = ColorButton()
+        self.bg_color_button.valueChanged.connect(self._on_changes)
 
         self.bg_image_file_input = QLineEdit(readOnly=True)
         self.bg_image_file_browse_btn = QPushButton("...")
@@ -133,197 +133,57 @@ class ConfigTab(QWidget):
         v_left_layout.setSpacing(2)
         v_right_layout.setSpacing(2)
 
-        # Left Column
-        v_left_layout.addWidget(SectionDivider("Track Props"))
+        # --- Left Column ---
+        column = v_left_layout
+        LayoutUtil.section(column, "Track Props")
+        LayoutUtil.line_edit(column, "Track Name", self.track_name)
+        LayoutUtil.spinbox(column, "FPS", self.fps_input)
+        LayoutUtil.checkbox(column, "Use Audio", self.use_audio_checkbox)
+        self.audio_file_row = LayoutUtil.file_picker(column, "Audio File", self.audio_file_input, self.audio_file_browse_btn)
 
-        h_layout = QHBoxLayout()
-        h_layout.addWidget(QLabel("Track Name"))
-        h_layout.addStretch()
-        h_layout.addWidget(self.track_name)
-        v_left_layout.addLayout(h_layout)
+        LayoutUtil.section(column, "Background")
+        LayoutUtil.combobox(column, "Background Mode", self.bg_mode_combo)
+        self.bg_color_row = LayoutUtil.button(column, "Background Color", self.bg_color_button)
+        self.bg_image_row = LayoutUtil.file_picker(column, "Background Image File", self.bg_image_file_input, self.bg_image_file_browse_btn)
+        self.bg_video_row = LayoutUtil.file_picker(column, "Background Video File", self.bg_video_file_input, self.bg_video_file_browse_btn)
 
-        h_layout = QHBoxLayout()
-        h_layout.addWidget(QLabel("FPS"))
-        h_layout.addWidget(self.fps_input)
-        v_left_layout.addLayout(h_layout)
+        self.bg_video_time_offset_row = LayoutUtil.spinbox(column, "Background Video Time Offset", self.bg_video_time_offset_input)
+        self.bg_video_loop_row = LayoutUtil.checkbox(column, "Background Video Loop", self.bg_video_loop_checkbox)
 
-        h_layout = QHBoxLayout()
-        h_layout.addWidget(QLabel("Use Audio"))
-        h_layout.addStretch()
-        h_layout.addWidget(self.use_audio_checkbox)
-        v_left_layout.addLayout(h_layout)
+        LayoutUtil.section(column, "Playhead")
+        LayoutUtil.checkbox(column, "Show Playhead", self.show_playhead_checkbox)
+        LayoutUtil.button(column, "Playhead Color", self.playhead_color_button)
+        LayoutUtil.spinbox(column, "Playhead Alpha", self.playhead_alpha_input)
+        LayoutUtil.spinbox(column, "Playhead Thickness", self.playhead_thickness_input)
+        LayoutUtil.spinbox(column, "Playhead Position", self.playhead_pos_input)
 
-        self.audio_file_row = QWidget()
-        h_layout = QHBoxLayout(self.audio_file_row)
-        h_layout.setContentsMargins(0, 0, 0, 0)
-        h_layout.addWidget(QLabel("Audio File"))
-        h_layout.addStretch()
-        h_layout.addWidget(self.audio_file_input)
-        h_layout.addWidget(self.audio_file_browse_btn)
-        v_left_layout.addWidget(self.audio_file_row)
+        LayoutUtil.section(column, "Scaling/Position")
+        LayoutUtil.spinbox(column, "Vertical Padding", self.vertical_padding_input)
+        LayoutUtil.spinbox(column, "Vertical Offset", self.vertical_offset_input)
 
-        v_left_layout.addWidget(SectionDivider("Background"))
+        column.addStretch()
 
-        h_layout = QHBoxLayout()
-        h_layout.addWidget(QLabel("Background Mode"))
-        h_layout.addWidget(self.bg_mode_combo)
-        v_left_layout.addLayout(h_layout)
+        # --- Right Column ---
+        column = v_right_layout
+        LayoutUtil.section(column, "Pitch Settings")
+        LayoutUtil.checkbox(column, "Auto-Calc Pitch Min/Max", self.auto_calc_pitch_bounds_checkbox)
+        LayoutUtil.spinbox(column, "Pitch Min", self.pitch_min_input)
+        LayoutUtil.spinbox(column, "Pitch Max", self.pitch_max_input)
 
-        self.bg_color_row = QWidget()
-        h_layout = QHBoxLayout(self.bg_color_row)
-        h_layout.setContentsMargins(0, 0, 0, 0)
-        h_layout.addWidget(QLabel("Background Color"))
-        h_layout.addWidget(self.bg_button)
-        v_left_layout.addWidget(self.bg_color_row)
+        LayoutUtil.section(column, "Time Offsets")
+        LayoutUtil.checkbox(column, "Apply Time Offsets", self.apply_time_offsets_checkbox)
+        LayoutUtil.spinbox(column, "Start Time Offset", self.start_time_input)
+        LayoutUtil.spinbox(column, "End Time Offset", self.end_time_input)
 
-        self.bg_image_row = QWidget()
-        h_layout = QHBoxLayout(self.bg_image_row)
-        h_layout.setContentsMargins(0, 0, 0, 0)
-        h_layout.addWidget(QLabel("Background Image File"))
-        h_layout.addStretch()
-        h_layout.addWidget(self.bg_image_file_input)
-        h_layout.addWidget(self.bg_image_file_browse_btn)
-        v_left_layout.addWidget(self.bg_image_row)
+        LayoutUtil.section(column, "Fade In/Out")
+        LayoutUtil.checkbox(column, "Fade In Enabled", self.fade_in_checkbox)
+        LayoutUtil.button(column, "Fade In Color", self.fade_in_color)
+        LayoutUtil.spinbox(column, "Fade In Time", self.fade_in_time)
+        LayoutUtil.checkbox(column, "Fade Out Enabled", self.fade_out_checkbox)
+        LayoutUtil.button(column, "Fade Out Color", self.fade_out_color)
+        LayoutUtil.spinbox(column, "Fade Out Time", self.fade_out_time)
 
-        self.bg_video_row = QWidget()
-        h_layout = QHBoxLayout(self.bg_video_row)
-        h_layout.setContentsMargins(0, 0, 0, 0)
-        h_layout.addWidget(QLabel("Background Video File"))
-        h_layout.addStretch()
-        h_layout.addWidget(self.bg_video_file_input)
-        h_layout.addWidget(self.bg_video_file_browse_btn)
-        v_left_layout.addWidget(self.bg_video_row)
-
-        self.bg_video_time_offset_row = QWidget()
-        h_layout = QHBoxLayout(self.bg_video_time_offset_row)
-        h_layout.setContentsMargins(0, 0, 0, 0)
-        h_layout.addWidget(QLabel("Background Video Time Offset"))
-        h_layout.addWidget(self.bg_video_time_offset_input)
-        v_left_layout.addWidget(self.bg_video_time_offset_row)
-
-        self.bg_video_loop_row = QWidget()
-        h_layout = QHBoxLayout(self.bg_video_loop_row)
-        h_layout.setContentsMargins(0, 0, 0, 0)
-        h_layout.addWidget(QLabel("Background Video Loop"))
-        h_layout.addStretch()
-        h_layout.addWidget(self.bg_video_loop_checkbox)
-        v_left_layout.addWidget(self.bg_video_loop_row)
-
-        v_left_layout.addWidget(SectionDivider("Playhead"))
-
-        h_layout = QHBoxLayout()
-        h_layout.addWidget(QLabel("Show Playhead"))
-        h_layout.addStretch()
-        h_layout.addWidget(self.show_playhead_checkbox)
-        v_left_layout.addLayout(h_layout)
-
-        h_layout = QHBoxLayout()
-        h_layout.addWidget(QLabel("Playhead Color"))
-        h_layout.addWidget(self.playhead_color_button)
-        v_left_layout.addLayout(h_layout)
-
-        h_layout = QHBoxLayout()
-        h_layout.addWidget(QLabel("Playhead Alpha"))
-        h_layout.addWidget(self.playhead_alpha_input)
-        v_left_layout.addLayout(h_layout)
-
-        h_layout = QHBoxLayout()
-        h_layout.addWidget(QLabel("Playhead Thickness"))
-        h_layout.addWidget(self.playhead_thickness_input)
-        v_left_layout.addLayout(h_layout)
-
-        h_layout = QHBoxLayout()
-        h_layout.addWidget(QLabel("Playhead Position"))
-        h_layout.addWidget(self.playhead_pos_input)
-        v_left_layout.addLayout(h_layout)
-
-        v_left_layout.addWidget(SectionDivider("Scaling/Position"))
-
-        h_layout = QHBoxLayout()
-        h_layout.addWidget(QLabel("Vertical Padding"))
-        h_layout.addWidget(self.vertical_padding_input)
-        v_left_layout.addLayout(h_layout)
-
-        h_layout = QHBoxLayout()
-        h_layout.addWidget(QLabel("Vertical Offset"))
-        h_layout.addWidget(self.vertical_offset_input)
-        v_left_layout.addLayout(h_layout)
-
-        v_left_layout.addStretch()
-
-        # Right Column
-
-        v_right_layout.addWidget(SectionDivider("Pitch Settings"))
-
-        h_layout = QHBoxLayout()
-        h_layout.addWidget(QLabel("Auto-Calc Pitch Min/Max"))
-        h_layout.addStretch()
-        h_layout.addWidget(self.auto_calc_pitch_bounds_checkbox)
-        v_right_layout.addLayout(h_layout)
-
-        h_layout = QHBoxLayout()
-        h_layout.addWidget(QLabel("Pitch Min"))
-        h_layout.addWidget(self.pitch_min_input)
-        v_right_layout.addLayout(h_layout)
-
-        h_layout = QHBoxLayout()
-        h_layout.addWidget(QLabel("Pitch Max"))
-        h_layout.addWidget(self.pitch_max_input)
-        v_right_layout.addLayout(h_layout)
-
-        v_right_layout.addWidget(SectionDivider("Time Offsets"))
-
-        h_layout = QHBoxLayout()
-        h_layout.addWidget(QLabel("Apply Time Offsets"))
-        h_layout.addStretch()
-        h_layout.addWidget(self.apply_time_offsets_checkbox)
-        v_right_layout.addLayout(h_layout)
-
-        h_layout = QHBoxLayout()
-        h_layout.addWidget(QLabel("Start Time Offset"))
-        h_layout.addWidget(self.start_time_input)
-        v_right_layout.addLayout(h_layout)
-
-        end_time_layout = QHBoxLayout()
-        end_time_layout.addWidget(QLabel("End Time Offset"))
-        end_time_layout.addWidget(self.end_time_input)
-        v_right_layout.addLayout(end_time_layout)
-
-        v_right_layout.addWidget(SectionDivider("Fade In/Out"))
-        
-        h_layout = QHBoxLayout()
-        h_layout.addWidget(QLabel("Fade In Enabled"))
-        h_layout.addStretch()
-        h_layout.addWidget(self.fade_in_checkbox)
-        v_right_layout.addLayout(h_layout)
-
-        h_layout = QHBoxLayout()
-        h_layout.addWidget(QLabel("Fade In Color"))
-        h_layout.addWidget(self.fade_in_color)
-        v_right_layout.addLayout(h_layout)
-
-        h_layout = QHBoxLayout()
-        h_layout.addWidget(QLabel("Fade In Time"))
-        h_layout.addWidget(self.fade_in_time)
-        v_right_layout.addLayout(h_layout)
-
-        h_layout = QHBoxLayout()
-        h_layout.addWidget(QLabel("Fade Out Enabled"))
-        h_layout.addStretch()
-        h_layout.addWidget(self.fade_out_checkbox)
-        v_right_layout.addLayout(h_layout)
-
-        h_layout = QHBoxLayout()
-        h_layout.addWidget(QLabel("Fade Out Color"))
-        h_layout.addWidget(self.fade_out_color)
-        v_right_layout.addLayout(h_layout)
-
-        h_layout = QHBoxLayout()
-        h_layout.addWidget(QLabel("Fade Out Time"))
-        h_layout.addWidget(self.fade_out_time)
-        v_right_layout.addLayout(h_layout)
-
-        v_right_layout.addStretch()
+        column.addStretch()
 
         root_h_layout.addLayout(v_left_layout, 1)
         root_h_layout.addLayout(v_right_layout, 1)
@@ -349,7 +209,7 @@ class ConfigTab(QWidget):
         self.bg_video_time_offset_row.setVisible(self.vis_config.bg_mode == BackgroundMode.Video)
         self.bg_video_loop_row.setVisible(self.vis_config.bg_mode == BackgroundMode.Video)
 
-        self.bg_button.setColor(self.vis_config.bg_color)
+        self.bg_color_button.setColor(self.vis_config.bg_color)
         self.bg_image_file_input.setText(self.vis_config.bg_image_filepath)
         self.bg_video_file_input.setText(self.vis_config.bg_video_filepath)
         self.bg_video_time_offset_input.setValue(self.vis_config.bg_video_time_offset)
@@ -406,7 +266,7 @@ class ConfigTab(QWidget):
         self.vis_config.fps = self.fps_input.value()
 
         self.vis_config.bg_mode = self.bg_mode_combo.currentData()
-        self.vis_config.bg_color = self.bg_button.getColor()
+        self.vis_config.bg_color = self.bg_color_button.getColor()
         self.vis_config.bg_image_filepath = self.bg_image_file_input.text()
         self.vis_config.bg_video_filepath = self.bg_video_file_input.text()
 
