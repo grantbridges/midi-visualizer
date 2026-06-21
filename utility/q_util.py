@@ -5,6 +5,7 @@ class QUtil:
     def __new__(cls):
         raise TypeError("QUtil is static")
     
+    # -- Color helpers --
     @staticmethod
     def rgb_to_qcolor(rgb: RGB, alpha: int = 255) -> QColor:
         return QColor(*rgb, a=alpha)

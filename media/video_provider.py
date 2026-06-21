@@ -38,7 +38,6 @@ class VideoProvider:
         self.clear()
 
         cap = cv2.VideoCapture(video_path)
-        cap.get(cv2.CAP_PROP_)
 
         if not cap.isOpened():
             raise ValueError(f"VideoProvider | Error | Could not open video file: {video_path}")

@@ -7,15 +7,10 @@ from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
-    QLabel,
-    QLineEdit,
-    QPushButton,
-    QComboBox,
-    QFileDialog
 )
 
-from models import VisConfig, BackgroundMode
-from ui.common import ColorButton, SectionDivider
+from models import VisConfig
+from ui.common import LayoutUtil
 
 class NotesTab(QWidget):
     def __init__(self, 
@@ -46,6 +41,19 @@ class NotesTab(QWidget):
         self.note_highlight_intensity_input = QDoubleSpinBox(decimals=2, minimum=0.00, maximum=1.00, singleStep=0.01)
         self.note_highlight_intensity_input.valueChanged.connect(self._on_changes)
 
+        self.note_sparks_checkbox = QCheckBox()
+        self.note_sparks_checkbox.toggled.connect(self._on_changes)
+        self.note_sparks_start_dist_input = QDoubleSpinBox(decimals=1, minimum=0.0, maximum=10.0, singleStep=0.1)
+        self.note_sparks_start_dist_input.valueChanged.connect(self._on_changes)
+        self.note_sparks_start_length_input = QDoubleSpinBox(decimals=2, minimum=0.25, maximum=10.0, singleStep=0.01)
+        self.note_sparks_start_length_input.valueChanged.connect(self._on_changes)
+        self.note_sparks_count_input = QSpinBox(minimum=1, maximum=50)
+        self.note_sparks_count_input.valueChanged.connect(self._on_changes)
+        self.note_sparks_angle_input = QSpinBox(minimum=0, maximum=180, suffix="°")
+        self.note_sparks_angle_input.valueChanged.connect(self._on_changes)
+        self.note_sparks_fade_time_input = QDoubleSpinBox(decimals=2, minimum=0.00, maximum=5.0, singleStep=0.01, suffix=" sec")
+        self.note_sparks_fade_time_input.valueChanged.connect(self._on_changes)
+
     def shutdown(self):
         pass
 
@@ -68,46 +76,26 @@ class NotesTab(QWidget):
         v_right_layout.setSpacing(2)
 
         # Left Column
+        LayoutUtil.layout_section(v_left_layout, "Style")
+        LayoutUtil.layout_spinbox(v_left_layout, "Fade Distance", self.note_fadeout_input)
 
-        v_left_layout.addWidget(SectionDivider("Note Style"))
-
-        h_layout = QHBoxLayout()
-        h_layout.addWidget(QLabel("Note Fade Distance"))
-        h_layout.addWidget(self.note_fadeout_input)
-        v_left_layout.addLayout(h_layout)
-
-        v_left_layout.addWidget(SectionDivider("Note Highlight & Glow"))
-
-        h_layout = QHBoxLayout()
-        h_layout.addWidget(QLabel("Note Highlight Enabled"))
-        h_layout.addStretch()
-        h_layout.addWidget(self.note_highlight_checkbox)
-        v_left_layout.addLayout(h_layout)
-
-        h_layout = QHBoxLayout()
-        h_layout.addWidget(QLabel("Note Highlight Intensity"))
-        h_layout.addWidget(self.note_highlight_intensity_input)
-        v_left_layout.addLayout(h_layout)
-
-        h_layout = QHBoxLayout()
-        h_layout.addWidget(QLabel("Note Glow Enabled"))
-        h_layout.addStretch()
-        h_layout.addWidget(self.note_glow_checkbox)
-        v_left_layout.addLayout(h_layout)
-
-        h_layout = QHBoxLayout()
-        h_layout.addWidget(QLabel("Note Glow Size"))
-        h_layout.addWidget(self.note_glow_size_input)
-        v_left_layout.addLayout(h_layout)
-
-        h_layout = QHBoxLayout()
-        h_layout.addWidget(QLabel("Note Glow Intensity"))
-        h_layout.addWidget(self.note_glow_intensity_input)
-        v_left_layout.addLayout(h_layout)
+        LayoutUtil.layout_section(v_left_layout, "Highlight & Glow")
+        LayoutUtil.layout_checkbox(v_left_layout, "Highlight Enabled", self.note_highlight_checkbox)
+        LayoutUtil.layout_spinbox(v_left_layout, "Highlight Intensity", self.note_highlight_intensity_input)
+        LayoutUtil.layout_checkbox(v_left_layout, "Glow Enabled", self.note_glow_checkbox)
+        LayoutUtil.layout_spinbox(v_left_layout, "Glow Size", self.note_glow_size_input)
+        LayoutUtil.layout_spinbox(v_left_layout, "Glow Intensity", self.note_glow_intensity_input)
 
         v_left_layout.addStretch()
 
         # Right Column
+        LayoutUtil.layout_section(v_right_layout, "Sparks")
+        LayoutUtil.layout_checkbox(v_right_layout, "Sparks Enabled", self.note_sparks_checkbox)
+        LayoutUtil.layout_spinbox(v_right_layout, "Distance", self.note_sparks_start_dist_input)
+        LayoutUtil.layout_spinbox(v_right_layout, "Size", self.note_sparks_start_length_input)
+        LayoutUtil.layout_spinbox(v_right_layout, "Count", self.note_sparks_count_input)
+        LayoutUtil.layout_spinbox(v_right_layout, "Angle", self.note_sparks_angle_input)
+        LayoutUtil.layout_spinbox(v_right_layout, "Fade Time", self.note_sparks_fade_time_input)
 
         v_right_layout.addStretch()
 
@@ -135,6 +123,18 @@ class NotesTab(QWidget):
         self.note_highlight_intensity_input.setValue(self.vis_config.note_highlight_intensity)
         self.note_highlight_intensity_input.setDisabled(not self.vis_config.note_highlight_enabled)
 
+        self.note_sparks_checkbox.setChecked(self.vis_config.note_sparks_enabled)
+        self.note_sparks_start_dist_input.setValue(self.vis_config.note_sparks_start_dist_ratio)
+        self.note_sparks_start_dist_input.setDisabled(not self.vis_config.note_sparks_enabled)
+        self.note_sparks_start_length_input.setValue(self.vis_config.note_sparks_start_length_ratio)
+        self.note_sparks_start_length_input.setDisabled(not self.vis_config.note_sparks_enabled)
+        self.note_sparks_count_input.setValue(self.vis_config.note_sparks_count)
+        self.note_sparks_count_input.setDisabled(not self.vis_config.note_sparks_enabled)
+        self.note_sparks_angle_input.setValue(self.vis_config.note_sparks_max_angle_deg)
+        self.note_sparks_angle_input.setDisabled(not self.vis_config.note_sparks_enabled)
+        self.note_sparks_fade_time_input.setValue(self.vis_config.note_sparks_time_to_fade_sec)
+        self.note_sparks_fade_time_input.setDisabled(not self.vis_config.note_sparks_enabled)
+
         self.block_changes_callback = False
 
     def update_model(self):
@@ -148,6 +148,13 @@ class NotesTab(QWidget):
 
         self.vis_config.note_highlight_enabled = self.note_highlight_checkbox.isChecked()
         self.vis_config.note_highlight_intensity = self.note_highlight_intensity_input.value()
+
+        self.vis_config.note_sparks_enabled = self.note_sparks_checkbox.isChecked()
+        self.vis_config.note_sparks_start_dist_ratio = self.note_sparks_start_dist_input.value()
+        self.vis_config.note_sparks_start_length_ratio = self.note_sparks_start_length_input.value()
+        self.vis_config.note_sparks_count = self.note_sparks_count_input.value()
+        self.vis_config.note_sparks_max_angle_deg = self.note_sparks_angle_input.value()
+        self.vis_config.note_sparks_time_to_fade_sec = self.note_sparks_fade_time_input.value()
 
     # callbacks
 
