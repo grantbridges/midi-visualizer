@@ -4,6 +4,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QMessageBox,
     QPushButton,
+    QSpinBox,
     QVBoxLayout,
     QHBoxLayout,
     QHBoxLayout,
@@ -13,6 +14,7 @@ from PySide6.QtWidgets import (
 )
 from pathlib import Path
 from models import VisConfig, RenderFormat, Resolution
+from ui.common import LayoutUtil
 
 @dataclass
 class ExportOptions:
@@ -20,6 +22,7 @@ class ExportOptions:
     output_dir: str
     render_format: RenderFormat
     resolution: Resolution
+    fps: int
 
 class ExportOptionsDialog(QDialog):
     def __init__(self, vis_config: VisConfig, parent=None):
@@ -30,7 +33,7 @@ class ExportOptionsDialog(QDialog):
 
         self._options: ExportOptions | None = None
 
-        layout = QVBoxLayout(self)
+        # -- Create Controls --
 
         # Output directory selection
         output_dir = vis_config.export_dir if vis_config.export_dir else str(Path.home() / "Desktop")
@@ -38,22 +41,11 @@ class ExportOptionsDialog(QDialog):
         self.output_dir_input.setReadOnly(True)
         browse_btn = QPushButton("...")
         browse_btn.clicked.connect(self.browse_output_dir)
-        output_dir_row = QHBoxLayout()
-        output_dir_row.addWidget(QLabel("Output folder"))
-        output_dir_row.addWidget(self.output_dir_input)
-        output_dir_row.addWidget(browse_btn)
-        layout.addLayout(output_dir_row)
 
         # Filename input
         filename = vis_config.export_filename if vis_config.export_filename else vis_config.track_name
         self.filename_input = QLineEdit(filename)
-        filename_row = QHBoxLayout()
-        filename_row.addWidget(QLabel("Filename"))
-        filename_row.addWidget(self.filename_input)
-
         self.filename_ext = QLabel(f".{vis_config.export_format.value}")
-        filename_row.addWidget(self.filename_ext)
-        layout.addLayout(filename_row)
 
         # render format dropdown
         self.format_combo = QComboBox()
@@ -66,11 +58,6 @@ class ExportOptionsDialog(QDialog):
         index = self.format_combo.findData(vis_config.export_format)
         self.format_combo.setCurrentIndex(index)
 
-        format_row = QHBoxLayout()
-        format_row.addWidget(QLabel("Format"))
-        format_row.addWidget(self.format_combo)
-        layout.addLayout(format_row)
-
         # resolution combo
         self.resolution_combo = QComboBox()
         self.resolution_combo.addItem("Low (360p)", Resolution.Low)
@@ -79,31 +66,36 @@ class ExportOptionsDialog(QDialog):
         self.resolution_combo.addItem("Full HD (1080p)", Resolution.FullHD)
         self.resolution_combo.addItem("Quad HD (1440p)", Resolution.QuadHD)
         self.resolution_combo.addItem("4K (2160p)", Resolution.UltraHD)
-        self.resolution_combo.addItem("Vertical HD (1080p)", Resolution.VerticalHD)
-        self.resolution_combo.addItem("Square HD (1080p)", Resolution.SquareHD)
-        self.resolution_combo.addItem("Portrait Feed", Resolution.PortraitFeed)
+        self.resolution_combo.insertSeparator(self.resolution_combo.count())
+        self.resolution_combo.addItem("Vertical HD", Resolution.VerticalHD)
+        self.resolution_combo.addItem("Square HD", Resolution.SquareHD)
+        self.resolution_combo.addItem("Portrait Feed HD (4:5)", Resolution.PortraitFeed)
 
         # initialize resolution dropdown
         index = self.resolution_combo.findData(vis_config.export_resolution)
         self.resolution_combo.setCurrentIndex(index)
 
-        resolution_row = QHBoxLayout()
-        resolution_row.addWidget(QLabel("Resolution"))
-        resolution_row.addWidget(self.resolution_combo)
-        layout.addLayout(resolution_row)
+        # fps
+        self.fps_input = QSpinBox(value=vis_config.export_fps, minimum=1, maximum=120)
 
         # button row
         cancel_btn = QPushButton("Cancel")
         cancel_btn.clicked.connect(self.reject)
         export_btn = QPushButton("Export")
-        export_btn.setDefault(True) # highlight
         export_btn.clicked.connect(self.on_export_clicked)
 
-        button_row = QHBoxLayout()
-        button_row.addStretch()
-        button_row.addWidget(cancel_btn)
-        button_row.addWidget(export_btn)
-        layout.addLayout(button_row)
+        # -- Layout Controls --
+
+        column = QVBoxLayout(self)
+
+        LayoutUtil.file_picker(column, "Output folder", self.output_dir_input, browse_btn)
+        LayoutUtil.line_edit_suffix(column, "Filename", self.filename_input, self.filename_ext)
+        LayoutUtil.combobox(column, "Format", self.format_combo)
+        LayoutUtil.combobox(column, "Resolution", self.resolution_combo)
+        LayoutUtil.spinbox(column, "FPS", self.fps_input)
+        LayoutUtil.buttons(column, [cancel_btn, export_btn])
+
+        export_btn.setDefault(True) # highlight
 
         # resize and fix
         self.adjustSize()
@@ -124,7 +116,8 @@ class ExportOptionsDialog(QDialog):
             output_dir=self.output_dir_input.text(),
             filename=self.filename_input.text(),
             render_format=self.format_combo.currentData(),
-            resolution=self.resolution_combo.currentData()
+            resolution=self.resolution_combo.currentData(),
+            fps=self.fps_input.value()
         )
 
         # validation

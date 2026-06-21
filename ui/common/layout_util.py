@@ -1,3 +1,5 @@
+from typing import List
+
 from PySide6.QtWidgets import (
     QAbstractSpinBox,
     QBoxLayout,
@@ -41,6 +43,18 @@ class LayoutUtil:
         h_layout.addWidget(edit)
         parent_layout.addWidget(row)
         return row
+    
+    @staticmethod
+    def line_edit_suffix(parent_layout: QBoxLayout, label: str, edit: QLineEdit, suffix: QLabel) -> QWidget:
+        row = QWidget()
+        h_layout = QHBoxLayout(row)
+        h_layout.setContentsMargins(0, 0, 0, 0)
+        h_layout.addWidget(QLabel(label))
+        h_layout.addStretch()
+        h_layout.addWidget(edit)
+        h_layout.addWidget(suffix)
+        parent_layout.addWidget(row)
+        return row
 
     @staticmethod
     def spinbox(parent_layout: QBoxLayout, label: str, spinbox: QAbstractSpinBox) -> QWidget:
@@ -69,6 +83,20 @@ class LayoutUtil:
         h_layout.setContentsMargins(0, 0, 0, 0)
         h_layout.addWidget(QLabel(label))
         h_layout.addWidget(button)
+        parent_layout.addWidget(row)
+        return row
+    
+    @staticmethod
+    def buttons(parent_layout: QBoxLayout, buttons: List[QPushButton]) -> QWidget:
+        '''
+        Shoves buttons to the right side - best used at the bottom of a dialog
+        '''
+        row = QWidget()
+        h_layout = QHBoxLayout(row)
+        h_layout.setContentsMargins(0, 0, 0, 0)
+        h_layout.addStretch()
+        for button in buttons:
+            h_layout.addWidget(button)
         parent_layout.addWidget(row)
         return row
     

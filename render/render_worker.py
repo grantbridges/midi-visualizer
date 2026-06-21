@@ -53,7 +53,7 @@ class RenderWorker(QObject):
                     pitch_max = self.vis_config.get_max_pitch()
 
                     # build render frame job for every frame
-                    total_frames = int((end_time - start_time) * self.vis_config.fps)
+                    total_frames = int((end_time - start_time) * self.vis_config.export_fps)
                     jobs = [
                         RenderFrameJobInput(
                             frame_index = i, 
@@ -129,7 +129,7 @@ class RenderWorker(QObject):
             return
 
         try:
-            current_time = job.start_time + job.frame_index / job.vis_config.fps
+            current_time = job.start_time + job.frame_index / job.vis_config.export_fps
 
             image = QImage(job.width, job.height, QImage.Format_ARGB32)
             image.fill(Qt.transparent)
@@ -184,7 +184,7 @@ class RenderWorker(QObject):
             "-y",
 
             # input 0: rendered MIDI overlay frames
-            "-framerate", str(vis_config.fps),
+            "-framerate", str(vis_config.export_fps),
             "-i", os.path.join(frames_dir, "frame_%05d.png"),
         ]
 

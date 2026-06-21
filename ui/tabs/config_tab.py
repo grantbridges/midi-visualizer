@@ -40,9 +40,6 @@ class ConfigTab(QWidget):
         self.track_name = QLineEdit()
         self.track_name.editingFinished.connect(self._on_changes)
 
-        self.fps_input = QSpinBox(minimum=1, maximum=120)
-        self.fps_input.valueChanged.connect(self._on_changes)
-
         self.bg_mode_combo = QComboBox()
         for mode in BackgroundMode:
             self.bg_mode_combo.addItem(mode.value, mode)
@@ -145,7 +142,8 @@ class ConfigTab(QWidget):
 
         LayoutUtil.section(column, "Track Props")
         LayoutUtil.line_edit(column, "Track Name", self.track_name)
-        LayoutUtil.spinbox(column, "FPS", self.fps_input)
+
+        LayoutUtil.section(column, "Audio")
         LayoutUtil.checkbox(column, "Use Audio", self.use_audio_checkbox)
         self.audio_file_row = LayoutUtil.file_picker(column, "Audio File", self.audio_file_input, self.audio_file_browse_btn)
 
@@ -212,7 +210,6 @@ class ConfigTab(QWidget):
         self.block_changes_callback = True # prevent "change" callbacks from triggering while we set values
 
         self.track_name.setText(self.vis_config.track_name)
-        self.fps_input.setValue(self.vis_config.fps)
 
         index = self.bg_mode_combo.findData(self.vis_config.bg_mode)
         self.bg_mode_combo.setCurrentIndex(index)
@@ -283,7 +280,6 @@ class ConfigTab(QWidget):
     def update_model(self):
         # pull UI values out of controls and set on model
         self.vis_config.track_name = self.track_name.text()
-        self.vis_config.fps = self.fps_input.value()
 
         self.vis_config.bg_mode = self.bg_mode_combo.currentData()
         self.vis_config.bg_color = self.bg_color_button.getColor()

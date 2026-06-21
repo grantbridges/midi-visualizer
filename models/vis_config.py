@@ -39,7 +39,6 @@ Top level construct containing all visualizing info
 class VisConfig:
     # -- Track Props --
     track_name: str = ""
-    fps: int = 60
 
     # -- Background Props --
     bg_mode: BackgroundMode = BackgroundMode.Color
@@ -64,6 +63,7 @@ class VisConfig:
     export_filename: str = ""
     export_format: RenderFormat = RenderFormat.MP4
     export_resolution: Resolution = Resolution.FullHD
+    export_fps: int = 60
 
     # -- Playhead Props --
     show_playhead: bool = True
@@ -166,7 +166,6 @@ class VisConfig:
         data = {
             "schema_version": VIS_CONFIG_SCHEMA_VERSION,
             "track_name": self.track_name,
-            "fps": self.fps,
 
             "bg_mode": self.bg_mode.name,
             "bg_color": list(self.bg_color),
@@ -187,6 +186,7 @@ class VisConfig:
             "export_filename": self.export_filename,
             "export_format": self.export_format.name,
             "export_resolution": self.export_resolution.name,
+            "export_fps": self.export_fps,
 
             "show_playhead": self.show_playhead,
             "playhead_pos_ratio": self.playhead_pos_ratio,
@@ -257,7 +257,6 @@ class VisConfig:
             config = VisConfig()
 
             config.track_name = data["track_name"]
-            config.fps = data["fps"]
 
             config.bg_color = tuple(data["bg_color"])
             
@@ -267,6 +266,7 @@ class VisConfig:
             config.export_filename = data["export_filename"]
             config.export_format = RenderFormat[data["export_format"]]
             config.export_resolution = Resolution[data["export_resolution"]]
+            config.export_fps = data["export_fps"]
 
             config.vertical_padding_ratio = data["vertical_padding_ratio"]
             config.vertical_offset_ratio = data["vertical_offset_ratio"]

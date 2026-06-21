@@ -645,6 +645,7 @@ class MainWindow(QMainWindow):
             self.vis_config.export_filename = options.filename
             self.vis_config.export_format = options.render_format
             self.vis_config.export_resolution = options.resolution
+            self.vis_config.export_fps = options.fps
             self.has_unsaved_changes = True
             self.refresh_window_title()
 
