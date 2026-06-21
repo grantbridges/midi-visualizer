@@ -6,6 +6,9 @@ from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 from utility import Util
 from models import user_settings
 
+'''
+Used for loading & playing audio in preview mode - NOT for rendering
+'''
 class AudioProvider(QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -16,7 +19,7 @@ class AudioProvider(QObject):
 
         self.player = QMediaPlayer(self)
         self.player.setAudioOutput(self.audio_output)
-        
+
         self.refresh_mute_state()
 
     def refresh_mute_state(self):
