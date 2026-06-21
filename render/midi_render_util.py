@@ -256,17 +256,17 @@ class MidiRenderUtil:
             angle_d = seed.uniform(-vis_config.note_sparks_max_angle_deg, vis_config.note_sparks_max_angle_deg)
             angle = math.radians(angle_d)
 
-            # randomize speed a bit
-            speed_rand = seed.uniform(bar_px_per_sec, bar_px_per_sec * 1.2)
-            speed_px_per_sec = speed_rand
+            # calculate speed and randomize a bit
+            base_speed_px_per_sec = vis_config.note_sparks_speed_ratio * bar_px_per_sec
+            speed_px_per_sec = seed.uniform(base_speed_px_per_sec, vis_config.note_sparks_speed_var_ratio * base_speed_px_per_sec)
 
             # calculate positions, adjusted over animation period
             x = playhead_x - (start_dist_px + speed_px_per_sec * anim_time) * math.cos(angle)
             y = note_center_y - (start_dist_px + speed_px_per_sec * anim_time) * math.sin(angle)
 
-            # draw (lighter)
+            # draw (matching highlight lightening)
             color_highlight = Util.lighten_color(color, vis_config.note_highlight_intensity)
-            qcolor = QUtil.rgb_to_qcolor(color_highlight, int(alpha / 2))
+            qcolor = QUtil.rgb_to_qcolor(color_highlight, int(alpha * vis_config.note_sparks_alpha_ratio))
             painter.setPen(Qt.NoPen)
             painter.setBrush(qcolor)
             painter.drawRect(x - length_px / 2, y - length_px / 2, length_px, length_px)

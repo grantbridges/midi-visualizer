@@ -90,6 +90,9 @@ class VisConfig:
     note_sparks_enabled: bool = True
     note_sparks_start_dist_ratio: float = 1.0 # ratio of bar height
     note_sparks_start_length_ratio: float = 1.0 # ratio of bar height
+    note_sparks_speed_ratio: float = 1.0 # ratio of bar speed
+    note_sparks_speed_var_ratio: float = 1.0 # ratio of upper end of randomized speed
+    note_sparks_alpha_ratio: float = 1.0 # ratio of track alpha
     note_sparks_count = 3
     note_sparks_max_angle_deg = 50
     note_sparks_time_to_fade_sec = .6
@@ -187,6 +190,9 @@ class VisConfig:
             "note_sparks_enabled": self.note_sparks_enabled,
             "note_sparks_start_dist_ratio": self.note_sparks_start_dist_ratio,
             "note_sparks_start_length_ratio": self.note_sparks_start_length_ratio,
+            "note_sparks_speed_ratio": self.note_sparks_speed_ratio,
+            "note_sparks_speed_var_ratio": self.note_sparks_speed_var_ratio,
+            "note_sparks_alpha_ratio": self.note_sparks_alpha_ratio,
             "note_sparks_count": self.note_sparks_count,
             "note_sparks_max_angle_deg": self.note_sparks_max_angle_deg,
             "note_sparks_time_to_fade_sec": self.note_sparks_time_to_fade_sec,
@@ -314,6 +320,9 @@ class VisConfig:
                 config.note_sparks_enabled = data["note_sparks_enabled"]
                 config.note_sparks_start_dist_ratio = data["note_sparks_start_dist_ratio"]
                 config.note_sparks_start_length_ratio = data["note_sparks_start_length_ratio"]
+                config.note_sparks_speed_ratio = data["note_sparks_speed_ratio"]
+                config.note_sparks_speed_var_ratio = data["note_sparks_speed_var_ratio"]
+                config.note_sparks_alpha_ratio = data["note_sparks_alpha_ratio"]
                 config.note_sparks_count = data["note_sparks_count"]
                 config.note_sparks_max_angle_deg = data["note_sparks_max_angle_deg"]
                 config.note_sparks_time_to_fade_sec = data["note_sparks_time_to_fade_sec"]
