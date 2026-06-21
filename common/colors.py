@@ -15,8 +15,3 @@ class Color(tuple, Enum):
     BLUE = (0, 0, 255)
     KAYLA_1 = (50, 131, 168)
     KAYLA_2 = (179, 139, 46)
-
-    # takes an rgb tuple + alpha value and returns rgba tuple
-    @staticmethod
-    def rgba(color: RGB, alpha: int) -> tuple[int, int, int, int]:
-        return (color[0], color[1], color[2], alpha)
