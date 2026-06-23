@@ -5,7 +5,7 @@ from typing import List
 from PySide6.QtGui import QBrush, QLinearGradient, QPainter, QPen
 from PySide6.QtCore import QRect, QRectF, Qt
 from common import Const, Color, RGB
-from models import VisConfig, BackgroundMode, Note
+from models import VisConfig, BackgroundMode, Note, Orientation
 from media import video_provider, image_provider
 from utility import QUtil
 from utility.util import Util
@@ -101,10 +101,18 @@ class MidiRenderUtil:
                     notes = t.notes
                 ))
 
+        # In order to make note speed feel consistent between different
+        # orientations, create a normalized "baseline_width" for computing
+        # pixels per second instead of just dumbly using the rect.width()
+        LANDSCAPE_W = Orientation.Landscape.value[0]
+        LANDSCAPE_H = Orientation.Landscape.value[1]
+        short_side = min(rect.width(), rect.height())
+        baseline_width = short_side * ( LANDSCAPE_W / LANDSCAPE_H )
+
         # draw midi bars
         painter.setPen(Qt.NoPen)
         for track in tracks:
-            pixels_per_sec = rect.width() / track.bar_sec_across_screen
+            pixels_per_sec = baseline_width / track.bar_sec_across_screen
 
             for note in track.notes:
                 # x and width calc
