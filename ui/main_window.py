@@ -528,7 +528,7 @@ class MainWindow(QMainWindow):
             add_btn = msg.addButton("Add", QMessageBox.AcceptRole)
             ignore_btn = msg.addButton("Ignore", QMessageBox.RejectRole)
 
-            msg.setDefaultButton(keep_btn)
+            msg.setDefaultButton(add_btn)
             msg.exec()
 
             if msg.clickedButton() == add_btn:
