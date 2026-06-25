@@ -4,6 +4,7 @@ class Const:
     
     # app props
     APP_NAME = "MIDI Visualizer"
+    APP_ALT_NAME = "midi-vis"
 
     PROJECT_EXT = "mvp" # midi visualizer project
 

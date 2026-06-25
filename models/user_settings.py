@@ -6,6 +6,9 @@ from pathlib import Path
 
 from utility.file_util import FileUtil
 
+import logging
+logger = logging.getLogger("UserSettings")
+
 # ----
 
 '''
@@ -52,7 +55,7 @@ class UserSettings:
             **asdict(self),
         }
 
-        print(f"UserSettings | Saving user settings")
+        logger.info(f"Saving user settings")
 
         with path.open("w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
@@ -61,10 +64,10 @@ class UserSettings:
         path = self._settings_path()
 
         if not path.exists():
-            print("UserSettings | No user settings found on disk - using default")
+            logger.info("No user settings found on disk - using default")
             return
         
-        print(f"UserSettings | Loading user settings from \"{str(path)}\"")
+        logger.info(f"Loading user settings from \"{str(path)}\"")
 
         with path.open("r", encoding="utf-8") as f:
             data = json.load(f)
