@@ -17,6 +17,9 @@ from utility import Util, QUtil
 from ui.common import ColorButton, TableCheckbox, TableSpinbox, TableDoubleSpinbox
 import copy
 
+import logging
+logger = logging.getLogger("TrackGroupsTab")
+
 class TrackGroupsTab(QWidget):
     def __init__(self, vis_config: VisConfig, on_changes_callback: object, on_track_group_selected_callback: object, parent=None):
         super().__init__(parent)
@@ -244,7 +247,7 @@ class TrackGroupsTab(QWidget):
         if col == self.track_columns.index("Name"):
             track_group.name = item.text()
         else:
-            print(f"TrackGroupsTab | Warning: OnItemChanged for unhandled column: {self.track_columns[col]} (index: {col})")
+            logger.warning(f"OnItemChanged for unhandled column: {self.track_columns[col]} (index: {col})")
 
         self.on_changes_callback()
 

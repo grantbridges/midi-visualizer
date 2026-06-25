@@ -16,6 +16,9 @@ from utility import Util
 from ui.widgets.preview_canvas import PreviewCanvas
 from media import audio_provider
 
+import logging
+logger = logging.getLogger("PreviewWidget")
+
 class PreviewWidget(QWidget):
     def __init__(self, vis_config: VisConfig, parent=None):
         super().__init__(parent)
@@ -193,7 +196,7 @@ class PreviewWidget(QWidget):
                             if self.current_time <= audio_provider.get_duration_seconds():
                                 audio_out_of_sync_sec = abs(audio_provider.get_position_seconds() - self.current_time)
                                 if audio_out_of_sync_sec >= self.audio_sync_tolerance_sec:
-                                    print(f"PreviewWidget | Audio out of sync by {audio_out_of_sync_sec:.2f} sec - resyncing")
+                                    logger.debug(f"Audio out of sync by {audio_out_of_sync_sec:.2f} sec - resyncing")
                                     audio_provider.seek_seconds(self.current_time)
                     else:
                         if audio_provider.is_playing():

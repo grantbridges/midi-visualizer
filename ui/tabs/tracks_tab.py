@@ -18,6 +18,9 @@ from utility import MidiUtil
 from ui.common import ColorButton, TableCheckbox, TableSpinbox
 import copy
 
+import logging
+logger = logging.getLogger("TracksTab")
+
 class TracksTab(QWidget):
     def __init__(self, vis_config: VisConfig, on_changes_callback: object, parent=None):
         super().__init__(parent)
@@ -111,7 +114,7 @@ class TracksTab(QWidget):
                 group = group_combo.currentData()
                 track.group_id = UUID(group) if group is not None else None
             else:
-                print(f"Warning: Unknown track row \"{name}\"")
+                logger.warning(f"Update Model | Unknown track row \"{name}\"")
 
     def _on_group_changed(self):
         self.on_changes_callback()

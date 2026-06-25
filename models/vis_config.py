@@ -13,6 +13,9 @@ from models.render_format import RenderFormat
 from models.resolution import Resolution
 from models.bg_mode import BackgroundMode
 
+import logging
+logger = logging.getLogger("VisConfig")
+
 # ----
 
 '''
@@ -145,16 +148,16 @@ class VisConfig:
         inst_names = set()
         for inst in instruments:
             if not inst.name:
-                print("VisConfig | Warning: Loaded track from MIDI data with no name - skipping")
+                logger.warning("Loaded track from MIDI data with no name - skipping")
                 continue
 
             if inst.name in inst_names:
-                print(f"VisConfig | Warning: Loaded track with duplicate name \"{inst.name}\" - skipping")
+                logger.warning(f"Loaded track with duplicate name \"{inst.name}\" - skipping")
                 continue
 
             track = Track.create_from_midi_data(inst)
             if len(track.notes) == 0:
-                print(f"VisConfig | Warning: Loaded track with no notes \"{inst.name}\" - skipping")
+                logger.warning(f"Loaded track with no notes \"{inst.name}\" - skipping")
                 continue
 
             track.group_id = track_group.group_id
@@ -164,7 +167,7 @@ class VisConfig:
         return vis_config
 
     def save(self, path: str) -> None:
-        print(f'VisConfig | Saving config to "{path}"')
+        logger.info(f'Saving config to "{path}"')
 
         data = {
             "schema_version": VIS_CONFIG_SCHEMA_VERSION,
@@ -251,7 +254,7 @@ class VisConfig:
     @staticmethod
     def load(path: str) -> VisConfig:
         try:
-            print(f'VisConfig | Loading config from "{path}"')
+            logger.info(f'Loading config from "{path}"')
 
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
@@ -355,7 +358,7 @@ class VisConfig:
 
             return config
         except Exception as ex:
-            print(f"VisConfig | Error while loading config: {str(ex)}")
+            logger.error(f"Error while loading config: {str(ex)}")
             return None
         
     def init(self):
@@ -368,7 +371,7 @@ class VisConfig:
         for i in reversed(range(len(self.tracks))):
             track = self.tracks[i]
             if len(track.notes) == 0:
-                print(f"VisConfig | Init | Track \"{track.name}\" has no notes - removing from config")
+                logger.warning(f"Init | Track \"{track.name}\" has no notes - removing from config")
                 self.tracks.pop(i)
         
         for t in self.tracks:
@@ -381,13 +384,13 @@ class VisConfig:
         for inst in instruments:
             # ensure loaded instrument has a name - we use it for track indexing
             if not inst.name:
-                print("VisConfig | Warning: Loaded instrument from MIDI data with no name - skipping")
+                logger.warning("Loaded instrument from MIDI data with no name - skipping")
                 continue
 
             # get corresponding track by instrument name
             track = self.get_track_by_name(inst.name)
             if track == None:
-                print(f"VisConfig | Warning: Loaded instrument {inst.name} from MIDI data with no match in VisConfig tracks - skipping")
+                logger.warning(f"Loaded instrument {inst.name} from MIDI data with no match in VisConfig tracks - skipping")
                 continue
 
             track.notes = []

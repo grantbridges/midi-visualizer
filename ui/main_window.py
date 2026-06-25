@@ -32,13 +32,16 @@ from ui.dialogs import (
     ExportOptions
 )
 
+import logging
+logger = logging.getLogger("MainWindow")
+
 # ----
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        print(f"MainWindow | Starting MIDI Visualizer app")
+        logger.info(f"Starting MIDI Visualizer main window")
 
         self.setMinimumSize(Const.SCREEN_MIN_WIDTH, Const.SCREEN_MIN_HEIGHT)
 
@@ -92,12 +95,12 @@ class MainWindow(QMainWindow):
         load_path = user_settings.active_project_path
         if load_path:
             if Path.exists(load_path):
-                print(f"MainWindow | Previous active project detected at \"{load_path}\"")
+                logger.info(f"Previous active project detected at \"{load_path}\"")
             else:
-                print(f"MainWindow | Warning | Previous active project filepath is invalid (\"{load_path}\") - starting default view")
+                logger.warning(f"Previous active project filepath is invalid (\"{load_path}\") - starting default view")
                 load_path = None
         else:
-            print(f"MainWindow | No previous active project detected - starting default view")
+            logger.info(f" No previous active project detected - starting default view")
         
         if load_path:
             loaded_vis_config = VisConfig.load(load_path)

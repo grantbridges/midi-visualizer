@@ -1,10 +1,11 @@
 from pathlib import Path
-
 from PySide6.QtCore import QObject, QUrl
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
-
 from utility import Util
 from models import user_settings
+
+import logging
+logger = logging.getLogger("AudioProvider")
 
 '''
 Used for loading & playing audio in preview mode - NOT for rendering
@@ -14,6 +15,8 @@ class AudioProvider(QObject):
         super().__init__(parent)
 
     def init(self):
+        logger.info(f"Initializing")
+
         self.audio_output = QAudioOutput(self)
         self.audio_output.setVolume(1.0)
 
@@ -30,10 +33,13 @@ class AudioProvider(QObject):
         self.player.setSource(QUrl())
 
     def load_audio(self, audio_path: str):
-        if Path(audio_path).is_file():
-            print(f"AudioProvider | Loading audio from \"{audio_path}\"")
-            self.player.setSource(QUrl.fromLocalFile(audio_path))
-            print(f"AudioProvider | Loaded audio")
+        try:
+            if Path(audio_path).is_file():
+                logger.info(f"Loading audio from \"{audio_path}\"")
+                self.player.setSource(QUrl.fromLocalFile(audio_path))
+        except Exception:
+            logger.exception("Failed to load audio")
+            raise
 
     def is_playing(self) -> bool:
         return self.player.playbackState() == QMediaPlayer.PlayingState

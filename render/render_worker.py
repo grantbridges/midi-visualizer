@@ -13,6 +13,9 @@ import shutil
 import os
 import subprocess
 
+import logging
+logger = logging.getLogger("Render")
+
 # If True and using a BG image, generate a fresh QImage from the 
 # provided BG image filepath on each frame. Otherwise, layer in the
 # image during video encoding. The latter is far more efficeint,
@@ -169,7 +172,7 @@ class RenderWorker(QObject):
             path = Path(job.frames_dir).joinpath(f"frame_{job.frame_index:05d}.png")
             image.save(str(path))
         except Exception as e:
-            print(f'Render Frame | Error | {e}')
+            logger.error(f'RenderFrame | {e}')
 
         return job.frame_index
     

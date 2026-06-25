@@ -5,6 +5,9 @@ from PySide6.QtGui import QImage
 from utility.util import Util
 from models import Resolution
 
+import logging
+logger = logging.getLogger("VideoProvider")
+
 '''
 Used for loading background video into memory for preview purposes,
 NOT for ultimately rendering the final export - for that, we layer the
@@ -25,6 +28,7 @@ class VideoProvider:
     preview_res_pixels: int = 0 # computed on init
 
     def init(self):
+        logger.info(f"Initializing")
         self.preview_res_pixels = math.prod(self.preview_res.value)
 
     def clear(self):
@@ -34,70 +38,74 @@ class VideoProvider:
 
     # loads provided video into array of frames
     def load_video(self, video_path: str):
-        print(f"VideoProvider | Loading video data from \"{video_path}\"")
-        self.clear()
+        try:
+            logger.info(f"Loading video data from \"{video_path}\"")
+            self.clear()
 
-        cap = cv2.VideoCapture(video_path)
+            cap = cv2.VideoCapture(video_path)
 
-        if not cap.isOpened():
-            raise ValueError(f"VideoProvider | Error | Could not open video file: {video_path}")
-        
-        self.source_fps = cap.get(cv2.CAP_PROP_FPS)
-        frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            if not cap.isOpened():
+                raise ValueError(f"Could not open video file: {video_path}")
+            
+            self.source_fps = cap.get(cv2.CAP_PROP_FPS)
+            frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-        if self.source_fps <= 0:
-            raise ValueError("VideoProvider | Error | Video FPS could not be determined")
+            if self.source_fps <= 0:
+                raise ValueError("Video FPS could not be determined")
 
-        self.duration_s = frame_count / self.source_fps
+            self.duration_s = frame_count / self.source_fps
 
-        # only store frames that hit our preview fps
-        frame_interval = self.source_fps / self.preview_fps
-        source_frame_index = 0
-        next_keep_frame = 0.0
+            # only store frames that hit our preview fps
+            frame_interval = self.source_fps / self.preview_fps
+            source_frame_index = 0
+            next_keep_frame = 0.0
 
-        while True:
-            success, frame = cap.read()
-            if not success:
-                break
+            while True:
+                success, frame = cap.read()
+                if not success:
+                    break
 
-            if source_frame_index >= next_keep_frame:
-                # keep this frame - iterate for next one we want
-                next_keep_frame += frame_interval
+                if source_frame_index >= next_keep_frame:
+                    # keep this frame - iterate for next one we want
+                    next_keep_frame += frame_interval
 
-                frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-                frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-                frame_pixels = frame_width * frame_height
+                    frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                    frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                    frame_pixels = frame_width * frame_height
 
-                if frame_pixels > self.preview_res_pixels:
-                    # need to scale down to reach preview resolution
-                    scale = math.sqrt(self.preview_res_pixels / frame_pixels)
+                    if frame_pixels > self.preview_res_pixels:
+                        # need to scale down to reach preview resolution
+                        scale = math.sqrt(self.preview_res_pixels / frame_pixels)
 
-                    new_width = max(1, int(frame_width * scale))
-                    new_height = max(1, int(frame_height * scale))
+                        new_width = max(1, int(frame_width * scale))
+                        new_height = max(1, int(frame_height * scale))
 
-                    frame = cv2.resize(
-                        frame,
-                        (new_width, new_height),
-                        interpolation=cv2.INTER_AREA,
-                    )
+                        frame = cv2.resize(
+                            frame,
+                            (new_width, new_height),
+                            interpolation=cv2.INTER_AREA,
+                        )
 
-                # OpenCV gives BGR; Qt wants RGB
-                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    # OpenCV gives BGR; Qt wants RGB
+                    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-                h, w, ch = frame_rgb.shape
-                bytes_per_line = ch * w
-                image = QImage(frame_rgb.data, w, h, bytes_per_line, QImage.Format_RGB888).copy()
+                    h, w, ch = frame_rgb.shape
+                    bytes_per_line = ch * w
+                    image = QImage(frame_rgb.data, w, h, bytes_per_line, QImage.Format_RGB888).copy()
 
-                self.frames.append(image)                
-                
-            source_frame_index += 1
+                    self.frames.append(image)                
+                    
+                source_frame_index += 1
 
-        cap.release()
+            cap.release()
 
-        if not self.frames:
-            raise ValueError("VideoProvider | Error | No frames were loaded from video")
-        
-        print(f"VideoProvider | Loaded video ({len(self.frames)} frames, {self.duration_s:.2f} sec)")
+            if not self.frames:
+                raise ValueError("No frames were loaded from video")
+            
+            logger.info(f"Loaded video ({len(self.frames)} frames, {self.duration_s:.2f} sec)")
+        except Exception:
+            logger.exception("Failed to load video")
+            raise
     
     def get_frame(self, time_s: float, loop: bool) -> QImage | None:
         if not self.frames or self.duration_s <= 0:

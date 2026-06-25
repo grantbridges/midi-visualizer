@@ -2,21 +2,24 @@
 from typing import List
 import pretty_midi
 
+import logging
+logger = logging.getLogger("MidiUtil")
+
 class MidiUtil:
     def __new__(cls):
         raise TypeError("MidiUtil is static")
 
     @staticmethod
-    def print_midi_data(midi_data: pretty_midi.PrettyMIDI) -> None:
+    def log_midi_data(midi_data: pretty_midi.PrettyMIDI) -> None:
         instruments: List[pretty_midi.Instrument] = midi_data.instruments
 
-        print(f"MainWindow | Loaded MIDI with {len(instruments)} instrument track(s)\n")
+        log_str = f"Loaded MIDI with {len(instruments)} instrument track(s)\n"
 
         tempo_times, tempi = midi_data.get_tempo_changes()
-        print("Tempo changes:")
+        log_str += "Tempo changes:"
         for time, tempo in zip(tempo_times, tempi):
-            print(f"time={time:.3f}s tempo={tempo:.2f} BPM")
-        print()
+            log_str += f"time={time:.3f}s tempo={tempo:.2f} BPM"
+        log_str += ""
 
         for i, instrument in enumerate(instruments):
             instrument_name = instrument.name or "(no name)"
@@ -24,17 +27,17 @@ class MidiUtil:
 
             program_name = pretty_midi.program_to_instrument_name(instrument.program)
 
-            print(f"Instrument {i}")
-            print(f"  Name:      {instrument_name}")
-            print(f"  Program:   {instrument.program} ({program_name})")
-            print(f"  Is drum:   {instrument.is_drum}")
-            print(f"  Note count:{len(instrument.notes)}")    
+            log_str += f"Instrument {i}"
+            log_str += f"  Name:      {instrument_name}"
+            log_str += f"  Program:   {instrument.program} ({program_name})"
+            log_str += f"  Is drum:   {instrument.is_drum}"
+            log_str += f"  Note count:{len(instrument.notes)}"
 
             for j, note in enumerate(notes):
                 pitch_name = pretty_midi.note_number_to_name(note.pitch)
                 duration = note.end - note.start
 
-                print(
+                log_str += (
                     f"    Note {j}: "
                     f"pitch={note.pitch} ({pitch_name}), "
                     f"velocity={note.velocity}, "
@@ -43,12 +46,14 @@ class MidiUtil:
                     f"duration={duration:.3f}"
                 )
 
-            print()
+            log_str += ""
+
+        logger.info("%s", log_str)
 
     @staticmethod
     def midi_pitch_to_note(pitch: int) -> str:
         if not 0 <= pitch <= 127:
-            print(f"MIDIUtil | Pitch to Note | Warning: Invalid MIDI pitch \"{pitch}\"")
+            logger.warning(f"Pitch to Note | Invalid MIDI pitch \"{pitch}\"")
             return ""
         
         NOTE_NAMES = [

@@ -22,7 +22,7 @@ def main():
     )
 
     logger.info("%s started", Const.APP_NAME)
-    
+
     # initial load of user settings
     user_settings.load()
 

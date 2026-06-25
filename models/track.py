@@ -5,6 +5,9 @@ from common import Color, RGB
 from models.note import Note
 from uuid import UUID
 
+import logging
+logger = logging.getLogger("Track")
+
 # ----
 
 '''
@@ -95,7 +98,7 @@ class Track:
     def init(self):
         if len(self.notes) == 0:
             # shouldn't actually get here - track should've been removed already
-            print(f"Track | Init | Warning: Attempted initialization on track \"{self.name}\" with no notes")
+            logger.warning(f"Init | Attempted initialization on track \"{self.name}\" with no notes")
             return
         
         note_pitches = [note.pitch for note in self.notes]
