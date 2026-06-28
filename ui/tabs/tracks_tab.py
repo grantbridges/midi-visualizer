@@ -1,22 +1,20 @@
+from dataclasses import dataclass
+from typing import List
 from uuid import UUID
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QPushButton,
+    QStyle,
     QWidget,
     QVBoxLayout,
-    QHBoxLayout,
     QTableWidget,
     QTableWidgetItem,
-    QLabel,
     QComboBox,
     QHeaderView,
 )
-
-from common.types import RGB
 from models import VisConfig
 from utility import MidiUtil
-from ui.common import ColorButton, TableCheckbox, TableSpinbox
-import copy
 
 import logging
 logger = logging.getLogger("TracksTab")
@@ -29,10 +27,13 @@ class TracksTab(QWidget):
         self.vis_config = vis_config
 
         # create controls
-        self.track_columns = ["Name", "Group", "Pitch Min", "Pitch Max", "Start (sec)", "End (sec)"]
+        self.track_columns = ["", "", "Name", "Group", "Pitch Min", "Pitch Max", "Start (sec)", "End (sec)"]
         self.table = QTableWidget(0, len(self.track_columns))
         self.table.setHorizontalHeaderLabels(self.track_columns)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        # set button columns to shrink
+        for col in [0, 1]:
+            self.table.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeToContents)
 
     def shutdown(self):
         pass
@@ -47,9 +48,26 @@ class TracksTab(QWidget):
         self.table.blockSignals(True)
 
         self.table.setRowCount(len(self.vis_config.tracks))
+        style = self.style()
 
         for row, track in enumerate(self.vis_config.tracks):
             col = 0
+
+            # move up button
+            up_btn = QPushButton()
+            up_btn.setIcon(style.standardIcon(QStyle.SP_ArrowUp))
+            up_btn.setFixedSize(32, 24)
+            up_btn.clicked.connect(lambda _, row=row: self._on_move_track_up(row))
+            self.table.setCellWidget(row, col, up_btn)
+            col += 1
+
+            # move down button
+            down_btn = QPushButton()
+            down_btn.setIcon(style.standardIcon(QStyle.SP_ArrowDown))
+            down_btn.setFixedSize(32, 24)
+            down_btn.clicked.connect(lambda _, row=row: self._on_move_track_down(row))
+            self.table.setCellWidget(row, col, down_btn)
+            col += 1
 
             # name
             name_item = QTableWidgetItem(track.name)
@@ -105,16 +123,26 @@ class TracksTab(QWidget):
     def update_model(self):
         # update track props from table
         for row in range(self.table.rowCount()):
-            name_item = self.table.item(row, 0)
-            name = name_item.text()
+            track = self.vis_config.tracks[row]
+            group_combo: QComboBox = self.table.cellWidget(row, self.track_columns.index("Group"))
+            group = group_combo.currentData()
+            track.group_id = UUID(group) if group is not None else None
 
-            track = self.vis_config.get_track_by_name(name)
-            if track is not None:
-                group_combo: QComboBox = self.table.cellWidget(row, 1)
-                group = group_combo.currentData()
-                track.group_id = UUID(group) if group is not None else None
-            else:
-                logger.warning(f"Update Model | Unknown track row \"{name}\"")
+    def _on_move_track_up(self, row: int):
+        if row > 0:
+            # swap
+            self.vis_config.tracks[row-1], self.vis_config.tracks[row] = self.vis_config.tracks[row], self.vis_config.tracks[row-1]
+            self.refresh_ui()
+
+            self.on_changes_callback()
+
+    def _on_move_track_down(self, row: int):
+        if row < len(self.vis_config.tracks) - 1:
+            # swap
+            self.vis_config.tracks[row+1], self.vis_config.tracks[row] = self.vis_config.tracks[row], self.vis_config.tracks[row+1]
+            self.refresh_ui()
+
+            self.on_changes_callback()
 
     def _on_group_changed(self):
         self.on_changes_callback()
