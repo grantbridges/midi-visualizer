@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
     QDialog,
     QFileDialog
 )
-from PySide6.QtGui import QAction, QKeySequence, QResizeEvent
+from PySide6.QtGui import QAction, QKeySequence, QResizeEvent, QShortcut
 from common import Const
 from models import VisConfig, Track, Resolution, user_settings, BackgroundMode
 from render import RenderWorker
@@ -89,6 +89,11 @@ class MainWindow(QMainWindow):
         file_menu.addAction(self.save_as_action)
         file_menu.addSeparator()
         file_menu.addAction(self.export_action)
+
+        # Key shortcuts
+        self.space_shortcut = QShortcut(QKeySequence(Qt.Key_Space), self)
+        self.space_shortcut.setContext(Qt.WindowShortcut)
+        self.space_shortcut.activated.connect(self._on_space_pressed)
 
         # initial config load
         self.vis_config: VisConfig = None
@@ -715,4 +720,7 @@ class MainWindow(QMainWindow):
                 f"Exported video to {output_filepath}"
             )
                 
-
+    # Key press callbacks
+    def _on_space_pressed(self):
+        if self.preview_widget is not None:
+            self.preview_widget.handle_space_pressed()

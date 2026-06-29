@@ -46,9 +46,9 @@ class PreviewWidget(QWidget):
         self.preview_padding_max = 100
 
         # create controls
-        self.play_btn = QPushButton("Play")
+        self.play_btn = QPushButton("") # text set in refresh ui
         self.play_btn.clicked.connect(self._toggle_play)
-        self.reset_btn = QPushButton("Reset")
+        self.reset_btn = QPushButton("⏮ Reset")
         self.reset_btn.clicked.connect(self._reset)
         self.mute_checkbox = QCheckBox("Mute")
         self.mute_checkbox.setChecked(user_settings.mute_audio)
@@ -57,9 +57,9 @@ class PreviewWidget(QWidget):
         self.loop_checkbox.setChecked(user_settings.loop_preview)
         self.loop_checkbox.toggled.connect(self._on_loop_toggled)
         self.step_input = QDoubleSpinBox(decimals=2, value = 0.05, minimum=0.01, maximum=10.00, singleStep=0.01, suffix=" sec")
-        self.step_fwd_btn = QPushButton("⏭")
+        self.step_fwd_btn = QPushButton("⏩︎")
         self.step_fwd_btn.clicked.connect(lambda: self._step(self.step_input.value()))
-        self.step_back_btn = QPushButton("⏮")
+        self.step_back_btn = QPushButton("⏪︎")
         self.step_back_btn.clicked.connect(lambda: self._step(-1 * self.step_input.value()))
         self.expand_btn = QPushButton("⇅")
         self.expand_btn.clicked.connect(self._toggle_expanded)
@@ -125,6 +125,9 @@ class PreviewWidget(QWidget):
 
     def handle_export_starting(self):
         self._stop()
+
+    def handle_space_pressed(self):
+        self._toggle_play()
         
     def model_changed(self):
         if self.vis_config is not None:
