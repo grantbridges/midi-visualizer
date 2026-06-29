@@ -12,6 +12,7 @@ from models.note import Note
 from models.render_format import RenderFormat
 from models.resolution import Resolution
 from models.bg_mode import BackgroundMode
+from pympler import asizeof
 
 import logging
 logger = logging.getLogger("VisConfig")
@@ -254,7 +255,7 @@ class VisConfig:
     @staticmethod
     def load(path: str) -> VisConfig:
         try:
-            logger.info(f'Loading config from "{path}"')
+            logger.info(f'Load | Loading config from "{path}"')
 
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
@@ -355,6 +356,9 @@ class VisConfig:
 
             if schema_version >= 14:
                 config.orientation = Orientation[data["orientation"]]
+
+            size_bytes = asizeof.asizeof(config)
+            logger.info(f"Load | Loaded config ({size_bytes / 1024 / 1024:.3f} MB)")
 
             return config
         except Exception as ex:
