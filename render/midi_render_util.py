@@ -18,6 +18,8 @@ class RenderTrack:
     bar_sec_across_screen: float = 2.0
     pitch_offset: int = 0
     note_sparks_enabled: bool = False
+    velocity_min: int = 1
+    velocity_max: int = 127
     notes: List[Note] = field(default_factory=list)
 
 class MidiRenderUtil:
@@ -98,6 +100,8 @@ class MidiRenderUtil:
                     bar_sec_across_screen = tg.bar_sec_across_screen,
                     pitch_offset=tg.pitch_offset,
                     note_sparks_enabled=tg.note_sparks_enabled,
+                    velocity_min=t.velocity_min,
+                    velocity_max=t.velocity_max,
                     notes = t.notes
                 ))
 
@@ -164,7 +168,7 @@ class MidiRenderUtil:
 
                 # -- highlight --
                 if x < playhead_x and vis_config.note_highlight_enabled:
-                    MidiRenderUtil._draw_note_highlight(painter, vis_config, playhead_x, x, y, w, h, color, alpha)
+                    MidiRenderUtil._draw_note_highlight(painter, vis_config, track, note, playhead_x, x, y, w, h, color, alpha)
 
 
     @staticmethod
@@ -296,18 +300,29 @@ class MidiRenderUtil:
             # pen.setWidth(1)
             # painter.setPen(pen)
             # painter.drawLine(x, y, x2, y2)
-
-        
+   
     @staticmethod
     def _draw_note_highlight(
         painter: QPainter, vis_config: VisConfig, 
+        track: RenderTrack, note: Note,
         playhead_x: int, x: int, y: int, w: int, h: int, 
         color: RGB, alpha: int
     ):
         # draw transparent overlay over played note area to brighten
         x_right = x + w
         highlight_w = min(playhead_x, x_right) - x
-        color_highlight = Util.lighten_color(color, vis_config.note_highlight_intensity)
+
+        vel_ratio = 1
+        if track.velocity_min != track.velocity_max:
+            vel_ratio = (note.velocity - track.velocity_min) / (track.velocity_max - track.velocity_min)
+        
+        # use highlight intensity as a baseline, then increase as a function of velocity up to 1.0
+        # (maybe we need some ceiling in here?)
+        min_h_i = .01
+        max_h_i = vis_config.note_highlight_intensity
+
+        lighten_factor = min_h_i + vel_ratio * (max_h_i - min_h_i)
+        color_highlight = Util.lighten_color(color, lighten_factor)
         painter.setPen(Qt.NoPen)
-        painter.setBrush(QUtil.rgb_to_qcolor(color_highlight, int(alpha / 2)))
+        painter.setBrush(QUtil.rgb_to_qcolor(color_highlight, alpha * .8))
         painter.drawRect(x, y, highlight_w, h)

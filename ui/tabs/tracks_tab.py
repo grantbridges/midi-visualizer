@@ -33,7 +33,7 @@ class TracksTab(QWidget):
         self.sort_by_group_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         self.sort_by_group_btn.clicked.connect(self._on_sort_by_group)
 
-        self.track_columns = ["", "", "Name", "Group", "Pitch Min", "Pitch Max", "Start (sec)", "End (sec)"]
+        self.track_columns = ["", "", "Name", "Group", "Pitch Min", "Pitch Max", "Start (sec)", "End (sec)", "Vel. Min", "Vel. Max", "Vel. Avg"]
         self.table = QTableWidget(0, len(self.track_columns))
         self.table.setHorizontalHeaderLabels(self.track_columns)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
@@ -133,6 +133,27 @@ class TracksTab(QWidget):
             time_max_item.setFlags(time_max_item.flags() & ~Qt.ItemIsEditable)
             time_max_item.setTextAlignment(Qt.AlignCenter)
             self.table.setItem(row, col, time_max_item)
+            col += 1
+
+            # velocity min
+            velocity_min_item = QTableWidgetItem(f"{track.velocity_min:.2f}")
+            velocity_min_item.setFlags(velocity_min_item.flags() & ~Qt.ItemIsEditable)
+            velocity_min_item.setTextAlignment(Qt.AlignCenter)
+            self.table.setItem(row, col, velocity_min_item)
+            col += 1
+
+            # velocity max
+            velocity_max_item = QTableWidgetItem(f"{track.velocity_max:.2f}")
+            velocity_max_item.setFlags(velocity_max_item.flags() & ~Qt.ItemIsEditable)
+            velocity_max_item.setTextAlignment(Qt.AlignCenter)
+            self.table.setItem(row, col, velocity_max_item)
+            col += 1
+
+            # velocity avg
+            velocity_avg_item = QTableWidgetItem(f"{track.velocity_avg:.2f}")
+            velocity_avg_item.setFlags(velocity_avg_item.flags() & ~Qt.ItemIsEditable)
+            velocity_avg_item.setTextAlignment(Qt.AlignCenter)
+            self.table.setItem(row, col, velocity_avg_item)
             col += 1
 
         # resume callbacks

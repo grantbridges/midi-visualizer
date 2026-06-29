@@ -23,11 +23,14 @@ class Track:
     # group reference
     group_id: UUID | None = None
 
-    # computed props
+    # computed props (not saved)
     pitch_min: int = 0
     pitch_max: int = 1
     time_min: float = 0.0
     time_max: float = 1.0
+    velocity_min: int = 1
+    velocity_max: int = 127
+    velocity_avg: int = 96
 
     @staticmethod
     def create_from_midi_data(inst: pretty_midi.Instrument) -> Track:
@@ -109,3 +112,8 @@ class Track:
         self.time_min = min(note_starts)
         note_ends = [note.end for note in self.notes]
         self.time_max = max(note_ends)
+
+        note_velocities = [note.velocity for note in self.notes]
+        self.velocity_min = min(note_velocities)
+        self.velocity_max = max(note_velocities)
+        self.velocity_avg = sum(note_velocities) / len(note_velocities)

@@ -98,7 +98,7 @@ class VisConfig:
 
     # -- Note Highlight --
     note_highlight_enabled: bool = True
-    note_highlight_intensity: float = 0.75 # ratio on alpha
+    note_highlight_intensity: float = 0.75 # ratio of how much we lighten to white (0.0 - 1.0)
 
     # -- Note Sparks --
     note_sparks_enabled: bool = True
