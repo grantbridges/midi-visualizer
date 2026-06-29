@@ -46,7 +46,7 @@ class TrackGroupsTab(QWidget):
         self.clear_solo_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         self.clear_solo_btn.clicked.connect(self._on_clear_solo)
 
-        self.track_columns = ["", "", "Name", "Tracks", "Solo", "Visible", "Color", "Alpha", "Note Sparks", "Bar Height", "Speed", "Pitch Offset", ""]
+        self.track_columns = ["", "", "Name", "Tracks", "Solo", "Visible", "Color", "Alpha", "Note Sparks", "Note Velocity Fx", "Bar Height", "Speed", "Pitch Offset", ""]
         self.table = QTableWidget(0, len(self.track_columns))
         self.table.setHorizontalHeaderLabels(self.track_columns)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
@@ -143,6 +143,12 @@ class TrackGroupsTab(QWidget):
             # sparks
             checkbox = TableCheckbox(track_group.note_sparks_enabled)
             checkbox.valueChanged.connect(lambda checked, row=row: self._on_sparks_changed(row, checked))
+            self.table.setCellWidget(row, col, checkbox)
+            col += 1
+
+            # velocity fx
+            checkbox = TableCheckbox(track_group.note_velocity_fx_enabled)
+            checkbox.valueChanged.connect(lambda checked, row=row: self._on_velocity_fx_changed(row, checked))
             self.table.setCellWidget(row, col, checkbox)
             col += 1
 
@@ -341,6 +347,14 @@ class TrackGroupsTab(QWidget):
         
         track_group = self.track_groups[row]
         track_group.note_sparks_enabled = checked
+        self.on_changes_callback()
+    
+    def _on_velocity_fx_changed(self, row: int, checked: bool):
+        if self.table.signalsBlocked():
+            return
+        
+        track_group = self.track_groups[row]
+        track_group.note_velocity_fx_enabled = checked
         self.on_changes_callback()
 
     def _on_bar_height_changed(self, row: int, value: float):

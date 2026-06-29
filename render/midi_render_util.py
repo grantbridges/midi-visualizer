@@ -18,6 +18,7 @@ class RenderTrack:
     bar_sec_across_screen: float = 2.0
     pitch_offset: int = 0
     note_sparks_enabled: bool = False
+    note_velocity_fx_enabled: bool = False
     velocity_min: int = 1
     velocity_max: int = 127
     notes: List[Note] = field(default_factory=list)
@@ -100,6 +101,7 @@ class MidiRenderUtil:
                     bar_sec_across_screen = tg.bar_sec_across_screen,
                     pitch_offset=tg.pitch_offset,
                     note_sparks_enabled=tg.note_sparks_enabled,
+                    note_velocity_fx_enabled=tg.note_velocity_fx_enabled,
                     velocity_min=t.velocity_min,
                     velocity_max=t.velocity_max,
                     notes = t.notes
@@ -241,7 +243,6 @@ class MidiRenderUtil:
         painter.setPen(Qt.NoPen)
         painter.setBrush(QBrush(gradient))
         painter.drawRect(x, y, w, h)
-        
 
     @staticmethod
     def _draw_note_sparks(
@@ -312,16 +313,18 @@ class MidiRenderUtil:
         x_right = x + w
         highlight_w = min(playhead_x, x_right) - x
 
-        vel_ratio = 1
-        if track.velocity_min != track.velocity_max:
-            vel_ratio = (note.velocity - track.velocity_min) / (track.velocity_max - track.velocity_min)
-        
-        # use highlight intensity as a baseline, then increase as a function of velocity up to 1.0
-        # (maybe we need some ceiling in here?)
-        min_h_i = .01
-        max_h_i = vis_config.note_highlight_intensity
+        lighten_factor = vis_config.note_highlight_intensity
 
-        lighten_factor = min_h_i + vel_ratio * (max_h_i - min_h_i)
+        if vis_config.note_highlight_use_velocity and track.note_velocity_fx_enabled:
+            vel_ratio = 1
+            if track.velocity_min != track.velocity_max:
+                vel_ratio = (note.velocity - track.velocity_min) / (track.velocity_max - track.velocity_min)
+            
+            min_h_i = vis_config.note_highlight_min_intensity
+            max_h_i = vis_config.note_highlight_max_intensity
+
+            lighten_factor = min_h_i + vel_ratio * (max_h_i - min_h_i)
+        
         color_highlight = Util.lighten_color(color, lighten_factor)
         painter.setPen(Qt.NoPen)
         painter.setBrush(QUtil.rgb_to_qcolor(color_highlight, alpha * .8))

@@ -35,8 +35,9 @@ History
   12 - Track group solo; note sparks config
   13 - Note fadeout enabled; background tint props
   14 - Orientation
+  15 - Velocity impacting highlight intensity
 '''
-VIS_CONFIG_SCHEMA_VERSION = 14
+VIS_CONFIG_SCHEMA_VERSION = 15
 
 '''
 Top level construct containing all visualizing info
@@ -98,7 +99,11 @@ class VisConfig:
 
     # -- Note Highlight --
     note_highlight_enabled: bool = True
+    note_highlight_use_velocity: bool = True
     note_highlight_intensity: float = 0.75 # ratio of how much we lighten to white (0.0 - 1.0)
+    # these two are used if we're using velocity for dynamic highlighting
+    note_highlight_min_intensity: float = 0.5
+    note_highlight_max_intensity: float = 1.0
 
     # -- Note Sparks --
     note_sparks_enabled: bool = True
@@ -222,7 +227,10 @@ class VisConfig:
             "note_glow_size": self.note_glow_size,
             "note_glow_intensity": self.note_glow_intensity,
             "note_highlight_enabled": self.note_highlight_enabled,
+            "note_highlight_use_velocity": self.note_highlight_use_velocity,
             "note_highlight_intensity": self.note_highlight_intensity,
+            "note_highlight_min_intensity": self.note_highlight_min_intensity,
+            "note_highlight_max_intensity": self.note_highlight_max_intensity,
 
             "fade_in_enabled": self.fade_in_enabled,
             "fade_in_color": list(self.fade_in_color),
@@ -356,6 +364,11 @@ class VisConfig:
 
             if schema_version >= 14:
                 config.orientation = Orientation[data["orientation"]]
+
+            if schema_version >= 15:
+                config.note_highlight_use_velocity = data["note_highlight_use_velocity"]
+                config.note_highlight_min_intensity = data["note_highlight_min_intensity"]
+                config.note_highlight_max_intensity = data["note_highlight_max_intensity"]
 
             size_bytes = asizeof.asizeof(config)
             logger.info(f"Load | Loaded config ({size_bytes / 1024 / 1024:.3f} MB)")

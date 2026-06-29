@@ -27,11 +27,19 @@ class MidiUtil:
 
             program_name = pretty_midi.program_to_instrument_name(instrument.program)
 
-            log_str += f"Instrument {i}"
-            log_str += f"  Name:      {instrument_name}"
-            log_str += f"  Program:   {instrument.program} ({program_name})"
-            log_str += f"  Is drum:   {instrument.is_drum}"
-            log_str += f"  Note count:{len(instrument.notes)}"
+            log_str += f"Instrument {i}\n"
+            log_str += f"  Name:      {instrument_name}\n"
+            log_str += f"  Program:   {instrument.program} ({program_name})\n"
+            log_str += f"  Is drum:   {instrument.is_drum}\n"
+            log_str += f"  Note count:{len(instrument.notes)}\n"
+
+            if not instrument.control_changes:
+                log_str += f"  No CC data\n"
+            else:
+                log_str += f"  CC events: {len(instrument.control_changes)}\n"
+
+                for cc in instrument.control_changes[:10]:
+                    log_str += f"    CC{cc.number} value={cc.value} time={cc.time:.3f}s"
 
             for j, note in enumerate(notes):
                 pitch_name = pretty_midi.note_number_to_name(note.pitch)
@@ -40,15 +48,15 @@ class MidiUtil:
                 log_str += (
                     f"    Note {j}: "
                     f"pitch={note.pitch} ({pitch_name}), "
-                    f"velocity={note.velocity}, "
-                    f"start={note.start:.3f}, "
-                    f"end={note.end:.3f}, "
-                    f"duration={duration:.3f}"
+                    f"velocity={note.velocity} "
+                    f"start={note.start:.3f} "
+                    f"end={note.end:.3f} "
+                    f"duration={duration:.3f}\n"
                 )
 
             log_str += ""
 
-        logger.info("%s", log_str)
+        logger.debug("%s", log_str)
 
     @staticmethod
     def midi_pitch_to_note(pitch: int) -> str:

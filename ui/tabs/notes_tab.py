@@ -40,8 +40,14 @@ class NotesTab(QWidget):
 
         self.note_highlight_checkbox = QCheckBox()
         self.note_highlight_checkbox.toggled.connect(self._on_changes)
-        self.note_highlight_intensity_input = QDoubleSpinBox(decimals=2, minimum=0.00, maximum=1.00, singleStep=0.01)
+        self.note_highlight_use_vel_checkbox = QCheckBox()
+        self.note_highlight_use_vel_checkbox.toggled.connect(self._on_changes)
+        self.note_highlight_intensity_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.00, singleStep=0.01)
         self.note_highlight_intensity_input.valueChanged.connect(self._on_changes)
+        self.note_highlight_min_intensity_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.00, singleStep=0.01)
+        self.note_highlight_min_intensity_input.valueChanged.connect(self._on_changes)
+        self.note_highlight_max_intensity_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.00, singleStep=0.01)
+        self.note_highlight_max_intensity_input.valueChanged.connect(self._on_changes)
 
         self.note_sparks_checkbox = QCheckBox()
         self.note_sparks_checkbox.toggled.connect(self._on_changes)
@@ -92,7 +98,10 @@ class NotesTab(QWidget):
 
         LayoutUtil.section(column, "Highlight & Glow")
         LayoutUtil.checkbox(column, "Highlight Enabled", self.note_highlight_checkbox)
+        LayoutUtil.checkbox(column, "Highlight Use Velocity", self.note_highlight_use_vel_checkbox)
         LayoutUtil.spinbox(column, "Highlight Intensity", self.note_highlight_intensity_input)
+        LayoutUtil.spinbox(column, "Highlight Min Intensity", self.note_highlight_min_intensity_input)
+        LayoutUtil.spinbox(column, "Highlight Max Intensity", self.note_highlight_max_intensity_input)
         LayoutUtil.checkbox(column, "Glow Enabled", self.note_glow_checkbox)
         LayoutUtil.spinbox(column, "Glow Size", self.note_glow_size_input)
         LayoutUtil.spinbox(column, "Glow Intensity", self.note_glow_intensity_input)
@@ -138,8 +147,16 @@ class NotesTab(QWidget):
         self.note_glow_intensity_input.setDisabled(not self.vis_config.note_glow_enabled)
 
         self.note_highlight_checkbox.setChecked(self.vis_config.note_highlight_enabled)
+        self.note_highlight_use_vel_checkbox.setChecked(self.vis_config.note_highlight_use_velocity)
+        self.note_highlight_use_vel_checkbox.setDisabled(not self.vis_config.note_highlight_enabled)
         self.note_highlight_intensity_input.setValue(self.vis_config.note_highlight_intensity)
-        self.note_highlight_intensity_input.setDisabled(not self.vis_config.note_highlight_enabled)
+        self.note_highlight_intensity_input.setDisabled(not self.vis_config.note_highlight_enabled or self.vis_config.note_highlight_use_velocity)
+        self.note_highlight_min_intensity_input.setValue(self.vis_config.note_highlight_min_intensity)
+        self.note_highlight_min_intensity_input.setDisabled(not self.vis_config.note_highlight_enabled or not self.vis_config.note_highlight_use_velocity)
+        self.note_highlight_min_intensity_input.setMaximum(self.vis_config.note_highlight_max_intensity - .01)
+        self.note_highlight_max_intensity_input.setValue(self.vis_config.note_highlight_max_intensity)
+        self.note_highlight_max_intensity_input.setDisabled(not self.vis_config.note_highlight_enabled or not self.vis_config.note_highlight_use_velocity)
+        self.note_highlight_max_intensity_input.setMinimum(self.vis_config.note_highlight_min_intensity + .01)
 
         self.note_sparks_checkbox.setChecked(self.vis_config.note_sparks_enabled)
         self.note_sparks_start_dist_input.setValue(self.vis_config.note_sparks_start_dist_ratio)
@@ -172,7 +189,10 @@ class NotesTab(QWidget):
         self.vis_config.note_glow_intensity = self.note_glow_intensity_input.value()
 
         self.vis_config.note_highlight_enabled = self.note_highlight_checkbox.isChecked()
+        self.vis_config.note_highlight_use_velocity = self.note_highlight_use_vel_checkbox.isChecked()
         self.vis_config.note_highlight_intensity = self.note_highlight_intensity_input.value()
+        self.vis_config.note_highlight_min_intensity = self.note_highlight_min_intensity_input.value()
+        self.vis_config.note_highlight_max_intensity = self.note_highlight_max_intensity_input.value()
 
         self.vis_config.note_sparks_enabled = self.note_sparks_checkbox.isChecked()
         self.vis_config.note_sparks_start_dist_ratio = self.note_sparks_start_dist_input.value()
