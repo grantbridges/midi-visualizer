@@ -1,10 +1,12 @@
 from dataclasses import dataclass
 from typing import List
 from uuid import UUID
-
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor, QBrush
 from PySide6.QtWidgets import (
+    QHBoxLayout,
     QPushButton,
+    QSizePolicy,
     QStyle,
     QWidget,
     QVBoxLayout,
@@ -14,7 +16,7 @@ from PySide6.QtWidgets import (
     QHeaderView,
 )
 from models import VisConfig
-from utility import MidiUtil
+from utility import MidiUtil, Util, QUtil
 
 import logging
 logger = logging.getLogger("TracksTab")
@@ -27,6 +29,10 @@ class TracksTab(QWidget):
         self.vis_config = vis_config
 
         # create controls
+        self.sort_by_group_btn = QPushButton("Sort by Group")
+        self.sort_by_group_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+        self.sort_by_group_btn.clicked.connect(self._on_sort_by_group)
+
         self.track_columns = ["", "", "Name", "Group", "Pitch Min", "Pitch Max", "Start (sec)", "End (sec)"]
         self.table = QTableWidget(0, len(self.track_columns))
         self.table.setHorizontalHeaderLabels(self.track_columns)
@@ -41,6 +47,10 @@ class TracksTab(QWidget):
     def layout_controls(self):
         # layout controls
         v_layout = QVBoxLayout(self)
+        btns_layout = QHBoxLayout()
+        btns_layout.addWidget(self.sort_by_group_btn)
+        btns_layout.addStretch()
+        v_layout.addLayout(btns_layout)
         v_layout.addWidget(self.table)
 
     def refresh_ui(self):
@@ -53,10 +63,13 @@ class TracksTab(QWidget):
         for row, track in enumerate(self.vis_config.tracks):
             col = 0
 
+            group = self.vis_config.get_track_group_by_id(track.group_id)
+
             # move up button
             up_btn = QPushButton()
             up_btn.setIcon(style.standardIcon(QStyle.SP_ArrowUp))
             up_btn.setFixedSize(32, 24)
+            up_btn.setDisabled(row == 0)
             up_btn.clicked.connect(lambda _, row=row: self._on_move_track_up(row))
             self.table.setCellWidget(row, col, up_btn)
             col += 1
@@ -65,12 +78,17 @@ class TracksTab(QWidget):
             down_btn = QPushButton()
             down_btn.setIcon(style.standardIcon(QStyle.SP_ArrowDown))
             down_btn.setFixedSize(32, 24)
+            down_btn.setDisabled(row == len(self.vis_config.tracks) - 1)
             down_btn.clicked.connect(lambda _, row=row: self._on_move_track_down(row))
             self.table.setCellWidget(row, col, down_btn)
             col += 1
 
             # name
             name_item = QTableWidgetItem(track.name)
+            if group is not None:
+                # color by group color
+                name_item.setBackground(QBrush(QUtil.rgb_to_qcolor(group.color)))
+                name_item.setForeground(QBrush(QUtil.rgb_to_qcolor(Util.contrast_color(group.color))))
             name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
             self.table.setItem(row, col, name_item)
             col += 1
@@ -85,7 +103,7 @@ class TracksTab(QWidget):
                 index = combo.findData(str(track.group_id)) 
                 if index >= 0:
                     combo.setCurrentIndex(index)
-            combo.currentIndexChanged.connect(self._on_group_changed)
+            combo.currentIndexChanged.connect(lambda index, row=row: self._on_group_changed(row, index))
             self.table.setCellWidget(row, col, combo)
             col += 1
 
@@ -121,29 +139,63 @@ class TracksTab(QWidget):
         self.table.blockSignals(False)
 
     def update_model(self):
-        # update track props from table
-        for row in range(self.table.rowCount()):
-            track = self.vis_config.tracks[row]
-            group_combo: QComboBox = self.table.cellWidget(row, self.track_columns.index("Group"))
-            group = group_combo.currentData()
-            track.group_id = UUID(group) if group is not None else None
+        # No work here - we update vis_config tracks directly on changes
+        pass
 
     def _on_move_track_up(self, row: int):
-        if row > 0:
-            # swap
-            self.vis_config.tracks[row-1], self.vis_config.tracks[row] = self.vis_config.tracks[row], self.vis_config.tracks[row-1]
+        if row == 0:
+            Util.swap(self.vis_config.tracks, row, row-1)
+            
             self.refresh_ui()
-
             self.on_changes_callback()
 
     def _on_move_track_down(self, row: int):
         if row < len(self.vis_config.tracks) - 1:
-            # swap
-            self.vis_config.tracks[row+1], self.vis_config.tracks[row] = self.vis_config.tracks[row], self.vis_config.tracks[row+1]
+            Util.swap(self.vis_config.tracks, row, row+1)
+            
             self.refresh_ui()
-
             self.on_changes_callback()
 
-    def _on_group_changed(self):
-        self.on_changes_callback()
+    def _on_group_changed(self, row: int, col: int):
+        # get selected value from this row
+        group_combo: QComboBox = self.table.cellWidget(row, self.track_columns.index("Group"))
+        group = group_combo.currentData()
+        group_id = UUID(group) if group is not None else None
+
+        # get all selected rows, plus the row this group was changed on
+        # so we can apply a bulk change
+        rows = set([row] + self._get_selected_rows())
+        for row in rows:
+            track = self.vis_config.tracks[row]
+            track.group_id = group_id
+
         self.refresh_ui()
+        self.on_changes_callback()
+
+    def _on_sort_by_group(self):
+        # reorder tracks to be alongside others in their group
+        # while maintaining their original relative order
+        group_order = {
+            group.group_id: index
+            for index, group in enumerate(self.vis_config.track_groups)
+        }
+
+        # sort tracks with no group (or invalid group) to the end
+        none_index = len(self.vis_config.track_groups)
+
+        self.vis_config.tracks.sort(
+            key=lambda track: group_order.get(track.group_id, none_index)
+        )
+
+        self.refresh_ui()
+        self.on_changes_callback()
+
+    # Getters
+    def _get_selected_rows(self):
+        selected_rows: set[int] = set()
+
+        for selection_range in self.table.selectedRanges():
+            for row in range(selection_range.topRow(), selection_range.bottomRow() + 1):
+                selected_rows.add(row)
+
+        return sorted(selected_rows)

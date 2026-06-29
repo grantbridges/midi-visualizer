@@ -1,6 +1,6 @@
 from common import RGB
 from common import Color
-from utility import QUtil
+from utility import QUtil, Util
 
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QAction
@@ -44,12 +44,14 @@ class ColorButton(QPushButton):
         if not self.isEnabled():
             r, g, b = Color.DARK_GRAY
 
+        text_r, text_g, text_b = Util.contrast_color((r, g, b))
+
         # color bg + text by color
         self.setStyleSheet(
             f"""
             QPushButton#ColorButton {{
                 background-color: rgb({r}, {g}, {b});
-                color: {'black' if (r*0.299 + g*0.587 + b*0.114) > 160 else 'white'};
+                color: rgb({text_r}, {text_g}, {text_b});
             }}
             """
         )

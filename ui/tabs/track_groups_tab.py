@@ -85,6 +85,7 @@ class TrackGroupsTab(QWidget):
             up_btn = QPushButton()
             up_btn.setIcon(style.standardIcon(QStyle.SP_ArrowUp))
             up_btn.setFixedSize(32, 24)
+            up_btn.setDisabled(row == 0)
             up_btn.clicked.connect(lambda _, row=row: self._on_move_group_up(row))
             self.table.setCellWidget(row, col, up_btn)
             col += 1
@@ -93,6 +94,7 @@ class TrackGroupsTab(QWidget):
             down_btn = QPushButton()
             down_btn.setIcon(style.standardIcon(QStyle.SP_ArrowDown))
             down_btn.setFixedSize(32, 24)
+            down_btn.setDisabled(row == len(self.vis_config.track_groups) - 1)
             down_btn.clicked.connect(lambda _, row=row: self._on_move_group_down(row))
             self.table.setCellWidget(row, col, down_btn)
             col += 1
@@ -196,11 +198,17 @@ class TrackGroupsTab(QWidget):
 
     # Callbacks
     def _on_add_group(self):
-        track_group = TrackGroup(name = f"Group {len(self.track_groups)+1}")
-        self.track_groups.append(track_group)
-        self.refresh_ui()
+        insert_index = len(self.track_groups)
+        # if we currently have rows selected, insert after end of selection
+        selected_rows = self._get_selected_rows()
+        if len(selected_rows) > 0:
+            insert_index = selected_rows[-1] + 1
 
+        track_group = TrackGroup(name = f"Group {len(self.track_groups)+1}")
+        self.track_groups.insert(insert_index, track_group)
         self.on_changes_callback()
+        
+        self.refresh_ui()
 
     def _on_clear_selection(self):
         self.table.clearSelection()
@@ -326,3 +334,14 @@ class TrackGroupsTab(QWidget):
         track_group = self.track_groups[row]
         track_group.pitch_offset = value
         self.on_changes_callback()
+
+
+    # Getters
+    def _get_selected_rows(self):
+        selected_rows: set[int] = set()
+
+        for selection_range in self.table.selectedRanges():
+            for row in range(selection_range.topRow(), selection_range.bottomRow() + 1):
+                selected_rows.add(row)
+
+        return sorted(selected_rows)

@@ -73,3 +73,10 @@ class Util:
 
         t = (value - display_min) / (display_max - display_min)
         return internal_min + t * (internal_max - internal_min)
+    
+    @staticmethod
+    def swap(arr, first_index: int, second_index: int):
+        '''
+        Swaps two entries in an array in place
+        '''
+        arr[first_index], arr[second_index] = arr[second_index], arr[first_index]
