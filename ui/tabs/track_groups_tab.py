@@ -1,5 +1,6 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QMessageBox,
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
@@ -16,6 +17,7 @@ from models import VisConfig, TrackGroup
 from utility import Util, QUtil
 from ui.common import ColorButton, TableCheckbox, TableSpinbox, TableDoubleSpinbox
 import copy
+from uuid import uuid4
 
 import logging
 logger = logging.getLogger("TrackGroupsTab")
@@ -44,7 +46,7 @@ class TrackGroupsTab(QWidget):
         self.clear_solo_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         self.clear_solo_btn.clicked.connect(self._on_clear_solo)
 
-        self.track_columns = ["", "", "Name", "Solo", "Visible", "Color", "Alpha", "Note Sparks", "Bar Height", "Speed", "Pitch Offset", ""]
+        self.track_columns = ["", "", "Name", "Tracks", "Solo", "Visible", "Color", "Alpha", "Note Sparks", "Bar Height", "Speed", "Pitch Offset", ""]
         self.table = QTableWidget(0, len(self.track_columns))
         self.table.setHorizontalHeaderLabels(self.track_columns)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
@@ -102,6 +104,14 @@ class TrackGroupsTab(QWidget):
             # name
             name_cell = QTableWidgetItem(track_group.name)
             self.table.setItem(row, col, name_cell)
+            col += 1
+
+            # tracks count
+            tracks_count = len(self.vis_config.get_tracks_by_group_id(track_group.group_id))
+            tracks_count_cell = QTableWidgetItem(f"{tracks_count}")
+            tracks_count_cell.setFlags(tracks_count_cell.flags() & ~Qt.ItemIsEditable)
+            tracks_count_cell.setTextAlignment(Qt.AlignCenter)
+            self.table.setItem(row, col, tracks_count_cell)
             col += 1
 
             # solo
@@ -204,7 +214,13 @@ class TrackGroupsTab(QWidget):
         if len(selected_rows) > 0:
             insert_index = selected_rows[-1] + 1
 
-        track_group = TrackGroup(name = f"Group {len(self.track_groups)+1}")
+        # use sibling track group to seed properties from
+        copy_from = self.track_groups[insert_index - 1] if insert_index > 0 else self.track_groups[0]
+        track_group = copy.deepcopy(copy_from)
+        
+        # generate new name and Id
+        track_group.name = f"Group {len(self.track_groups)+1}"
+        track_group.group_id = uuid4()
         self.track_groups.insert(insert_index, track_group)
         self.on_changes_callback()
         
@@ -225,6 +241,22 @@ class TrackGroupsTab(QWidget):
 
     def _on_remove_group(self, row: int):
         if 0 <= row < len(self.track_groups):
+
+            track_group = self.track_groups[row]
+            tracks = self.vis_config.get_tracks_by_group_id(track_group.group_id)
+
+            if len(tracks) > 0:
+                result = QMessageBox.question(
+                    self,
+                    "Confirm Track Group Delete",
+                    f"The \"{track_group.name}\" track group is being used by {len(tracks)} track{"s" if len(tracks) > 1 else ""} ({", ".join(x.name for x in tracks)}). Are you sure you want to delete?",
+                    QMessageBox.Cancel | QMessageBox.Delete,
+                    QMessageBox.Cancel,
+                )
+
+                if result != QMessageBox.Delete:
+                    return
+
             self.track_groups.pop(row)
             self.refresh_ui()
 

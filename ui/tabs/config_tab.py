@@ -92,7 +92,7 @@ class ConfigTab(QWidget):
         self.playhead_alpha_input.valueChanged.connect(self._on_changes)
         self.playhead_thickness_input = QDoubleSpinBox(decimals=4, minimum=0.0001, maximum=0.1, singleStep=0.001)
         self.playhead_thickness_input.valueChanged.connect(self._on_changes)
-        self.playhead_pos_input = QDoubleSpinBox(decimals=2, minimum=0.00, maximum=1.00, singleStep=0.01)
+        self.playhead_pos_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.00, singleStep=0.01)
         self.playhead_pos_input.valueChanged.connect(self._on_changes)
 
         self.vertical_padding_input = QDoubleSpinBox(decimals=2, minimum=0.00, maximum=1.00, singleStep=0.01)
