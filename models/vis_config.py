@@ -36,8 +36,9 @@ History
   13 - Note fadeout enabled; background tint props
   14 - Orientation
   15 - Velocity impacting highlight intensity
+  16 - Glow and highlight color
 '''
-VIS_CONFIG_SCHEMA_VERSION = 15
+VIS_CONFIG_SCHEMA_VERSION = 16
 
 '''
 Top level construct containing all visualizing info
@@ -94,12 +95,14 @@ class VisConfig:
 
     # -- Note Glow --
     note_glow_enabled: bool = True
+    note_glow_color: RGB = Color.WHITE
     note_glow_size: float = 0.8 # ratio of computed bar height - applies to y padding
     note_glow_intensity: float = 0.33
 
     # -- Note Highlight --
     note_highlight_enabled: bool = True
     note_highlight_use_velocity: bool = True
+    note_highlight_color: RGB = Color.WHITE
     note_highlight_intensity: float = 0.75 # ratio of how much we lighten to white (0.0 - 1.0)
     # these two are used if we're using velocity for dynamic highlighting
     note_highlight_min_intensity: float = 0.5
@@ -224,10 +227,12 @@ class VisConfig:
             "note_sparks_time_to_fade_sec": self.note_sparks_time_to_fade_sec,
 
             "note_glow_enabled": self.note_glow_enabled,
+            "note_glow_color": list(self.note_glow_color),
             "note_glow_size": self.note_glow_size,
             "note_glow_intensity": self.note_glow_intensity,
             "note_highlight_enabled": self.note_highlight_enabled,
             "note_highlight_use_velocity": self.note_highlight_use_velocity,
+            "note_highlight_color": list(self.note_highlight_color),
             "note_highlight_intensity": self.note_highlight_intensity,
             "note_highlight_min_intensity": self.note_highlight_min_intensity,
             "note_highlight_max_intensity": self.note_highlight_max_intensity,
@@ -369,6 +374,10 @@ class VisConfig:
                 config.note_highlight_use_velocity = data["note_highlight_use_velocity"]
                 config.note_highlight_min_intensity = data["note_highlight_min_intensity"]
                 config.note_highlight_max_intensity = data["note_highlight_max_intensity"]
+
+            if schema_version >= 16:
+                config.note_glow_color = tuple(data["note_glow_color"])
+                config.note_highlight_color = tuple(data["note_highlight_color"])
 
             size_bytes = asizeof.asizeof(config)
             logger.info(f"Load | Loaded config ({size_bytes / 1024 / 1024:.3f} MB)")

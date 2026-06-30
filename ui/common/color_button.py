@@ -39,12 +39,12 @@ class ColorButton(QPushButton):
 
     def refresh(self):
         r, g, b = self._rgb
+        text_r, text_g, text_b = Util.contrast_color((r, g, b))
+       
         self.setText(f"{r}, {g}, {b}")
-
         if not self.isEnabled():
             r, g, b = Color.DARK_GRAY
-
-        text_r, text_g, text_b = Util.contrast_color((r, g, b))
+            text_r, text_g, text_b = Color.LIGHTISH_GRAY
 
         # color bg + text by color
         self.setStyleSheet(

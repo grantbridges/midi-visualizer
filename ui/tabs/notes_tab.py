@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (
 )
 
 from models import VisConfig
-from ui.common import LayoutUtil
+from ui.common import LayoutUtil, ColorButton
 
 class NotesTab(QWidget):
     def __init__(self, 
@@ -33,6 +33,8 @@ class NotesTab(QWidget):
 
         self.note_glow_checkbox = QCheckBox()
         self.note_glow_checkbox.toggled.connect(self._on_changes)
+        self.note_glow_color = ColorButton()
+        self.note_glow_color.valueChanged.connect(self._on_changes)
         self.note_glow_size_input = QDoubleSpinBox(decimals=2, minimum=0.00, maximum=2.0, singleStep=0.01)
         self.note_glow_size_input.valueChanged.connect(self._on_changes)
         self.note_glow_intensity_input = QDoubleSpinBox(decimals=2, minimum=0.00, maximum=1.00, singleStep=0.01)
@@ -42,6 +44,8 @@ class NotesTab(QWidget):
         self.note_highlight_checkbox.toggled.connect(self._on_changes)
         self.note_highlight_use_vel_checkbox = QCheckBox()
         self.note_highlight_use_vel_checkbox.toggled.connect(self._on_changes)
+        self.note_highlight_color = ColorButton()
+        self.note_highlight_color.valueChanged.connect(self._on_changes)
         self.note_highlight_intensity_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.00, singleStep=0.01)
         self.note_highlight_intensity_input.valueChanged.connect(self._on_changes)
         self.note_highlight_min_intensity_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.00, singleStep=0.01)
@@ -96,13 +100,16 @@ class NotesTab(QWidget):
         LayoutUtil.checkbox(column, "Fade Enabled", self.note_fadeout_checkbox)
         LayoutUtil.spinbox(column, "Fade Distance", self.note_fadeout_input)
 
-        LayoutUtil.section(column, "Highlight & Glow")
+        LayoutUtil.section(column, "Highlight")
         LayoutUtil.checkbox(column, "Highlight Enabled", self.note_highlight_checkbox)
         LayoutUtil.checkbox(column, "Highlight Use Velocity", self.note_highlight_use_vel_checkbox)
+        LayoutUtil.button(column, "Highlight Color", self.note_highlight_color)
         LayoutUtil.spinbox(column, "Highlight Intensity", self.note_highlight_intensity_input)
         LayoutUtil.spinbox(column, "Highlight Min Intensity", self.note_highlight_min_intensity_input)
         LayoutUtil.spinbox(column, "Highlight Max Intensity", self.note_highlight_max_intensity_input)
+        LayoutUtil.section(column, "Glow")
         LayoutUtil.checkbox(column, "Glow Enabled", self.note_glow_checkbox)
+        LayoutUtil.button(column, "Glow Color", self.note_glow_color)
         LayoutUtil.spinbox(column, "Glow Size", self.note_glow_size_input)
         LayoutUtil.spinbox(column, "Glow Intensity", self.note_glow_intensity_input)
 
@@ -141,6 +148,8 @@ class NotesTab(QWidget):
         self.note_fadeout_input.setDisabled(not self.vis_config.note_fadeout_enabled)
 
         self.note_glow_checkbox.setChecked(self.vis_config.note_glow_enabled)
+        self.note_glow_color.setColor(self.vis_config.note_glow_color)
+        self.note_glow_color.setDisabled(not self.vis_config.note_glow_enabled)
         self.note_glow_size_input.setValue(self.vis_config.note_glow_size)
         self.note_glow_size_input.setDisabled(not self.vis_config.note_glow_enabled)
         self.note_glow_intensity_input.setValue(self.vis_config.note_glow_intensity)
@@ -149,6 +158,8 @@ class NotesTab(QWidget):
         self.note_highlight_checkbox.setChecked(self.vis_config.note_highlight_enabled)
         self.note_highlight_use_vel_checkbox.setChecked(self.vis_config.note_highlight_use_velocity)
         self.note_highlight_use_vel_checkbox.setDisabled(not self.vis_config.note_highlight_enabled)
+        self.note_highlight_color.setColor(self.vis_config.note_highlight_color)
+        self.note_highlight_color.setDisabled(not self.vis_config.note_highlight_enabled)
         self.note_highlight_intensity_input.setValue(self.vis_config.note_highlight_intensity)
         self.note_highlight_intensity_input.setDisabled(not self.vis_config.note_highlight_enabled or self.vis_config.note_highlight_use_velocity)
         self.note_highlight_min_intensity_input.setValue(self.vis_config.note_highlight_min_intensity)
@@ -185,11 +196,13 @@ class NotesTab(QWidget):
         self.vis_config.note_fadeout_ratio = self.note_fadeout_input.value()
 
         self.vis_config.note_glow_enabled = self.note_glow_checkbox.isChecked()
+        self.vis_config.note_glow_color = self.note_glow_color.getColor()
         self.vis_config.note_glow_size = self.note_glow_size_input.value()
         self.vis_config.note_glow_intensity = self.note_glow_intensity_input.value()
 
         self.vis_config.note_highlight_enabled = self.note_highlight_checkbox.isChecked()
         self.vis_config.note_highlight_use_velocity = self.note_highlight_use_vel_checkbox.isChecked()
+        self.vis_config.note_highlight_color = self.note_highlight_color.getColor()
         self.vis_config.note_highlight_intensity = self.note_highlight_intensity_input.value()
         self.vis_config.note_highlight_min_intensity = self.note_highlight_min_intensity_input.value()
         self.vis_config.note_highlight_max_intensity = self.note_highlight_max_intensity_input.value()

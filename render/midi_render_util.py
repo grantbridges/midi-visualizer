@@ -208,7 +208,7 @@ class MidiRenderUtil:
     ):
         x_right = x + w
         glow_w = min(playhead_x, x_right) - x
-        color_glow = Util.lighten_color(color, 0.75)
+        color_glow = Util.mix_colors(color, vis_config.note_glow_color, 0.75)
 
         # padding for how far glow extends vertically
         pad_y: float = bar_height * vis_config.note_glow_size
@@ -287,7 +287,7 @@ class MidiRenderUtil:
             y = note_center_y - (start_dist_px + speed_px_per_sec * anim_time) * math.sin(angle)
 
             # draw (matching highlight lightening)
-            color_highlight = Util.lighten_color(color, vis_config.note_highlight_intensity)
+            color_highlight = Util.mix_colors(color, vis_config.note_highlight_color, vis_config.note_highlight_intensity)
             qcolor = QUtil.rgb_to_qcolor(color_highlight, int(alpha * vis_config.note_sparks_alpha_ratio))
             painter.setPen(Qt.NoPen)
             painter.setBrush(qcolor)
@@ -313,7 +313,7 @@ class MidiRenderUtil:
         x_right = x + w
         highlight_w = min(playhead_x, x_right) - x
 
-        lighten_factor = vis_config.note_highlight_intensity
+        highlight_factor = vis_config.note_highlight_intensity
 
         if vis_config.note_highlight_use_velocity and track.note_velocity_fx_enabled:
             vel_ratio = 1
@@ -323,9 +323,9 @@ class MidiRenderUtil:
             min_h_i = vis_config.note_highlight_min_intensity
             max_h_i = vis_config.note_highlight_max_intensity
 
-            lighten_factor = min_h_i + vel_ratio * (max_h_i - min_h_i)
+            highlight_factor = min_h_i + vel_ratio * (max_h_i - min_h_i)
         
-        color_highlight = Util.lighten_color(color, lighten_factor)
+        color_highlight = Util.mix_colors(color, vis_config.note_highlight_color, highlight_factor)
         painter.setPen(Qt.NoPen)
         painter.setBrush(QUtil.rgb_to_qcolor(color_highlight, alpha * .8))
         painter.drawRect(x, y, highlight_w, h)
