@@ -326,7 +326,6 @@ class PreviewWidget(QWidget):
         self._set_current_time(self.start_time)
 
         audio_provider.stop() # will restart on tick
-        self._update_slider_position()
         self._refresh_canvas()
 
         self.refresh_ui()

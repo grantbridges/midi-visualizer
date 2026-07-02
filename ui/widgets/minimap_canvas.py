@@ -73,44 +73,47 @@ class MinimapCanvas(QWidget):
 
         try:
             rect = self.rect()
-            preview_padding = 4
-            preview_rect = self.rect().adjusted(
-                0, 
-                preview_padding, 
-                0, 
-                -preview_padding
-            )
 
             # draw background
-            painter.fillRect(preview_rect, QUtil.rgb_to_qcolor(self.vis_config.bg_color))
+            self._draw_background(painter, rect)
 
             # draw midi bars
             # TODO
 
             # draw cursor
-            if self.end_time != self.start_time:
-                time_ratio = (self.current_time - self.start_time) / (self.end_time - self.start_time)
-                cursor_x = time_ratio * rect.width()
-
-                cursor_width = 3
-                cursor_border_thickness = 1
-
-                cursor_rect = QRectF(
-                    cursor_x - cursor_width / 2,
-                    cursor_border_thickness,
-                    cursor_width,
-                    rect.height() - 2 * cursor_border_thickness,
-                )
-
-                border_color = QUtil.rgb_to_qcolor(Color.BLACK)
-                fill_color = QUtil.rgb_to_qcolor(Color.WHITE)
-                painter.setPen(QPen(border_color, cursor_border_thickness))
-                painter.setBrush(QBrush(fill_color))
-                painter.drawRect(cursor_rect)
+            self._draw_cursor(painter, rect)
 
 
         except Exception as e:
             logger.error(f"Minimap render failed: {str(e)}")
+
+    # draw helpers
+    def _draw_background(self, painter: QPainter, rect: QRect):
+        preview_padding = 4
+        preview_rect = rect.adjusted(
+            0, preview_padding, 
+            0, -preview_padding
+        )
+
+        painter.fillRect(preview_rect, QUtil.rgb_to_qcolor(self.vis_config.bg_color))
+
+    def _draw_cursor(self, painter: QPainter, rect: QRect):
+        cursor_x = self._get_x_pos_from_time(self.current_time)
+
+        cursor_width = 3
+        cursor_border_thickness = 1
+        cursor_rect = QRectF(
+            cursor_x - cursor_width / 2,
+            cursor_border_thickness,
+            cursor_width,
+            rect.height() - 2 * cursor_border_thickness,
+        )
+
+        border_color = QUtil.rgb_to_qcolor(Color.BLACK)
+        fill_color = QUtil.rgb_to_qcolor(Color.WHITE)
+        painter.setPen(QPen(border_color, cursor_border_thickness))
+        painter.setBrush(QBrush(fill_color))
+        painter.drawRect(cursor_rect)
 
     # helpers
     def _get_time_from_x_pos(self, x_pos: float) -> float:
@@ -118,3 +121,11 @@ class MinimapCanvas(QWidget):
         new_time = ratio * (self.end_time - self.start_time)
         new_time = Util.clamp(new_time, self.start_time, self.end_time)
         return new_time
+    
+    def _get_x_pos_from_time(self, time: float) -> float:
+        if self.start_time == self.end_time:
+            return 0
+        
+        ratio = (time - self.start_time) / (self.end_time - self.start_time)
+        x_pos = ratio * self.rect().width()
+        return x_pos
