@@ -84,12 +84,8 @@ class PreviewWidget(QWidget):
 
         self.settings_btn.setMenu(settings_menu)
 
-        # self.slider = QSlider(Qt.Horizontal)
-        # self.slider.setRange(0, 1000)
-        # self.slider.setValue(0)
-        # self.slider.valueChanged.connect(self._on_slider_changed)
-
         self.minimap_canvas = MinimapCanvas(parent=self)
+        self.minimap_canvas.valueChanged.connect(self._on_slider_changed)
         self.preview_canvas = PreviewCanvas(parent=self)
 
         self._update_canvas_size()
@@ -118,12 +114,7 @@ class PreviewWidget(QWidget):
         top_row_layout.addWidget(self.settings_btn)
         v_layout.addLayout(top_row_layout)
 
-        #slider_bar_layout = QHBoxLayout()
-        #slider_bar_layout.addWidget(self.slider)
-        #v_layout.addLayout(slider_bar_layout)
-        v_layout.addWidget(self.minimap_canvas, alignment=Qt.AlignCenter)
-        #v_layout.addSpacing()
-
+        v_layout.addWidget(self.minimap_canvas)
         v_layout.addWidget(self.preview_canvas, alignment=Qt.AlignCenter)
 
     def handle_resize(self):
@@ -164,8 +155,6 @@ class PreviewWidget(QWidget):
                     # apply clamping to ensure current time stays in bounds
                     self._set_current_time(Util.clamp(self.current_time, self.start_time, self.end_time))
 
-                self._update_slider_position()
-
         self._update_canvas_size() # in case orientation changed
         self._refresh_canvas()
         self.refresh_ui()
@@ -184,16 +173,18 @@ class PreviewWidget(QWidget):
 
     def _on_tick(self):
         # only update widget if playing and user isn't dragging slider
-        if self.playing: #and not self.slider.isSliderDown():
+        if self.playing and not self.minimap_canvas.isSliderDown():
             if self.playing == True:
                 # calculate current time from how long has elapsed since play start
                 elapsed_sec = self.play_timer.elapsed() / 1000.0
                 self.current_time = self.play_start_visual_time + elapsed_sec
+                #logger.debug(f"Current Time (tick): {self.current_time:.2f} s")
 
                 if self.current_time > self.end_time:
                     if user_settings.loop_preview:
                         self._set_current_time(self.start_time)
                     else:
+                        self._set_current_time(self.end_time)
                         self._stop()
                 
                 if self.vis_config.has_audio():
@@ -214,8 +205,6 @@ class PreviewWidget(QWidget):
                     if audio_provider.is_playing():
                         audio_provider.stop()
 
-
-            self._update_slider_position()
             self._refresh_canvas()
 
     def _update_canvas_size(self):
@@ -224,7 +213,7 @@ class PreviewWidget(QWidget):
         max_height = int(self.window().height() / 2 + self._get_preview_padding())
 
         # size minimap
-        self.minimap_canvas.setFixedWidth(max_width)
+        #self.minimap_canvas.setFixedWidth(max_width)
         self.minimap_canvas.setFixedHeight(MINIMAP_HEIGHT)
 
         # size preview area - shape to fit orientation
@@ -272,16 +261,8 @@ class PreviewWidget(QWidget):
 
         if step_to_time is not self.current_time: 
             self._set_current_time(step_to_time)
-            self._update_slider_position()
             self._refresh_canvas()
             self.refresh_ui()
-
-    def _update_slider_position(self):
-        # set slider position from current time
-        t_norm = (self.current_time - self.start_time) / (self.end_time - self.start_time)
-        slider_value = int(t_norm * 1000)
-        slider_value = max(0, min(1000, slider_value)) # clamp
-        #self.slider.setValue(slider_value)
 
     def _on_mute_toggled(self, checked: bool):
         user_settings.mute_audio = checked
@@ -320,18 +301,13 @@ class PreviewWidget(QWidget):
         user_settings.save()
         self._refresh_canvas()
 
-    def _on_slider_changed(self, value):
-        # TODO
-        pass
-        # only apply if this is a user-driven movement
-        # if self.slider.isSliderDown():
-        #     if audio_provider.is_playing():
-        #         audio_provider.stop() # will resume during tick
+    def _on_slider_changed(self, new_time: float):
+        if audio_provider.is_playing():
+            audio_provider.stop() # will resume during tick
 
-        #     t_norm = value / 1000
-        #     self._set_current_time(self.start_time + t_norm * (self.end_time - self.start_time))
+        self._set_current_time(new_time)
 
-        #     self._refresh_canvas()
+        self._refresh_canvas()
 
     def _play(self):
         self.playing = True
@@ -357,6 +333,7 @@ class PreviewWidget(QWidget):
 
     def _set_current_time(self, time: float):
         self.current_time = time
+        #logger.debug(f"Current Time: {self.current_time:.2f} s")
 
         # reset when this "play" context started from
         self.play_start_visual_time = self.current_time
