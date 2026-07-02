@@ -54,9 +54,13 @@ class MidiRenderUtil:
                 if image is not None:
                     painter.drawImage(rect, image)
             case BackgroundMode.Video:
-                frame = video_provider.get_frame(current_time - vis_config.bg_video_time_offset, loop=vis_config.bg_video_loop)
-                if frame is not None:
-                    painter.drawImage(rect, frame)
+                if ignore_video:
+                    # fall through to black fill
+                    painter.fillRect(rect, QUtil.rgb_to_qcolor(Color.BLACK))
+                else:
+                    frame = video_provider.get_frame(current_time - vis_config.bg_video_time_offset, loop=vis_config.bg_video_loop)
+                    if frame is not None:
+                        painter.drawImage(rect, frame)
             case BackgroundMode.NoBackground:
                 pass
             case _:

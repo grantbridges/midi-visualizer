@@ -1,10 +1,11 @@
 from uuid import UUID
-
+import time
 from PySide6.QtWidgets import QMessageBox, QWidget
-from PySide6.QtGui import QBrush, QFont, QPainter, QPen
+from PySide6.QtGui import QBrush, QFont, QImage, QPainter, QPen
 from PySide6.QtCore import QRect, QRectF, Qt, Signal
 from common import Const, Color
-from models import VisConfig, user_settings
+from media import image_provider
+from models import VisConfig, user_settings, BackgroundMode
 from render import MidiRenderUtil
 from utility import QUtil, Util
 
@@ -12,6 +13,10 @@ import logging
 logger = logging.getLogger("MinimapCanvas")
 
 class MinimapCanvas(QWidget):
+    '''
+    Shows a visual preview of the entire midi track with a cursor
+    showing playback position and allowing interaction
+    '''
     valueChanged = Signal(float)
 
     def __init__(self, parent=None):
@@ -26,8 +31,14 @@ class MinimapCanvas(QWidget):
         self.pitch_min: int = 0
         self.pitch_max: int = 0
 
+        # cache the preview data (background, notes) and only redraw
+        # when model changes or screen is resized
+        self._preview_cache: QImage | None = None
+        self._preview_cache_dirty: bool = True
+
         self.is_dragging: bool = False
 
+    # parent API
     def refresh(self, current_time: float, vis_config: VisConfig, start_time: float, end_time: float, pitch_min: int, pitch_max: int):
         self.current_time = current_time
         self.vis_config = vis_config
@@ -38,9 +49,13 @@ class MinimapCanvas(QWidget):
 
         self.update() # queues paint event
 
-    def isSliderDown(self) -> bool:
-        return self.is_dragging
+    def set_dirty(self):
+        self._preview_cache_dirty = True
 
+    def is_slider_down(self) -> bool:
+        return self.is_dragging
+    
+    # events
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.is_dragging = True
@@ -72,28 +87,44 @@ class MinimapCanvas(QWidget):
         painter.setRenderHint(QPainter.Antialiasing)
 
         try:
-            rect = self.rect()
+            #if self._preview_cache_dirty or self._preview_cache is None:
+            #    self._rebuild_preview_cache()
+            #rect = self._get_preview_rect()
+            #painter.drawImage(rect.x(), rect.y(), self._preview_cache)
 
-            # draw background
-            self._draw_background(painter)
-
-            # draw midi notes
-            self._draw_notes(painter)
+            # draw preview data
+            self._draw_preview_data(painter, self._get_preview_rect())
 
             # draw cursor
             self._draw_cursor(painter)
-
 
         except Exception as e:
             logger.error(f"Minimap render failed: {str(e)}")
 
     # draw helpers
-    def _draw_background(self, painter: QPainter):
+    def _rebuild_preview_cache(self):       
         rect = self._get_preview_rect()
-        painter.fillRect(rect, QUtil.rgb_to_qcolor(self.vis_config.bg_color))
 
-    def _draw_notes(self, painter: QPainter):
-        rect = self._get_preview_rect()
+        # set up QImage for cache
+        self._preview_cache = QImage(
+            rect.width(),
+            rect.height(),
+            QImage.Format_ARGB32_Premultiplied,
+        )
+
+        painter = QPainter(self._preview_cache)
+        painter.setRenderHint(QPainter.Antialiasing, False)
+
+        self._draw_preview_data(painter, rect)
+
+        painter.end()
+
+        self._preview_cache_dirty = False
+
+    def _draw_preview_data(self, painter: QPainter, rect: QRect):
+        # fill background
+        painter.fillRect(rect, QUtil.rgb_to_qcolor(self.vis_config.bg_color))
+        
         # iterate backwards so first groups are drawn on top
         track_groups = self.vis_config.get_visible_track_groups()[::-1]
 
@@ -102,11 +133,19 @@ class MinimapCanvas(QWidget):
 
             painter.setPen(QPen(QUtil.rgb_to_qcolor(tg.color), 1))
             
+            # draw notes for each track in group
             for t in tracks:
                 for n in t.notes:
                     x1 = self._get_x_pos_from_time(n.start)
                     x2 = self._get_x_pos_from_time(n.end)
-                    y = MidiRenderUtil.pitch_to_y(n.pitch, self.pitch_min, self.pitch_max, rect, 0, 0.5)
+                    y = MidiRenderUtil.pitch_to_y(
+                        n.pitch + tg.pitch_offset, 
+                        self.pitch_min, 
+                        self.pitch_max, 
+                        rect, 
+                        self.vis_config.vertical_padding_ratio, 
+                        self.vis_config.vertical_offset_ratio + .4 # TODO keep debugging sizing here
+                    )
                     painter.drawLine(x1, y, x2, y)
 
     def _draw_cursor(self, painter: QPainter):
@@ -123,7 +162,7 @@ class MinimapCanvas(QWidget):
         )
 
         border_color = QUtil.rgb_to_qcolor(Color.BLACK)
-        fill_color = QUtil.rgb_to_qcolor(Color.LIGHT_GRAY)
+        fill_color = QUtil.rgb_to_qcolor(Color.WHITE)
         painter.setPen(QPen(border_color, cursor_border_thickness))
         painter.setBrush(QBrush(fill_color))
         painter.drawRect(cursor_rect)

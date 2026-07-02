@@ -119,6 +119,7 @@ class PreviewWidget(QWidget):
 
     def handle_resize(self):
         self._update_canvas_size()
+        self.minimap_canvas.set_dirty()
 
     def handle_export_starting(self):
         self._stop()
@@ -156,6 +157,7 @@ class PreviewWidget(QWidget):
                     self._set_current_time(Util.clamp(self.current_time, self.start_time, self.end_time))
 
         self._update_canvas_size() # in case orientation changed
+        self.minimap_canvas.set_dirty()
         self._refresh_canvas()
         self.refresh_ui()
 
@@ -173,7 +175,7 @@ class PreviewWidget(QWidget):
 
     def _on_tick(self):
         # only update widget if playing and user isn't dragging slider
-        if self.playing and not self.minimap_canvas.isSliderDown():
+        if self.playing and not self.minimap_canvas.is_slider_down():
             if self.playing == True:
                 # calculate current time from how long has elapsed since play start
                 elapsed_sec = self.play_timer.elapsed() / 1000.0
