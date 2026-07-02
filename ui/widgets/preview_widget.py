@@ -20,7 +20,7 @@ from media import audio_provider
 import logging
 logger = logging.getLogger("PreviewWidget")
 
-MINIMAP_HEIGHT = 28
+MINIMAP_HEIGHT = 36
 
 class PreviewWidget(QWidget):
     def __init__(self, vis_config: VisConfig, parent=None):
@@ -209,7 +209,7 @@ class PreviewWidget(QWidget):
 
     def _update_canvas_size(self):
         # max area the preview can fill
-        max_width = self.window().width()
+        max_width = self.window().width() - 50 # account for margins
         max_height = int(self.window().height() / 2 + self._get_preview_padding())
 
         # size minimap
