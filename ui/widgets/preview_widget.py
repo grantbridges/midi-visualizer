@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 from models import VisConfig, user_settings
 from utility import Util
 from ui.widgets.preview_canvas import PreviewCanvas
+from ui.widgets.minimap_canvas import MinimapCanvas
 from media import audio_provider
 
 import logging
@@ -81,11 +82,12 @@ class PreviewWidget(QWidget):
 
         self.settings_btn.setMenu(settings_menu)
 
-        self.slider = QSlider(Qt.Horizontal)
-        self.slider.setRange(0, 1000)
-        self.slider.setValue(0)
-        self.slider.valueChanged.connect(self._on_slider_changed)
+        # self.slider = QSlider(Qt.Horizontal)
+        # self.slider.setRange(0, 1000)
+        # self.slider.setValue(0)
+        # self.slider.valueChanged.connect(self._on_slider_changed)
 
+        self.minimap_canvas = MinimapCanvas(parent=self)
         self.preview_canvas = PreviewCanvas(parent=self)
 
         self._update_canvas_size()
@@ -114,9 +116,11 @@ class PreviewWidget(QWidget):
         top_row_layout.addWidget(self.settings_btn)
         v_layout.addLayout(top_row_layout)
 
-        slider_bar_layout = QHBoxLayout()
-        slider_bar_layout.addWidget(self.slider)
-        v_layout.addLayout(slider_bar_layout)
+        #slider_bar_layout = QHBoxLayout()
+        #slider_bar_layout.addWidget(self.slider)
+        #v_layout.addLayout(slider_bar_layout)
+        v_layout.addWidget(self.minimap_canvas, alignment=Qt.AlignCenter)
+        v_layout.addSpacing(5)
 
         v_layout.addWidget(self.preview_canvas, alignment=Qt.AlignCenter)
 
@@ -178,7 +182,7 @@ class PreviewWidget(QWidget):
 
     def _on_tick(self):
         # only update widget if playing and user isn't dragging slider
-        if self.playing and not self.slider.isSliderDown():
+        if self.playing: #and not self.slider.isSliderDown():
             if self.playing == True:
                 # calculate current time from how long has elapsed since play start
                 elapsed_sec = self.play_timer.elapsed() / 1000.0
@@ -217,7 +221,11 @@ class PreviewWidget(QWidget):
         max_width = self.window().width()
         max_height = int(self.window().height() / 2 + self._get_preview_padding())
 
-        # shape preview area to fit orientation
+        # size minimap
+        self.minimap_canvas.setFixedWidth(max_width)
+        self.minimap_canvas.setFixedHeight(20)
+
+        # size preview area - shape to fit orientation
         aspect_width, aspect_height = self.vis_config.orientation
         aspect_ratio = aspect_width / aspect_height
 
@@ -232,6 +240,15 @@ class PreviewWidget(QWidget):
         self.preview_canvas.setFixedHeight(preview_height)
 
     def _refresh_canvas(self):
+        self.minimap_canvas.refresh(
+            self.current_time,
+            self.vis_config,
+            self.start_time, 
+            self.end_time,
+            self.pitch_min, 
+            self.pitch_max
+        )
+
         self.preview_canvas.refresh(
             self.current_time,
             self.vis_config,
@@ -262,7 +279,7 @@ class PreviewWidget(QWidget):
         t_norm = (self.current_time - self.start_time) / (self.end_time - self.start_time)
         slider_value = int(t_norm * 1000)
         slider_value = max(0, min(1000, slider_value)) # clamp
-        self.slider.setValue(slider_value)
+        #self.slider.setValue(slider_value)
 
     def _on_mute_toggled(self, checked: bool):
         user_settings.mute_audio = checked
@@ -302,15 +319,17 @@ class PreviewWidget(QWidget):
         self._refresh_canvas()
 
     def _on_slider_changed(self, value):
+        # TODO
+        pass
         # only apply if this is a user-driven movement
-        if self.slider.isSliderDown():
-            if audio_provider.is_playing():
-                audio_provider.stop() # will resume during tick
+        # if self.slider.isSliderDown():
+        #     if audio_provider.is_playing():
+        #         audio_provider.stop() # will resume during tick
 
-            t_norm = value / 1000
-            self._set_current_time(self.start_time + t_norm * (self.end_time - self.start_time))
+        #     t_norm = value / 1000
+        #     self._set_current_time(self.start_time + t_norm * (self.end_time - self.start_time))
 
-            self._refresh_canvas()
+        #     self._refresh_canvas()
 
     def _play(self):
         self.playing = True
