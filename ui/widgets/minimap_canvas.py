@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from PySide6.QtWidgets import QMessageBox, QWidget
-from PySide6.QtGui import QFont, QPainter, QPen
+from PySide6.QtGui import QBrush, QFont, QPainter, QPen
 from PySide6.QtCore import QRect, Qt
 from common import Const, Color
 from models import VisConfig, user_settings
@@ -41,16 +41,39 @@ class MinimapCanvas(QWidget):
         try:
             rect = self.rect()
 
-            x_min = 0
-            x_max = rect.width()
+            preview_padding = 4
+            preview_rect = QRect(
+                rect.x(), 
+                rect.y() + preview_padding, 
+                rect.width(), 
+                rect.height() - 2 * preview_padding
+            )
 
             # draw background
-            painter.fillRect(rect, QUtil.rgb_to_qcolor(self.vis_config.bg_color))
+            painter.fillRect(preview_rect, QUtil.rgb_to_qcolor(self.vis_config.bg_color))
 
             # draw midi bars
             # TODO
 
             # draw cursor
-            
+            if self.end_time != self.start_time:
+                time_ratio = (self.current_time - self.start_time) / (self.end_time - self.start_time)
+                cursor_x = time_ratio * rect.width()
+
+                cursor_width = 3
+                cursor_border_thickness = 1
+
+                border_color = QUtil.rgb_to_qcolor(Color.BLACK)
+                fill_color = QUtil.rgb_to_qcolor(Color.WHITE)
+                painter.setPen(QPen(border_color, 1))
+                painter.setBrush(QBrush(fill_color))
+                painter.drawRect(
+                    cursor_x - cursor_width / 2, 
+                    cursor_border_thickness, 
+                    cursor_width, 
+                    rect.height() - 2 * cursor_border_thickness
+                )
+
+
         except Exception as e:
             logger.error(f"Minimap render failed: {str(e)}")

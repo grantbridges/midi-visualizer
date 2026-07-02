@@ -20,6 +20,8 @@ from media import audio_provider
 import logging
 logger = logging.getLogger("PreviewWidget")
 
+MINIMAP_HEIGHT = 28
+
 class PreviewWidget(QWidget):
     def __init__(self, vis_config: VisConfig, parent=None):
         super().__init__(parent)
@@ -120,7 +122,7 @@ class PreviewWidget(QWidget):
         #slider_bar_layout.addWidget(self.slider)
         #v_layout.addLayout(slider_bar_layout)
         v_layout.addWidget(self.minimap_canvas, alignment=Qt.AlignCenter)
-        v_layout.addSpacing(5)
+        #v_layout.addSpacing()
 
         v_layout.addWidget(self.preview_canvas, alignment=Qt.AlignCenter)
 
@@ -223,7 +225,7 @@ class PreviewWidget(QWidget):
 
         # size minimap
         self.minimap_canvas.setFixedWidth(max_width)
-        self.minimap_canvas.setFixedHeight(20)
+        self.minimap_canvas.setFixedHeight(MINIMAP_HEIGHT)
 
         # size preview area - shape to fit orientation
         aspect_width, aspect_height = self.vis_config.orientation
