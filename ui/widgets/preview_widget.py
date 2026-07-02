@@ -20,7 +20,7 @@ from media import audio_provider
 import logging
 logger = logging.getLogger("PreviewWidget")
 
-MINIMAP_HEIGHT = 36
+MINIMAP_HEIGHT = 32
 
 class PreviewWidget(QWidget):
     def __init__(self, vis_config: VisConfig, parent=None):

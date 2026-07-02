@@ -87,13 +87,13 @@ class MinimapCanvas(QWidget):
         painter.setRenderHint(QPainter.Antialiasing)
 
         try:
-            #if self._preview_cache_dirty or self._preview_cache is None:
-            #    self._rebuild_preview_cache()
-            #rect = self._get_preview_rect()
-            #painter.drawImage(rect.x(), rect.y(), self._preview_cache)
-
+            if self._preview_cache_dirty or self._preview_cache is None:
+               self._rebuild_preview_cache()
+            
             # draw preview data
-            self._draw_preview_data(painter, self._get_preview_rect())
+            rect = self.rect()
+            painter.drawImage(rect.x(), rect.y(), self._preview_cache)
+            #self._draw_preview_data(painter, self.rect())
 
             # draw cursor
             self._draw_cursor(painter)
@@ -103,7 +103,7 @@ class MinimapCanvas(QWidget):
 
     # draw helpers
     def _rebuild_preview_cache(self):       
-        rect = self._get_preview_rect()
+        rect = self.rect()
 
         # set up QImage for cache
         self._preview_cache = QImage(
@@ -144,7 +144,7 @@ class MinimapCanvas(QWidget):
                         self.pitch_max, 
                         rect, 
                         self.vis_config.vertical_padding_ratio, 
-                        self.vis_config.vertical_offset_ratio + .4 # TODO keep debugging sizing here
+                        self.vis_config.vertical_offset_ratio
                     )
                     painter.drawLine(x1, y, x2, y)
 
@@ -189,14 +189,3 @@ class MinimapCanvas(QWidget):
 
         ratio = (pitch - self.pitch_min) / (self.pitch_max - self.pitch_min)
         return ratio * height
-        
-    def _get_preview_rect(self) -> QRect:
-        '''
-        A height-reduced rect for the actual midi minimap drawing. The cursor 
-        is the only thing that gets the full canvas height.
-        '''
-        preview_padding = 4
-        return self.rect().adjusted(
-            0, preview_padding, 
-            0, -preview_padding
-        )
