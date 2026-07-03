@@ -180,22 +180,22 @@ class MainWindow(QMainWindow):
             self.on_bg_image_changed, 
             self.on_audio_changed
         )
+        self.tracks_tab = TracksTab(
+            self.vis_config, 
+            self.on_config_changed
+        )
         self.track_groups_tab = TrackGroupsTab(
             self.vis_config, 
             self.on_config_changed, 
             self.on_track_group_selected
-        )
-        self.tracks_tab = TracksTab(
-            self.vis_config, 
-            self.on_config_changed
         )
         self.notes_tab = NotesTab(
             self.vis_config, 
             self.on_config_changed
         )
         self.tabs.addTab(self.config_tab, "General")
-        self.tabs.addTab(self.track_groups_tab, "Track Groups")
         self.tabs.addTab(self.tracks_tab, "Tracks")
+        self.tabs.addTab(self.track_groups_tab, "Track Groups")
         self.tabs.addTab(self.notes_tab, "Note Effects")
         self.tabs.currentChanged.connect(self.on_tab_changed)
         
