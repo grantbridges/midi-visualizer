@@ -1,9 +1,10 @@
 from dataclasses import dataclass
 from typing import List
 from uuid import UUID
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QPoint, Qt, QPointList
 from PySide6.QtGui import QColor, QBrush
 from PySide6.QtWidgets import (
+    QDialog,
     QHBoxLayout,
     QPushButton,
     QSizePolicy,
@@ -14,9 +15,12 @@ from PySide6.QtWidgets import (
     QTableWidgetItem,
     QComboBox,
     QHeaderView,
+    QMenu,
+    QAbstractItemView
 )
-from models import VisConfig
+from models import VisConfig, Track, TrackGroup
 from utility import MidiUtil, Util, QUtil
+from ui.dialogs import CreateGroupDialog
 
 import logging
 logger = logging.getLogger("TracksTab")
@@ -40,6 +44,13 @@ class TracksTab(QWidget):
         # set button columns to shrink
         for col in [0, 1]:
             self.table.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeToContents)
+
+        # set up right-click handling
+        self.table.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.table.customContextMenuRequested.connect(self._on_table_context_menu)
+        # set whole-row multi-select
+        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.table.setSelectionMode(QAbstractItemView.ExtendedSelection)        
 
     def shutdown(self):
         pass
@@ -164,7 +175,7 @@ class TracksTab(QWidget):
         pass
 
     def _on_move_track_up(self, row: int):
-        if row == 0:
+        if row > 0:
             Util.swap(self.vis_config.tracks, row, row-1)
             
             self.refresh_ui()
@@ -212,7 +223,7 @@ class TracksTab(QWidget):
         self.on_changes_callback()
 
     # Getters
-    def _get_selected_rows(self):
+    def _get_selected_rows(self) -> List[int]:
         selected_rows: set[int] = set()
 
         for selection_range in self.table.selectedRanges():
@@ -220,3 +231,39 @@ class TracksTab(QWidget):
                 selected_rows.add(row)
 
         return sorted(selected_rows)
+    
+    def _get_selected_tracks(self) -> List[Track]:
+        rows = self._get_selected_rows()
+        tracks = []
+        for row in rows:
+            if row >= 0 and row < len(self.vis_config.tracks):
+                tracks.append(self.vis_config.tracks[row])
+        return tracks
+    
+    def _on_table_context_menu(self, pos: QPoint):
+        rows = self._get_selected_rows()
+
+        menu = QMenu(self)
+
+        create_group = menu.addAction("Group Selected Tracks...")
+
+        # create menu on right-click location
+        action = menu.exec(self.table.viewport().mapToGlobal(pos))
+
+        if action == create_group:
+            self._create_group_from_selected_tracks()
+
+    def _create_group_from_selected_tracks(self):
+        tracks = self._get_selected_tracks()
+
+        dialog = CreateGroupDialog(tracks, self)
+        if dialog.exec() == QDialog.Accepted:
+            track_group = dialog.get_track_group()
+            self.vis_config.add_track_group(track_group)
+
+            for t in tracks:
+                t.group_id = track_group.group_id
+
+            self.refresh_ui()
+            self.on_changes_callback()
+

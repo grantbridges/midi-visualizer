@@ -423,14 +423,21 @@ class VisConfig:
             for note in inst.notes:
                 track.notes.append(Note(note.pitch, note.velocity, note.start, note.end))
 
-
-    def update_track_groups(self, new_groups: List[TrackGroup]):
-        # copy our ui model back to vis config
-        self.track_groups = new_groups
-
+    def add_track_group(self, new_group: TrackGroup, insert_index: int = -1):
+        if insert_index == -1:
+            insert_index = len(self.track_groups)
+        self.track_groups.insert(insert_index, new_group)
         self._build_track_groups_cache()
 
-        # if any tracks are using removed group ids, clear them out
+    def remove_track_group(self, group_id: UUID):
+        # remove entry with this id
+        self.track_groups = [
+            group for group in self.track_groups
+            if group.group_id != group_id
+        ]
+        self._build_track_groups_cache()
+
+        # if any tracks are using removed group id, clear them out
         for t in self.tracks:
             if t.group_id is not None:
                 group = self.get_track_group_by_id(t.group_id)

@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (
     QBoxLayout,
     QCheckBox,
     QComboBox,
+    QDialogButtonBox,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -15,12 +16,25 @@ from PySide6.QtWidgets import (
 from ui.common import SectionDivider
 
 class LayoutUtil:
+    '''
+    Utility for cleanly laying out common widgets with labels.
+    Used extensively throughout tab layouts & dialogs for easy, common styling.
+    '''
     def __new__(cls):
         raise TypeError("LayoutUtil is static")
-    
+        
     @staticmethod
     def section(parent_layout: QBoxLayout, label: str):
         parent_layout.addWidget(SectionDivider(label))
+
+    @staticmethod
+    def label(parent_layout: QBoxLayout, label: QLabel) -> QWidget:
+        row = QWidget()
+        h_layout = QHBoxLayout(row)
+        h_layout.setContentsMargins(0, 0, 0, 0)
+        h_layout.addWidget(label)
+        parent_layout.addWidget(row)
+        return row
 
     @staticmethod
     def checkbox(parent_layout: QBoxLayout, label: str, checkbox: QCheckBox) -> QWidget:
@@ -97,6 +111,15 @@ class LayoutUtil:
         h_layout.addStretch()
         for button in buttons:
             h_layout.addWidget(button)
+        parent_layout.addWidget(row)
+        return row
+    
+    @staticmethod
+    def dialog_button_box(parent_layout: QBoxLayout, button_box: QDialogButtonBox) -> QWidget:
+        row = QWidget()
+        h_layout = QHBoxLayout(row)
+        h_layout.setContentsMargins(0, 0, 0, 0)
+        h_layout.addWidget(button_box)
         parent_layout.addWidget(row)
         return row
     

@@ -10,7 +10,8 @@ from PySide6.QtWidgets import (
     QLabel,
     QHeaderView,
     QStyle,
-    QSizePolicy
+    QSizePolicy,
+    QAbstractItemView
 )
 from common import RGB, Color
 from models import VisConfig, TrackGroup
@@ -29,9 +30,6 @@ class TrackGroupsTab(QWidget):
         self.on_changes_callback = on_changes_callback
         self.on_track_group_selected_callback = on_track_group_selected_callback
         self.vis_config = vis_config
-
-        # working ui model
-        self.track_groups = copy.deepcopy(self.vis_config.track_groups)
 
         # create controls
         self.add_row_btn = QPushButton("Add Group")
@@ -55,6 +53,9 @@ class TrackGroupsTab(QWidget):
             self.table.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeToContents)
         self.table.itemChanged.connect(self._on_item_changed)
         self.table.currentCellChanged.connect(self._on_cell_changed)
+        # set whole-row multi-select
+        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.table.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
     def shutdown(self):
         pass
@@ -77,10 +78,10 @@ class TrackGroupsTab(QWidget):
         # prevent callbacks while populating table
         self.table.blockSignals(True)
 
-        self.table.setRowCount(len(self.track_groups))
+        self.table.setRowCount(len(self.vis_config.track_groups))
         style = self.style()
 
-        for row, track_group in enumerate(self.track_groups):
+        for row, track_group in enumerate(self.vis_config.track_groups):
             col = 0
 
             # move up button
@@ -200,36 +201,35 @@ class TrackGroupsTab(QWidget):
         self.table.blockSignals(False)
 
     def update_model(self):
-        # copy our ui model back to vis config
-        groups = copy.deepcopy(self.track_groups)
-        self.vis_config.update_track_groups(groups)
+        # No work here - we update vis_config track groups directly on changes
+        pass
 
     def _refresh_clear_selection_btn(self):
         row = self.table.currentRow()
         self.clear_selection_btn.setDisabled(row == -1)
 
     def _refresh_clear_solo_btn(self):
-        solo_count = sum(tg.solo for tg in self.track_groups)
+        solo_count = sum(tg.solo for tg in self.vis_config.track_groups)
         self.clear_solo_btn.setDisabled(solo_count == 0)
 
     # Callbacks
     def _on_add_group(self):
-        insert_index = len(self.track_groups)
+        insert_index = len(self.vis_config.track_groups)
         # if we currently have rows selected, insert after end of selection
         selected_rows = self._get_selected_rows()
         if len(selected_rows) > 0:
             insert_index = selected_rows[-1] + 1
 
         # use sibling track group to seed properties from
-        copy_from = self.track_groups[insert_index - 1] if insert_index > 0 else self.track_groups[0]
+        copy_from = self.vis_config.track_groups[insert_index - 1] if insert_index > 0 else self.vis_config.track_groups[0]
         track_group = copy.deepcopy(copy_from)
         
         # generate new name and Id
-        track_group.name = f"Group {len(self.track_groups)+1}"
+        track_group.name = f"Group {len(self.vis_config.track_groups)+1}"
         track_group.group_id = uuid4()
-        self.track_groups.insert(insert_index, track_group)
+        self.vis_config.add_track_group(track_group, insert_index)
+
         self.on_changes_callback()
-        
         self.refresh_ui()
 
     def _on_clear_selection(self):
@@ -239,16 +239,15 @@ class TrackGroupsTab(QWidget):
         self._refresh_clear_selection_btn()
 
     def _on_clear_solo(self):
-        for tg in self.track_groups:
+        for tg in self.vis_config.track_groups:
             tg.solo = False
         
         self.refresh_ui()
         self.on_changes_callback()
 
     def _on_remove_group(self, row: int):
-        if 0 <= row < len(self.track_groups):
-
-            track_group = self.track_groups[row]
+        if 0 <= row < len(self.vis_config.track_groups):
+            track_group = self.vis_config.track_groups[row]
             tracks = self.vis_config.get_tracks_by_group_id(track_group.group_id)
 
             if len(tracks) > 0:
@@ -256,30 +255,29 @@ class TrackGroupsTab(QWidget):
                     self,
                     "Confirm Track Group Delete",
                     f"The \"{track_group.name}\" track group is being used by {len(tracks)} track{"s" if len(tracks) > 1 else ""} ({", ".join(x.name for x in tracks)}). Are you sure you want to delete?",
-                    QMessageBox.Cancel | QMessageBox.Delete,
+                    QMessageBox.Cancel | QMessageBox.Yes,
                     QMessageBox.Cancel,
                 )
 
-                if result != QMessageBox.Delete:
+                if result != QMessageBox.Yes:
                     return
 
-            self.track_groups.pop(row)
+            self.vis_config.remove_track_group(track_group.group_id)
             self.refresh_ui()
 
             self.on_changes_callback()
 
     def _on_move_group_up(self, row: int):
         if row > 0:
-            # swap
-            self.track_groups[row-1], self.track_groups[row] = self.track_groups[row], self.track_groups[row-1]
+            Util.swap(self.vis_config.track_groups, row-1, row)
             self.refresh_ui()
 
             self.on_changes_callback()
 
     def _on_move_group_down(self, row: int):
-        if row < len(self.track_groups) - 1:
+        if row < len(self.vis_config.track_groups) - 1:
             # swap
-            self.track_groups[row+1], self.track_groups[row] = self.track_groups[row], self.track_groups[row+1]
+            Util.swap(self.vis_config.track_groups, row+1, row)
             self.refresh_ui()
 
             self.on_changes_callback()
@@ -288,7 +286,7 @@ class TrackGroupsTab(QWidget):
         row = item.row()
         col = item.column()
 
-        track_group = self.track_groups[row]
+        track_group = self.vis_config.track_groups[row]
 
         if col == self.track_columns.index("Name"):
             track_group.name = item.text()
@@ -298,8 +296,8 @@ class TrackGroupsTab(QWidget):
         self.on_changes_callback()
 
     def _on_cell_changed(self, row: int, col: int, prev_row: int, prev_col: int):
-        if row >= 0 and row < len(self.track_groups):
-            track_group = self.track_groups[row]
+        if row >= 0 and row < len(self.vis_config.track_groups):
+            track_group = self.vis_config.track_groups[row]
             self.on_track_group_selected_callback(track_group.group_id)
         else:
             self.on_track_group_selected_callback(None)
@@ -310,7 +308,7 @@ class TrackGroupsTab(QWidget):
         if self.table.signalsBlocked():
             return
         
-        track_group = self.track_groups[row]
+        track_group = self.vis_config.track_groups[row]
         track_group.solo = checked
 
         self._refresh_clear_solo_btn()
@@ -321,7 +319,7 @@ class TrackGroupsTab(QWidget):
         if self.table.signalsBlocked():
             return
         
-        track_group = self.track_groups[row]
+        track_group = self.vis_config.track_groups[row]
         track_group.visible = checked
         self.on_changes_callback()
 
@@ -329,7 +327,7 @@ class TrackGroupsTab(QWidget):
         if self.table.signalsBlocked():
             return
         
-        track_group = self.track_groups[row]
+        track_group = self.vis_config.track_groups[row]
         track_group.color = color
         self.on_changes_callback()
 
@@ -337,7 +335,7 @@ class TrackGroupsTab(QWidget):
         if self.table.signalsBlocked():
             return
         
-        track_group = self.track_groups[row]
+        track_group = self.vis_config.track_groups[row]
         track_group.alpha = alpha
         self.on_changes_callback()
     
@@ -345,7 +343,7 @@ class TrackGroupsTab(QWidget):
         if self.table.signalsBlocked():
             return
         
-        track_group = self.track_groups[row]
+        track_group = self.vis_config.track_groups[row]
         track_group.note_sparks_enabled = checked
         self.on_changes_callback()
     
@@ -353,7 +351,7 @@ class TrackGroupsTab(QWidget):
         if self.table.signalsBlocked():
             return
         
-        track_group = self.track_groups[row]
+        track_group = self.vis_config.track_groups[row]
         track_group.note_velocity_fx_enabled = checked
         self.on_changes_callback()
 
@@ -361,7 +359,7 @@ class TrackGroupsTab(QWidget):
         if self.table.signalsBlocked():
             return
         
-        track_group = self.track_groups[row]
+        track_group = self.vis_config.track_groups[row]
         track_group.bar_height_ratio = Util.display_to_internal(value, 1.0, 10.0, 0.001, 1.0)
         self.on_changes_callback()
 
@@ -369,7 +367,7 @@ class TrackGroupsTab(QWidget):
         if self.table.signalsBlocked():
             return
         
-        track_group = self.track_groups[row]
+        track_group = self.vis_config.track_groups[row]
         track_group.bar_sec_across_screen = Util.display_to_internal(value, 10.0, 0.1, 0.1, 10.0)
         self.on_changes_callback()
 
@@ -377,10 +375,9 @@ class TrackGroupsTab(QWidget):
         if self.table.signalsBlocked():
             return
         
-        track_group = self.track_groups[row]
+        track_group = self.vis_config.track_groups[row]
         track_group.pitch_offset = value
         self.on_changes_callback()
-
 
     # Getters
     def _get_selected_rows(self):
