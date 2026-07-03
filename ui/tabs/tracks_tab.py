@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
 )
 from models import VisConfig, Track, TrackGroup
 from utility import MidiUtil, Util, QUtil
-from ui.dialogs import CreateGroupDialog
+from ui.dialogs import GroupTracksDialog
 
 import logging
 logger = logging.getLogger("TracksTab")
@@ -194,12 +194,8 @@ class TracksTab(QWidget):
         group = group_combo.currentData()
         group_id = UUID(group) if group is not None else None
 
-        # get all selected rows, plus the row this group was changed on
-        # so we can apply a bulk change
-        rows = set([row] + self._get_selected_rows())
-        for row in rows:
-            track = self.vis_config.tracks[row]
-            track.group_id = group_id
+        track = self.vis_config.tracks[row]
+        track.group_id = group_id
 
         self.refresh_ui()
         self.on_changes_callback()
@@ -251,19 +247,28 @@ class TracksTab(QWidget):
         action = menu.exec(self.table.viewport().mapToGlobal(pos))
 
         if action == create_group:
-            self._create_group_from_selected_tracks()
+            self._group_from_selected_tracks()
 
-    def _create_group_from_selected_tracks(self):
-        tracks = self._get_selected_tracks()
+    def _group_from_selected_tracks(self):
+        selected_tracks = self._get_selected_tracks()
 
-        dialog = CreateGroupDialog(tracks, self)
-        if dialog.exec() == QDialog.Accepted:
+        dialog = GroupTracksDialog(selected_tracks, self.vis_config, self)
+
+        if dialog.exec() != QDialog.Accepted:
+            return
+
+        group_id: UUID | None = None
+
+        if dialog.get_create_new_group():
             track_group = dialog.get_track_group()
             self.vis_config.add_track_group(track_group)
+            group_id = track_group.group_id
+        else:
+            group_id = dialog.get_selected_group_id()
 
-            for t in tracks:
-                t.group_id = track_group.group_id
+        for track in selected_tracks:
+            track.group_id = group_id
 
-            self.refresh_ui()
-            self.on_changes_callback()
+        self.refresh_ui()
+        self.on_changes_callback()
 

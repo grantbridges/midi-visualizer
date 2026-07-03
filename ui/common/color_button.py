@@ -11,7 +11,6 @@ from PySide6.QtWidgets import (
     QMenu,
 )
 
-
 class ColorButton(QPushButton):
     valueChanged = Signal(tuple)
 
@@ -24,6 +23,10 @@ class ColorButton(QPushButton):
         self.setObjectName("ColorButton")
 
         self.clicked.connect(self._pick_color)
+        self.refresh()
+
+    def setEnabled(self, enabled: bool):
+        super().setEnabled(enabled)
         self.refresh()
 
     def setDisabled(self, disabled: bool):
