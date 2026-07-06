@@ -132,6 +132,7 @@ class NotesTab(QWidget):
         column.addStretch()
 
         root_h_layout.addLayout(v_left_layout, 1)
+        root_h_layout.addSpacing(10)
         root_h_layout.addLayout(v_right_layout, 1)
 
         content_layout.addLayout(root_h_layout)

@@ -15,12 +15,14 @@ from models import VisConfig, user_settings
 from utility import Util
 from ui.widgets.preview_canvas import PreviewCanvas
 from ui.widgets.minimap_canvas import MinimapCanvas
+from ui.common import Icons
 from media import audio_provider
-
 import logging
 logger = logging.getLogger("PreviewWidget")
 
 PREVIEW_MIN_HEIGHT = 240
+
+# qta-browser
 
 class PreviewWidget(QWidget):
     def __init__(self, vis_config: VisConfig, parent=None):
@@ -46,24 +48,26 @@ class PreviewWidget(QWidget):
         self.pitch_max: int = 0
 
         # create controls
-        self.play_btn = QPushButton("") # text set in refresh ui
+        self.play_btn = QPushButton() # icon set in refresh ui
         self.play_btn.clicked.connect(self._toggle_play)
-        self.reset_btn = QPushButton("⏮ Reset")
+        self.reset_btn = QPushButton()
+        self.reset_btn.setIcon(Icons.rewind())
         self.reset_btn.clicked.connect(self._reset)
-        self.mute_checkbox = QCheckBox("Mute")
-        self.mute_checkbox.setChecked(user_settings.mute_audio)
-        self.mute_checkbox.toggled.connect(self._on_mute_toggled)
-        self.loop_checkbox = QCheckBox("Loop")
-        self.loop_checkbox.setChecked(user_settings.loop_preview)
-        self.loop_checkbox.toggled.connect(self._on_loop_toggled)
+        self.mute_btn = QPushButton() # icon set in refresh UI
+        self.mute_btn.clicked.connect(self._toggle_mute)
+        self.loop_btn = QPushButton() # icon set in refresh ui
+        self.loop_btn.clicked.connect(self._on_loop_toggled)
         self.step_input = QDoubleSpinBox(decimals=2, value = 0.05, minimum=0.01, maximum=10.00, singleStep=0.01, suffix=" sec")
-        self.step_fwd_btn = QPushButton("⏩︎")
+        self.step_fwd_btn = QPushButton()
+        self.step_fwd_btn.setIcon(Icons.skip_fwd())
         self.step_fwd_btn.clicked.connect(lambda: self._step(self.step_input.value()))
-        self.step_back_btn = QPushButton("⏪︎")
+        self.step_back_btn = QPushButton()
+        self.step_back_btn.setIcon(Icons.skip_back())
         self.step_back_btn.clicked.connect(lambda: self._step(-1 * self.step_input.value()))
 
         # create button
-        self.settings_btn = QPushButton("⚙")
+        self.settings_btn = QPushButton()
+        self.settings_btn.setIcon(Icons.gear())
         self.settings_btn.setFixedWidth(32)
 
         # create settings menu
@@ -95,21 +99,22 @@ class PreviewWidget(QWidget):
 
         group_spacing = 25
 
-        top_row_layout.addWidget(self.play_btn)
+        top_row_layout.addWidget(self.mute_btn)
+        top_row_layout.addStretch()
         top_row_layout.addWidget(self.reset_btn)
-        top_row_layout.addWidget(self.loop_checkbox)
         top_row_layout.addSpacing(group_spacing)
         top_row_layout.addWidget(self.step_back_btn)
-        top_row_layout.addWidget(self.step_input)
+        top_row_layout.addWidget(self.play_btn)
+        #top_row_layout.addWidget(self.step_input)
         top_row_layout.addWidget(self.step_fwd_btn)
         top_row_layout.addSpacing(group_spacing)
-        top_row_layout.addWidget(self.mute_checkbox)
+        top_row_layout.addWidget(self.loop_btn)
         top_row_layout.addStretch()
         top_row_layout.addWidget(self.settings_btn)
 
-        v_layout.addWidget(self.top_bar_widget)
         v_layout.addWidget(self.minimap_canvas)
         v_layout.addWidget(self.preview_canvas, stretch=1)
+        v_layout.addWidget(self.top_bar_widget)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -155,11 +160,17 @@ class PreviewWidget(QWidget):
         self.refresh_ui()
 
     def refresh_ui(self):
-        self.play_btn.setText("▶ Play" if not self.playing else "⏹ Stop")
+        self.play_btn.setIcon(Icons.play() if not self.playing else Icons.pause())
+
         self.step_back_btn.setDisabled(self.playing)
         self.step_fwd_btn.setDisabled(self.playing)
         self.step_input.setDisabled(self.playing)
-        self.mute_checkbox.setDisabled(not self.vis_config.has_audio())
+
+        self.loop_btn.setIcon(Icons.arrow_right_thin() if not user_settings.loop_preview else Icons.loop())
+
+        self.mute_btn.setIcon(Icons.audio() if not user_settings.mute_audio else Icons.muted())
+        self.mute_btn.setDisabled(not self.vis_config.has_audio())
+
 
     def set_selected_group_id(self, group_id: UUID | None):
         self.preview_canvas.set_selected_group_id(group_id)
@@ -237,15 +248,19 @@ class PreviewWidget(QWidget):
             self._refresh_canvas()
             self.refresh_ui()
 
-    def _on_mute_toggled(self, checked: bool):
-        user_settings.mute_audio = checked
+    def _toggle_mute(self):
+        user_settings.mute_audio = not user_settings.mute_audio
         user_settings.save()
+
+        self.refresh_ui()
 
         audio_provider.refresh_mute_state()
 
-    def _on_loop_toggled(self, checked: bool):
-        user_settings.loop_preview = checked
+    def _on_loop_toggled(self):
+        user_settings.loop_preview = not user_settings.loop_preview
         user_settings.save()
+
+        self.refresh_ui()
 
     def _create_settings_action(self, label: str, property_name: str) -> QAction:
         action = QAction(label, self)

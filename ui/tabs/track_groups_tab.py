@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
 from common import RGB, Color
 from models import VisConfig, TrackGroup
 from utility import Util, QUtil
-from ui.common import ColorButton, TableCheckbox, TableSpinbox, TableDoubleSpinbox
+from ui.common import ColorButton, TableCheckbox, TableSpinbox, TableDoubleSpinbox, LayoutUtil, Icons
 import copy
 from uuid import uuid4
 
@@ -86,20 +86,18 @@ class TrackGroupsTab(QWidget):
 
             # move up button
             up_btn = QPushButton()
-            up_btn.setIcon(style.standardIcon(QStyle.SP_ArrowUp))
-            up_btn.setFixedSize(32, 24)
+            up_btn.setIcon(Icons.arrow_up_bold())
             up_btn.setDisabled(row == 0)
             up_btn.clicked.connect(lambda _, row=row: self._on_move_group_up(row))
-            self.table.setCellWidget(row, col, up_btn)
+            self.table.setCellWidget(row, col, LayoutUtil.center(up_btn))
             col += 1
 
             # move down button
             down_btn = QPushButton()
-            down_btn.setIcon(style.standardIcon(QStyle.SP_ArrowDown))
-            down_btn.setFixedSize(32, 24)
+            down_btn.setIcon(Icons.arrow_down_bold())
             down_btn.setDisabled(row == len(self.vis_config.track_groups) - 1)
             down_btn.clicked.connect(lambda _, row=row: self._on_move_group_down(row))
-            self.table.setCellWidget(row, col, down_btn)
+            self.table.setCellWidget(row, col, LayoutUtil.center(down_btn))
             col += 1
 
             # name
@@ -189,12 +187,9 @@ class TrackGroupsTab(QWidget):
 
             # delete button
             delete_btn = QPushButton()
-            delete_btn.setIcon(style.standardIcon(QStyle.SP_TrashIcon))
-            delete_btn.setFixedSize(32, 24)
-            QUtil.color_button(delete_btn, Color.DELETE_RED)
+            delete_btn.setIcon(Icons.trash_can())
             delete_btn.clicked.connect(lambda _, row=row: self._on_remove_group(row))
-
-            self.table.setCellWidget(row, col, delete_btn)
+            self.table.setCellWidget(row, col, LayoutUtil.center(delete_btn))
             col += 1
 
         # resume callbacks

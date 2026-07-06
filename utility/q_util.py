@@ -20,25 +20,30 @@ class QUtil:
 
         palette = QPalette()
 
+        # Normal colors
         palette.setColor(QPalette.Window, QColor(37, 37, 37))
         palette.setColor(QPalette.WindowText, Qt.white)
-
         palette.setColor(QPalette.Base, QColor(30, 30, 30))
         palette.setColor(QPalette.AlternateBase, QColor(45, 45, 45))
-
-        palette.setColor(QPalette.ToolTipBase, QColor(45, 45, 45))
-        palette.setColor(QPalette.ToolTipText, Qt.white)
-
         palette.setColor(QPalette.Text, Qt.white)
         palette.setColor(QPalette.Button, QColor(45, 45, 45))
         palette.setColor(QPalette.ButtonText, Qt.white)
-
-        palette.setColor(QPalette.BrightText, Qt.red)
-
         palette.setColor(QPalette.Highlight, QColor(90, 120, 180))
         palette.setColor(QPalette.HighlightedText, Qt.white)
-
         palette.setColor(QPalette.PlaceholderText, QColor(160, 160, 160))
+
+        # Disabled colors
+        palette.setColor(QPalette.Disabled, QPalette.WindowText, QColor(120, 120, 120))
+        palette.setColor(QPalette.Disabled, QPalette.Text, QColor(120, 120, 120))
+        palette.setColor(QPalette.Disabled, QPalette.ButtonText, QColor(120, 120, 120))
+        palette.setColor(QPalette.Disabled, QPalette.PlaceholderText, QColor(100, 100, 100))
+
+        palette.setColor(QPalette.Disabled, QPalette.Base, QColor(38, 38, 38))
+        palette.setColor(QPalette.Disabled, QPalette.Button, QColor(38, 38, 38))
+        palette.setColor(QPalette.Disabled, QPalette.Window, QColor(37, 37, 37))
+
+        palette.setColor(QPalette.Disabled, QPalette.Highlight, QColor(55, 55, 55))
+        palette.setColor(QPalette.Disabled, QPalette.HighlightedText, QColor(130, 130, 130))
 
         app.setPalette(palette)
     

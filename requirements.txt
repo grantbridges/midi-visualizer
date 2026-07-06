@@ -5,3 +5,4 @@ opencv-python==4.13.0.92
 pretty_midi==0.2.11
 Pympler==1.1
 PySide6==6.11.0
+QtAwesome==1.4.2

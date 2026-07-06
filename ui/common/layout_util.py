@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QWidget,
 )
+from PySide6.QtCore import Qt
 
 from ui.common import SectionDivider
 
@@ -136,3 +137,19 @@ class LayoutUtil:
             h_layout.addWidget(clear_btn)
         parent_layout.addWidget(row)
         return row
+    
+    @staticmethod
+    def center(widget: QWidget) -> QWidget:
+        '''
+        Creates a generic wrapper widget, adds center
+        alignment, adds input widget to wrapper, then returns wrapper
+        '''
+        wrapper = QWidget()
+
+        layout = QHBoxLayout(wrapper)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setAlignment(Qt.AlignCenter)
+
+        layout.addWidget(widget)
+
+        return wrapper

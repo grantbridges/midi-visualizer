@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
 )
 from pathlib import Path
 from models import VisConfig, RenderFormat, Resolution
-from ui.common import LayoutUtil
+from ui.common import LayoutUtil, Icons
 
 @dataclass
 class ExportOptions:
@@ -39,7 +39,8 @@ class ExportOptionsDialog(QDialog):
         output_dir = vis_config.export_dir if vis_config.export_dir else str(Path.home() / "Desktop")
         self.output_dir_input = QLineEdit(output_dir)
         self.output_dir_input.setReadOnly(True)
-        browse_btn = QPushButton("…")
+        browse_btn = QPushButton()
+        browse_btn.setIcon(Icons.ellipsis())
         browse_btn.clicked.connect(self.browse_output_dir)
 
         # Filename input
@@ -97,9 +98,7 @@ class ExportOptionsDialog(QDialog):
 
         export_btn.setDefault(True) # highlight
 
-        # resize and fix
-        self.adjustSize()
-        self.setFixedSize(self.size())
+        self.setFixedSize(360, 240)
 
     def browse_output_dir(self):
         folder = QFileDialog.getExistingDirectory(self, "Choose Output Folder", self.output_dir_input.text())

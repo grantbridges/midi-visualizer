@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
     QAbstractItemView
 )
 from models import VisConfig, Track, TrackGroup
+from ui.common import LayoutUtil, Icons
 from utility import MidiUtil, Util, QUtil
 from ui.dialogs import GroupTracksDialog
 
@@ -78,20 +79,18 @@ class TracksTab(QWidget):
 
             # move up button
             up_btn = QPushButton()
-            up_btn.setIcon(style.standardIcon(QStyle.SP_ArrowUp))
-            up_btn.setFixedSize(32, 24)
+            up_btn.setIcon(Icons.arrow_up_bold())
             up_btn.setDisabled(row == 0)
             up_btn.clicked.connect(lambda _, row=row: self._on_move_track_up(row))
-            self.table.setCellWidget(row, col, up_btn)
+            self.table.setCellWidget(row, col, LayoutUtil.center(up_btn))
             col += 1
 
             # move down button
             down_btn = QPushButton()
-            down_btn.setIcon(style.standardIcon(QStyle.SP_ArrowDown))
-            down_btn.setFixedSize(32, 24)
+            down_btn.setIcon(Icons.arrow_down_bold())
             down_btn.setDisabled(row == len(self.vis_config.tracks) - 1)
             down_btn.clicked.connect(lambda _, row=row: self._on_move_track_down(row))
-            self.table.setCellWidget(row, col, down_btn)
+            self.table.setCellWidget(row, col, LayoutUtil.center(down_btn))
             col += 1
 
             # name

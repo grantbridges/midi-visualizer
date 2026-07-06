@@ -1,5 +1,6 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QMessageBox,
     QScrollArea,
     QSpinBox,
     QDoubleSpinBox,
@@ -15,7 +16,7 @@ from PySide6.QtWidgets import (
 )
 
 from models import VisConfig, BackgroundMode, Orientation
-from ui.common import ColorButton, LayoutUtil
+from ui.common import ColorButton, LayoutUtil, Icons
 
 class ConfigTab(QWidget):
     def __init__(self, 
@@ -54,15 +55,19 @@ class ConfigTab(QWidget):
         self.bg_color_button.valueChanged.connect(self._on_changes)
 
         self.bg_image_file_input = QLineEdit(readOnly=True)
-        self.bg_image_file_browse_btn = QPushButton("…")
+        self.bg_image_file_browse_btn = QPushButton()
+        self.bg_image_file_browse_btn.setIcon(Icons.ellipsis())
         self.bg_image_file_browse_btn.clicked.connect(self._browse_bg_image_file)
-        self.bg_image_file_clear_btn = QPushButton("x")
+        self.bg_image_file_clear_btn = QPushButton()
+        self.bg_image_file_clear_btn.setIcon(Icons.trash_can())
         self.bg_image_file_clear_btn.clicked.connect(self._clear_bg_image_file)
 
         self.bg_video_file_input = QLineEdit(readOnly=True)
-        self.bg_video_file_browse_btn = QPushButton("…")
+        self.bg_video_file_browse_btn = QPushButton()
+        self.bg_video_file_browse_btn.setIcon(Icons.ellipsis())
         self.bg_video_file_browse_btn.clicked.connect(self._browse_bg_video_file)
-        self.bg_video_file_clear_btn = QPushButton("x")
+        self.bg_video_file_clear_btn = QPushButton()
+        self.bg_video_file_clear_btn.setIcon(Icons.trash_can())
         self.bg_video_file_clear_btn.clicked.connect(self._clear_bg_video_file)
         self.bg_video_time_offset_input = QDoubleSpinBox(decimals=2, minimum=-10.0, maximum=10.0, singleStep=0.01, suffix=" sec")
         self.bg_video_time_offset_input.valueChanged.connect(self._on_changes)
@@ -79,9 +84,11 @@ class ConfigTab(QWidget):
         self.use_audio_checkbox = QCheckBox()
         self.use_audio_checkbox.toggled.connect(self._on_changes)
         self.audio_file_input = QLineEdit(readOnly=True)
-        self.audio_file_browse_btn = QPushButton("…")
+        self.audio_file_browse_btn = QPushButton()
+        self.audio_file_browse_btn.setIcon(Icons.ellipsis())
         self.audio_file_browse_btn.clicked.connect(self._browse_audio_file)
-        self.audio_file_clear_btn = QPushButton("x")
+        self.audio_file_clear_btn = QPushButton()
+        self.audio_file_clear_btn.setIcon(Icons.trash_can())
         self.audio_file_clear_btn.clicked.connect(self._clear_audio_file)
 
         self.show_playhead_checkbox = QCheckBox()
@@ -210,6 +217,7 @@ class ConfigTab(QWidget):
         column.addStretch()
 
         root_h_layout.addLayout(v_left_layout, 1)
+        root_h_layout.addSpacing(10)
         root_h_layout.addLayout(v_right_layout, 1)
 
         content_layout.addLayout(root_h_layout)
@@ -355,6 +363,17 @@ class ConfigTab(QWidget):
             self._on_bg_image_selected()
 
     def _clear_bg_image_file(self):
+        result = QMessageBox.question(
+            self,
+            "Confirm Image File Remove",
+            f"Are you sure you want to remove the selected background image file?",
+            QMessageBox.Cancel | QMessageBox.Yes,
+            QMessageBox.Cancel,
+        )
+
+        if result != QMessageBox.Yes:
+            return
+
         self.bg_image_file_input.setText("")
         self._on_bg_image_selected()
 
@@ -373,6 +392,17 @@ class ConfigTab(QWidget):
             self._on_bg_video_selected()
 
     def _clear_bg_video_file(self):
+        result = QMessageBox.question(
+            self,
+            "Confirm Video File Remove",
+            f"Are you sure you want to remove the selected background video file?",
+            QMessageBox.Cancel | QMessageBox.Yes,
+            QMessageBox.Cancel,
+        )
+
+        if result != QMessageBox.Yes:
+            return
+
         self.bg_video_file_input.setText("")
         self._on_bg_video_selected()
 
@@ -391,6 +421,17 @@ class ConfigTab(QWidget):
             self._on_audio_selected()
 
     def _clear_audio_file(self):
+        result = QMessageBox.question(
+            self,
+            "Confirm Audio File Remove",
+            f"Are you sure you want to remove the selected audio file?",
+            QMessageBox.Cancel | QMessageBox.Yes,
+            QMessageBox.Cancel,
+        )
+
+        if result != QMessageBox.Yes:
+            return
+        
         self.audio_file_input.setText("")
         self._on_audio_selected()
 

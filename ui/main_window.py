@@ -226,14 +226,14 @@ class MainWindow(QMainWindow):
 
         splitter.setStyleSheet("""
             QSplitter::handle:vertical {
-                margin-top: 5px;
+                margin-bottom: 5px;
                 background-color: #3a3a3a;
             }
         """)
 
-        splitter.addWidget(self.tabs)
         splitter.addWidget(self.preview_widget)
-        splitter.setSizes([500, 500])
+        splitter.addWidget(self.tabs)
+        splitter.setSizes([700, 300])
         
         root.addWidget(splitter)
 
