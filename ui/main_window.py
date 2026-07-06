@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QApplication,
     QLabel,
     QMainWindow,
+    QSplitter,
     QTabWidget,
     QWidget,
     QVBoxLayout,
@@ -218,8 +219,23 @@ class MainWindow(QMainWindow):
 
         # Layout
         root = QVBoxLayout(central)
-        root.addWidget(self.tabs, 1)
-        root.addWidget(self.preview_widget, 1)
+
+        splitter = QSplitter(Qt.Vertical)
+        splitter.setChildrenCollapsible(False)
+        splitter.setHandleWidth(2)
+
+        splitter.setStyleSheet("""
+            QSplitter::handle:vertical {
+                margin-top: 5px;
+                background-color: #3a3a3a;
+            }
+        """)
+
+        splitter.addWidget(self.tabs)
+        splitter.addWidget(self.preview_widget)
+        splitter.setSizes([500, 500])
+        
+        root.addWidget(splitter)
 
         self.config_tab.layout_controls()
         self.track_groups_tab.layout_controls()

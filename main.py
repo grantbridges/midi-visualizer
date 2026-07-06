@@ -4,7 +4,7 @@ import logging
 from PySide6.QtWidgets import QApplication
 from common import Const
 from ui import MainWindow
-from utility import LogUtil
+from utility import LogUtil, QUtil
 from models import user_settings
 from media import audio_provider, video_provider, image_provider
 
@@ -13,6 +13,7 @@ logger = logging.getLogger("Main")
 # create main window and start
 def main():
     app = QApplication(sys.argv)
+    QUtil.apply_dark_theme(app)
     app.setApplicationName(Const.APP_NAME)
 
     # set up logger after app is created
@@ -32,8 +33,8 @@ def main():
     image_provider.init()
 
     # start UI
-    editor = MainWindow()
-    editor.show()
+    window = MainWindow()
+    window.show()
 
     def run_app():
         exit_code = app.exec()
