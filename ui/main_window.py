@@ -442,17 +442,6 @@ class MainWindow(QMainWindow):
         else:  # Cancel
             event.ignore()
 
-    def resizeEvent(self, event: QResizeEvent):
-        new_size = event.size()
-
-        width = new_size.width()
-        height = new_size.height()
-
-        if self.preview_widget is not None:
-            self.preview_widget.handle_resize()
-
-        super().resizeEvent(event)
-
     # action callbacks
 
     def on_new_project_action(self):

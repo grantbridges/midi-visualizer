@@ -78,8 +78,8 @@ class MidiRenderUtil:
     @staticmethod
     def draw_notes(painter: QPainter, current_time: float, vis_config: VisConfig, pitch_min: int, pitch_max:int, rect: QRect):
         # convert ratios to pixel values
-        playhead_x = rect.width() * vis_config.playhead_pos_ratio
-        note_fade_distance = playhead_x * vis_config.note_fadeout_ratio
+        playhead_x = rect.left() + rect.width() * vis_config.playhead_pos_ratio
+        note_fade_distance = (playhead_x - rect.left()) * vis_config.note_fadeout_ratio
 
         # draw playhead line that notes will cross when they "play"
         if vis_config.show_playhead:
@@ -87,7 +87,7 @@ class MidiRenderUtil:
             pen = QPen(color)
             pen.setWidth(vis_config.playhead_thickness_ratio * rect.width())
             painter.setPen(pen)
-            painter.drawLine(playhead_x, 0, playhead_x, rect.height())
+            painter.drawLine(playhead_x, rect.top(), playhead_x, rect.bottom())
 
         # build render tracks
         tracks: List[RenderTrack] = []
@@ -129,7 +129,7 @@ class MidiRenderUtil:
                 x = int(playhead_x + (note.start - current_time) * pixels_per_sec)
                 w = int(note.duration * pixels_per_sec)
                 x_right = x + w
-                if x > rect.width() or x_right < 0:
+                if x > rect.right() or x_right < rect.left():
                     # note isn't in visible area - skip rendering
                     continue
 

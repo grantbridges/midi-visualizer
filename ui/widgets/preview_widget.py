@@ -20,7 +20,7 @@ from media import audio_provider
 import logging
 logger = logging.getLogger("PreviewWidget")
 
-MINIMAP_HEIGHT = 32
+PREVIEW_MIN_HEIGHT = 240
 
 class PreviewWidget(QWidget):
     def __init__(self, vis_config: VisConfig, parent=None):
@@ -45,9 +45,6 @@ class PreviewWidget(QWidget):
         self.pitch_min: int = 0
         self.pitch_max: int = 0
 
-        self.preview_padding_min = -100
-        self.preview_padding_max = 100
-
         # create controls
         self.play_btn = QPushButton("") # text set in refresh ui
         self.play_btn.clicked.connect(self._toggle_play)
@@ -64,8 +61,6 @@ class PreviewWidget(QWidget):
         self.step_fwd_btn.clicked.connect(lambda: self._step(self.step_input.value()))
         self.step_back_btn = QPushButton("⏪︎")
         self.step_back_btn.clicked.connect(lambda: self._step(-1 * self.step_input.value()))
-        self.expand_btn = QPushButton("⇅")
-        self.expand_btn.clicked.connect(self._toggle_expanded)
 
         # create button
         self.settings_btn = QPushButton("⚙")
@@ -88,37 +83,36 @@ class PreviewWidget(QWidget):
         self.minimap_canvas.valueChanged.connect(self._on_slider_changed)
         self.preview_canvas = PreviewCanvas(parent=self)
 
-        self._update_canvas_size()
-
     def shutdown(self):
         self.timer.stop()
 
     def layout_controls(self):
-        # layout controls
         v_layout = QVBoxLayout(self)
 
+        self.top_bar_widget = QWidget()
+        top_row_layout = QHBoxLayout(self.top_bar_widget)
+        top_row_layout.setContentsMargins(0, 0, 0, 0)
+
         group_spacing = 25
-        top_row_layout = QHBoxLayout()
+
         top_row_layout.addWidget(self.play_btn)
         top_row_layout.addWidget(self.reset_btn)
         top_row_layout.addWidget(self.loop_checkbox)
         top_row_layout.addSpacing(group_spacing)
         top_row_layout.addWidget(self.step_back_btn)
-        top_row_layout.addWidget(self.step_fwd_btn)
         top_row_layout.addWidget(self.step_input)
+        top_row_layout.addWidget(self.step_fwd_btn)
         top_row_layout.addSpacing(group_spacing)
         top_row_layout.addWidget(self.mute_checkbox)
-        top_row_layout.addSpacing(group_spacing)
-        top_row_layout.addWidget(self.expand_btn)
         top_row_layout.addStretch()
         top_row_layout.addWidget(self.settings_btn)
-        v_layout.addLayout(top_row_layout)
 
+        v_layout.addWidget(self.top_bar_widget)
         v_layout.addWidget(self.minimap_canvas)
-        v_layout.addWidget(self.preview_canvas, alignment=Qt.AlignCenter)
+        v_layout.addWidget(self.preview_canvas, stretch=1)
 
-    def handle_resize(self):
-        self._update_canvas_size()
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
         self.minimap_canvas.set_dirty()
 
     def handle_export_starting(self):
@@ -156,7 +150,6 @@ class PreviewWidget(QWidget):
                     # apply clamping to ensure current time stays in bounds
                     self._set_current_time(Util.clamp(self.current_time, self.start_time, self.end_time))
 
-        self._update_canvas_size() # in case orientation changed
         self.minimap_canvas.set_dirty()
         self._refresh_canvas()
         self.refresh_ui()
@@ -209,28 +202,6 @@ class PreviewWidget(QWidget):
 
             self._refresh_canvas()
 
-    def _update_canvas_size(self):
-        # max area the preview can fill
-        max_width = self.window().width() - 50 # account for margins
-        max_height = int(self.window().height() / 2 + self._get_preview_padding())
-
-        # size minimap
-        #self.minimap_canvas.setFixedWidth(max_width)
-        self.minimap_canvas.setFixedHeight(MINIMAP_HEIGHT)
-
-        # size preview area - shape to fit orientation
-        aspect_width, aspect_height = self.vis_config.orientation
-        aspect_ratio = aspect_width / aspect_height
-
-        preview_width = max_width
-        preview_height = int(preview_width / aspect_ratio)
-
-        if preview_height > max_height:
-            preview_height = max_height
-            preview_width = int(preview_height * aspect_ratio)
-
-        self.preview_canvas.setFixedWidth(preview_width)
-        self.preview_canvas.setFixedHeight(preview_height)
 
     def _refresh_canvas(self):
         self.minimap_canvas.refresh(
@@ -275,14 +246,6 @@ class PreviewWidget(QWidget):
     def _on_loop_toggled(self, checked: bool):
         user_settings.loop_preview = checked
         user_settings.save()
-
-    def _toggle_expanded(self):
-        user_settings.expanded_preview = not user_settings.expanded_preview
-        user_settings.save()
-        self._update_canvas_size()
-
-    def _get_preview_padding(self) -> int:
-        return self.preview_padding_max if user_settings.expanded_preview else self.preview_padding_min
 
     def _create_settings_action(self, label: str, property_name: str) -> QAction:
         action = QAction(label, self)

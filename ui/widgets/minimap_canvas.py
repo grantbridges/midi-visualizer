@@ -12,6 +12,8 @@ from utility import QUtil, Util
 import logging
 logger = logging.getLogger("MinimapCanvas")
 
+MINIMAP_HEIGHT = 32
+
 class MinimapCanvas(QWidget):
     '''
     Shows a visual preview of the entire midi track with a cursor
@@ -37,6 +39,8 @@ class MinimapCanvas(QWidget):
         self._preview_cache_dirty: bool = True
 
         self.is_dragging: bool = False
+
+        self.setFixedHeight(MINIMAP_HEIGHT)
 
     # parent API
     def refresh(self, current_time: float, vis_config: VisConfig, start_time: float, end_time: float, pitch_min: int, pitch_max: int):

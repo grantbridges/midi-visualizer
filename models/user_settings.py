@@ -40,7 +40,6 @@ class UserSettings:
     show_pitches: bool = True
     mute_audio: bool = True
     loop_preview: bool = True
-    expanded_preview: bool = True
 
     @staticmethod
     def _settings_path() -> Path:
@@ -95,7 +94,8 @@ class UserSettings:
             self.loop_preview = data["loop_preview"]
 
         if schema_version >= 7:
-            self.expanded_preview = data["expanded_preview"]
+            # removed tracked "expanded preview" field
+            pass
 
 
 # module-level singleton instance
