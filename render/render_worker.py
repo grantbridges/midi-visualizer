@@ -1,7 +1,8 @@
+import math
+import threading
+
 from PySide6.QtCore import QObject, QRect, Qt, Signal, Slot
-from concurrent.futures import ProcessPoolExecutor, as_completed
-from multiprocessing import Manager
-from common import Const
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from models import VisConfig, RenderFormat, BackgroundMode
 from pathlib import Path
 from PySide6.QtGui import QImage, QPainter
@@ -9,9 +10,8 @@ from render.midi_render_util import MidiRenderUtil
 from dataclasses import dataclass
 import uuid
 import tempfile
-import shutil
-import os
 import subprocess
+import os
 
 import logging
 logger = logging.getLogger("Render")
@@ -33,7 +33,11 @@ class RenderFrameJobInput:
     height: int
     start_time: float
     end_time: float
-    frames_dir: str
+
+@dataclass(frozen=True)
+class RenderFrameJobOutput:
+    frame_index: int
+    frame_bytes: bytes
 
 class RenderWorker(QObject):
     progress = Signal(int, str) # percent, message
@@ -44,107 +48,193 @@ class RenderWorker(QObject):
     def __init__(self, vis_config: VisConfig):
         super().__init__()
         self.vis_config: VisConfig = vis_config
-        (self.width, self.height) = self.vis_config.export_resolution
+        (self.width, self.height) = self.vis_config.export_resolution.value
         self._cancel_requested = False
+        self._cancel_event = threading.Event()
 
     @Slot()
     def run(self):
         try:
-            with Manager() as manager:
-                cancel_event = manager.Event()
+            success = False
 
-                # build temp directory for storing image frames in
-                frames_dir = tempfile.mkdtemp()
+            logger.info(
+                f"Beginning output render of {self.vis_config.track_name} "
+                f"to \"{self.vis_config.get_exported_filepath()}\" "
+                f"(Res: {self.vis_config.export_resolution.name}; {self.vis_config.export_fps} FPS)"
+            )
 
-                try:
-                    start_time = self.vis_config.get_min_time()
-                    end_time = self.vis_config.get_max_time()
-                    pitch_min = self.vis_config.get_min_pitch()
-                    pitch_max = self.vis_config.get_max_pitch()
+            # create output filepath
+            temp_output_file = Path(tempfile.gettempdir()) / f"midi_render_{uuid.uuid4()}.{self.vis_config.export_format.value}"
 
-                    # build render frame job for every frame
-                    total_frames = int((end_time - start_time) * self.vis_config.export_fps)
-                    jobs = [
-                        RenderFrameJobInput(
-                            frame_index = i, 
-                            vis_config=self.vis_config, 
-                            pitch_min=pitch_min, 
-                            pitch_max=pitch_max, 
-                            width=self.width,
-                            height=self.height,
-                            start_time=start_time,
-                            end_time=end_time,
-                            frames_dir=frames_dir
+            start_time = self.vis_config.get_min_time()
+            end_time = self.vis_config.get_max_time()
+            pitch_min = self.vis_config.get_min_pitch()
+            pitch_max = self.vis_config.get_max_pitch()
+
+            midi_delay_ms = max(0, int((-start_time) * 1000))
+            ffmpeg = RenderWorker.open_ffmpeg_rawvideo_process(
+                vis_config=self.vis_config,
+                midi_delay_ms=midi_delay_ms,
+                output_file=temp_output_file
+            )
+            logger.debug(f"Starting ffmpeg process (pid: {ffmpeg.pid})")
+
+            # track next frame index to submit for rendering and next 
+            # completed frame index to write to ffmpeg process sequentially
+            next_frame_to_submit = 0
+            next_frame_to_write = 0
+
+            # set of render jobs to run
+            pending_futures = set()
+            # buffer of completed frame index and its raw bytes
+            completed_buffer: dict[int, bytes] = {}
+
+            max_workers = max(1, (os.cpu_count() or 1) // 2)
+            max_buffered_frames = RenderWorker.get_max_buffered_frames(self.width, self.height, 512)
+            logger.debug(f"Using {max_workers} workers; max {max_buffered_frames} buffered frames")
+
+            total_frames = max(1, math.ceil((end_time - start_time) * self.vis_config.export_fps))
+            
+            def submit_frames_for_render(executor: ThreadPoolExecutor) -> None:
+                '''
+                Fills up frame buffer with as many render jobs as will fit
+                '''
+                nonlocal next_frame_to_submit
+
+                while (
+                    next_frame_to_submit < total_frames
+                    and len(pending_futures) + len(completed_buffer) < max_buffered_frames
+                    and not self._cancel_event.is_set()
+                ):
+                    # create new job for the next available frame and add to our tasks
+                    job = RenderFrameJobInput(
+                        frame_index = next_frame_to_submit,
+                        vis_config=self.vis_config,
+                        pitch_min=pitch_min,
+                        pitch_max=pitch_max,
+                        width=self.width,
+                        height=self.height,
+                        start_time=start_time,
+                        end_time=end_time
+                    )
+
+                    future = executor.submit(
+                        RenderWorker.render_frame_job,
+                        job,
+                        self._cancel_event,
+                    )
+
+                    pending_futures.add(future)
+                    next_frame_to_submit += 1
+
+            try:
+                with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                    submit_frames_for_render(executor)
+
+                    while next_frame_to_write < total_frames:
+                        if self._cancel_event.is_set():
+                            break
+
+                        if not pending_futures:
+                            if next_frame_to_write in completed_buffer:
+                                pass
+                            else:
+                                raise RuntimeError(f"Missing frame {next_frame_to_write}")
+
+                        done, pending_futures = wait(
+                            pending_futures,
+                            return_when=FIRST_COMPLETED,
                         )
-                        for i in range(total_frames)
-                    ]
 
-                    # fire off process workers
-                    with ProcessPoolExecutor() as executor:
-                        futures = [executor.submit(RenderWorker.render_frame_job, j, cancel_event) for j in jobs]
+                        for future in done:
+                            output = future.result()
 
-                        completed = 0
+                            if output is None:
+                                continue
 
-                        for future in as_completed(futures):
-                            if self._cancel_requested:
-                                cancel_event.set()
+                            completed_buffer[output.frame_index] = output.frame_bytes
+                        
+                        # Drain completed frames in strict order.
+                        while next_frame_to_write in completed_buffer:
+                            frame_bytes = completed_buffer.pop(next_frame_to_write)
 
-                                for f in futures:
-                                    f.cancel()
+                            expected_size = self.width * self.height * 4
+                            if len(frame_bytes) != expected_size:
+                                raise RuntimeError(
+                                    f"Frame {next_frame_to_write} has invalid byte size. "
+                                    f"Expected {expected_size}, got {len(frame_bytes)}."
+                                )
 
-                                self.cancelled.emit()
-                                return
+                            try:
+                                ffmpeg.stdin.write(frame_bytes)
+                            except BrokenPipeError as exc:
+                                raise RuntimeError(
+                                    "FFmpeg closed stdin while frames were being written."
+                                ) from exc
 
-                            future.result()  # raises if frame failed
-
-                            completed += 1
-                            percent = int((completed / total_frames) * 100)
+                            # emit progress event
+                            percent = int(((next_frame_to_write + 1) / total_frames) * 100)
                             self.progress.emit(percent, f"Rendering frames...")
+                            next_frame_to_write += 1
 
-                    if self._cancel_requested:
-                        return
+                        submit_frames_for_render(executor)
+            finally:
+                try:
+                    logger.info("Closing ffmpeg process")
+                    ffmpeg.stdin.close()
+                except Exception as e:
+                    logger.warning(f"Unable to close ffmpeg stdin - ignoring: {str(e)}")
+                    pass
 
-                    self.progress.emit(None, f"Encoding {self.vis_config.export_format.value} file...")
+                stderr = ffmpeg.stderr.read().decode("utf-8", errors="replace") if ffmpeg.stderr else ""
 
-                    # create output filepath - delete if already exists
-                    temp_output_file = Path(tempfile.gettempdir()) / f"midi_render_{uuid.uuid4()}.{self.vis_config.export_format.value}"
+                return_code = ffmpeg.wait()
 
-                    # delay until midi actually crosses playhead for first time
-                    midi_delay_ms = max(0, int((-start_time) * 1000))
-                    RenderWorker.encode_frames_to_video(frames_dir, self.vis_config, midi_delay_ms, temp_output_file)
+                if not self._cancel_event.is_set():
+                    if return_code != 0:
+                        raise RuntimeError(f"FFmpeg failed with exit code {return_code}.\n\n{stderr}")
 
-                    if self._cancel_requested:
-                        return
+            if self._cancel_requested:
+                logger.info("Handling render cancel request")
+                self.cancelled.emit()
+                return
 
-                    # define output file path - delete if already exists
-                    output_file = self.vis_config.get_exported_filepath()
-                    output_file.unlink(missing_ok=True)
+            # define output file path - delete if already exists
+            output_file = self.vis_config.get_exported_filepath()
+            output_file.unlink(missing_ok=True)
+            # move temp file to output location and rename
+            Path(temp_output_file).replace(output_file)
 
-                    # move temp file to output location and rename
-                    Path(temp_output_file).replace(output_file)
+            logger.info(f"Finished output render to \"{self.vis_config.get_exported_filepath()}")
 
-                    self.finished.emit()
-                finally:
-                    shutil.rmtree(frames_dir)
-
+            success = True
+            self.finished.emit()
         except Exception as e:
+            logger.exception("Render failed")
             self.failed.emit(str(e))
+        finally:
+            if not success and temp_output_file is not None:
+                logger.info("Cleaning up temp output file")
+                # clean up temp output file if still hanging around
+                temp_output_file.unlink(missing_ok=True)
 
     def cancel(self):
         self._cancel_requested = True
+        self._cancel_event.set()
 
     @staticmethod
-    def render_frame_job(job: RenderFrameJobInput, cancel_event):
+    def render_frame_job(job: RenderFrameJobInput, cancel_event) -> RenderFrameJobOutput | None:
         if cancel_event.is_set():
             return
 
+        image = QImage(job.width, job.height, QImage.Format_RGBA8888)
+        image.fill(Qt.transparent)
+
+        painter = QPainter(image)
+        painter.setRenderHint(QPainter.Antialiasing)
+
         try:
             current_time = job.start_time + job.frame_index / job.vis_config.export_fps
-
-            image = QImage(job.width, job.height, QImage.Format_ARGB32)
-            image.fill(Qt.transparent)
-            painter = QPainter(image)
-            painter.setRenderHint(QPainter.Antialiasing)
             rect = QRect(0, 0, job.width, job.height)
 
             if job.vis_config.bg_mode == BackgroundMode.Color:
@@ -163,23 +253,38 @@ class RenderWorker(QObject):
             MidiRenderUtil.draw_notes(painter, current_time, job.vis_config, job.pitch_min, job.pitch_max, rect)
             MidiRenderUtil.draw_fade_overlay(painter, current_time, job.start_time, job.end_time, job.vis_config, rect)
             
+            # save image file to disk
+            #path = Path(job.frames_dir).joinpath(f"frame_{job.frame_index:05d}.png")
+            #image.save(str(path))
+        except Exception:
+            logger.exception("RenderFrame | Render frame failed")
+            raise
+        finally:
             painter.end()
 
-            if cancel_event.is_set():
-                return
+        if cancel_event.is_set():
+            return
+        
+        # TODO check this
+        expected_size = job.width * job.height * 4
+        frame_bytes = image.constBits().tobytes()
 
-            # save image file to disk
-            path = Path(job.frames_dir).joinpath(f"frame_{job.frame_index:05d}.png")
-            image.save(str(path))
-        except Exception as e:
-            logger.error(f'RenderFrame | {e}')
+        if len(frame_bytes) != expected_size:
+            raise RuntimeError(
+                f"Invalid frame byte size. Expected {expected_size}, got {len(frame_bytes)}."
+            )
 
-        return job.frame_index
+        return RenderFrameJobOutput(
+            frame_index=job.frame_index,
+            frame_bytes=frame_bytes,
+        )
     
     @staticmethod
-    def encode_frames_to_video(frames_dir: str, vis_config: VisConfig, midi_delay_ms: int, output_file: Path):
+    def open_ffmpeg_rawvideo_process(vis_config: VisConfig, midi_delay_ms: int, output_file: Path) -> subprocess.Popen:
+        width, height = vis_config.export_resolution.value
+
         loop_video = vis_config.bg_video_loop
-        bg_video_start_delay_sec = midi_delay_ms / 1000 + vis_config.bg_video_time_offset
+        bg_video_start_delay_sec = (midi_delay_ms / 1000 + vis_config.bg_video_time_offset)
 
         has_audio = vis_config.has_audio()
 
@@ -202,9 +307,12 @@ class RenderWorker(QObject):
             "ffmpeg",
             "-y",
 
-            # input 0: rendered MIDI overlay frames
-            "-framerate", str(vis_config.export_fps),
-            "-i", os.path.join(frames_dir, "frame_%05d.png"),
+            # input 0: rendered MIDI overlay frames from stdin
+            "-f", "rawvideo",
+            "-pix_fmt", "rgba",
+            "-s", f"{width}x{height}",
+            "-r", str(vis_config.export_fps),
+            "-i", "-",
         ]
 
         input_index = 1
@@ -240,11 +348,9 @@ class RenderWorker(QObject):
                 "-i", str(vis_config.audio_filepath),
             ]
 
-        filter_parts = []
+        filter_parts: list[str] = []
 
         if has_background:
-            width, height = vis_config.export_resolution.value
-
             # MIDI overlay frames + transparent timing base
             filter_parts.append(
                 "[0:v]format=rgba,split=2[midi][base0]"
@@ -280,17 +386,24 @@ class RenderWorker(QObject):
                 shortest_flag = 1 if loop_video else 0
 
             filter_parts.append(
-                f"[base][bg]overlay=0:0:eof_action=repeat:shortest={shortest_flag}[bgbase]"
+                f"[base][bg]overlay=0:0:"
+                f"eof_action=repeat:"
+                f"shortest={shortest_flag}"
+                f"[bgbase]"
             )
 
             filter_parts.append(
-                f"[bgbase][midi]overlay=0:0:format=auto:shortest={shortest_flag}[v]"
+                f"[bgbase][midi]overlay=0:0:"
+                f"format=auto:"
+                f"shortest={shortest_flag}"
+                f"[v]"
             )
 
-        # If using audio, delay it.
         if has_audio:
             filter_parts.append(
-                f"[{audio_input_index}:a]adelay={midi_delay_ms}:all=1[a]"
+                f"[{audio_input_index}:a]"
+                f"adelay={midi_delay_ms}:all=1"
+                f"[a]"
             )
 
         if filter_parts:
@@ -313,6 +426,7 @@ class RenderWorker(QObject):
                     "-c:v", "libx264",
                     "-pix_fmt", "yuv420p",
                 ]
+
                 if has_audio:
                     cmd += ["-c:a", "aac"]
 
@@ -321,6 +435,7 @@ class RenderWorker(QObject):
                     "-c:v", "prores_ks",
                     "-profile:v", "3",
                 ]
+
                 if has_audio:
                     cmd += ["-c:a", "aac"]
 
@@ -329,12 +444,32 @@ class RenderWorker(QObject):
                     "-c:v", "libvpx-vp9",
                     "-b:v", "2M",
                 ]
+
                 if has_audio:
                     cmd += ["-c:a", "libopus"]
 
             case _:
-                raise ValueError(f"Unsupported render format: {vis_config.export_format}")
+                raise ValueError(
+                    f"Unsupported render format: {vis_config.export_format}"
+                )
 
         cmd.append(str(output_file))
 
-        subprocess.run(cmd, check=True)
+        return subprocess.Popen(
+            cmd,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+        )
+    
+    # -- helpers --
+    @staticmethod
+    def get_max_buffered_frames(width: int, height: int, max_memory_mb: int) -> int:
+        '''
+        Computes ideal max computed frames such that we never exceed
+        provided memory limit
+        '''
+        bytes_per_frame = width * height * 4
+        max_bytes = max_memory_mb * 1024 * 1024
+
+        return max(1, max_bytes // bytes_per_frame)
