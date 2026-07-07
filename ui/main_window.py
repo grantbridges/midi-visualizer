@@ -221,7 +221,6 @@ class MainWindow(QMainWindow):
         root = QVBoxLayout(central)
 
         splitter = QSplitter(Qt.Vertical)
-        splitter.setChildrenCollapsible(False)
         splitter.setHandleWidth(2)
 
         splitter.setStyleSheet("""
@@ -233,7 +232,11 @@ class MainWindow(QMainWindow):
 
         splitter.addWidget(self.preview_widget)
         splitter.addWidget(self.tabs)
+
         splitter.setSizes([700, 300])
+
+        splitter.setCollapsible(0, False)
+        splitter.setCollapsible(1, False) # TODO - make this true; Preview Canvas ratio messes up currently
         
         root.addWidget(splitter)
 

@@ -110,13 +110,13 @@ class VisConfig:
 
     # -- Note Sparks --
     note_sparks_enabled: bool = True
-    note_sparks_start_dist_ratio: float = 1.0 # ratio of bar height
-    note_sparks_start_length_ratio: float = 1.0 # ratio of bar height
-    note_sparks_speed_ratio: float = 1.0 # ratio of bar speed
-    note_sparks_speed_var_ratio: float = 1.0 # ratio of upper end of randomized speed
-    note_sparks_alpha_ratio: float = 1.0 # ratio of track alpha
-    note_sparks_count = 3
-    note_sparks_max_angle_deg = 50
+    note_sparks_start_dist_ratio: float = 1.1 # ratio of bar height
+    note_sparks_start_length_ratio: float = .70 # ratio of bar height
+    note_sparks_speed_ratio: float = 0.9 # ratio of bar speed
+    note_sparks_speed_var_ratio: float = 1.1 # ratio of upper end of randomized speed
+    note_sparks_alpha_ratio: float = 0.5 # ratio of track alpha
+    note_sparks_count = 4
+    note_sparks_max_angle_deg = 35
     note_sparks_time_to_fade_sec = .6
 
     # -- Fade In --

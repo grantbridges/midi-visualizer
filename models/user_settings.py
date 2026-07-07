@@ -35,9 +35,9 @@ class UserSettings:
 
     # preview area displays
     show_time_display: bool = True
-    show_track_groups: bool = True
+    show_track_groups: bool = False
     show_guides: bool = True
-    show_pitches: bool = True
+    show_pitches: bool = False
     mute_audio: bool = True
     loop_preview: bool = True
 
