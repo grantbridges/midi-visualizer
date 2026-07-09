@@ -3,12 +3,12 @@ import pretty_midi
 
 # ----
 
-'''
-A Note corresponds to a single midi note value.
-It contains relevant MIDI note data.
-'''
 @dataclass
 class Note:
+    '''
+    A Note corresponds to a single midi note value.
+    It contains relevant MIDI note data.
+    '''
     # midi data
     pitch: int = 50 # 0-127
     velocity: int = 70 # 0-127

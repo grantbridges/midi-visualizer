@@ -10,12 +10,12 @@ logger = logging.getLogger("Track")
 
 # ----
 
-'''
-A Track corresponds to a single track from a MIDI file.
-It contains MIDI note data.
-'''
 @dataclass
 class Track:
+    '''
+    A Track corresponds to a single track from a MIDI file.
+    It contains MIDI note data.
+    '''
     # midi data
     name: str = 'Track'
     notes: List[Note] = field(default_factory=list)

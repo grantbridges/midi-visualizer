@@ -24,11 +24,11 @@ History
 USER_SETTINGS_SCHEMA_VERSION = 7
 USER_SETTINGS_FILENAME = "user_settings.json"
 
-'''
-User Settings data container
-'''
 @dataclass
 class UserSettings:
+    '''
+    User Settings data container
+    '''
     # file info
     # persisted so we can reload last project on startup
     active_project_path: str | None = None

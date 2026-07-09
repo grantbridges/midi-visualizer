@@ -5,11 +5,11 @@ from PySide6.QtGui import QImage
 import logging
 logger = logging.getLogger("ImageProvider")
 
-'''
-Used for loading background image in preview mode - NOT for rendering
-'''
 @dataclass
 class ImageProvider:
+    '''
+    Used for loading background image in preview mode - NOT for rendering
+    '''
     image: QImage | None = None
 
     def init(self):

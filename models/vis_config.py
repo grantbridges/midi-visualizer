@@ -40,11 +40,11 @@ History
 '''
 VIS_CONFIG_SCHEMA_VERSION = 16
 
-'''
-Top level construct containing all visualizing info
-'''
 @dataclass
 class VisConfig:
+    '''
+    Top level construct containing all visualizing info
+    '''
     # -- Track Props --
     track_name: str = ""
     orientation: Orientation = Orientation.Landscape

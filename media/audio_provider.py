@@ -7,10 +7,10 @@ from models import user_settings
 import logging
 logger = logging.getLogger("AudioProvider")
 
-'''
-Used for loading & playing audio in preview mode - NOT for rendering
-'''
 class AudioProvider(QObject):
+    '''
+    Used for loading & playing audio in preview mode - NOT for rendering
+    '''
     def __init__(self, parent=None):
         super().__init__(parent)
 

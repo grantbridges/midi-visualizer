@@ -4,11 +4,11 @@ from common import Color, RGB
 
 # ----
 
-'''
-A Track Group holds a group of midi tracks for bulk formatting
-'''
 @dataclass
 class TrackGroup:
+    '''
+    A Track Group holds a group of midi tracks for bulk formatting
+    '''
     group_id: UUID = field(default_factory=uuid4)
     name: str = 'Group 1'
     visible: bool = True
