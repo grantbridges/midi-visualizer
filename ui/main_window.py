@@ -354,7 +354,8 @@ class MainWindow(QMainWindow):
         )
 
         if has_video:
-            self.load_video_progress_dialog = ProgressDialog("Load", "Loading video preview...", False, parent=self)
+            self.setDisabled(True)
+            self.load_video_progress_dialog = ProgressDialog("Load", "Loading video preview...", False)
             self.load_video_progress_dialog.show()
 
             video_provider.load_video(self.vis_config.bg_video_filepath)
@@ -674,8 +675,9 @@ class MainWindow(QMainWindow):
             self.has_unsaved_changes = True
             self.refresh_window_title()
 
-            self.export_progress_dialog = ExportProgressDialog(track_title=self.vis_config.track_name, parent=self)
+            self.export_progress_dialog = ExportProgressDialog(self.vis_config.track_name)
             self.export_progress_dialog.show()
+            self.setDisabled(True)
 
             self.render_thread = QThread()
             self.render_worker = RenderWorker(self.vis_config)
@@ -702,10 +704,12 @@ class MainWindow(QMainWindow):
 
     def on_render_cancelled(self):
         self.render_worker.cancel()
+        self.setDisabled(False)
         self.export_progress_dialog.hide()
         self.export_progress_dialog = None
 
     def on_render_failed(self, error: str):
+        self.setDisabled(False)
         self.export_progress_dialog.hide()
         self.export_progress_dialog = None
 
@@ -714,6 +718,7 @@ class MainWindow(QMainWindow):
     def on_render_finished(self):
         open_file = self.export_progress_dialog.get_open_output_file()
 
+        self.setDisabled(False)
         self.export_progress_dialog.hide()
         self.export_progress_dialog = None
 
@@ -736,11 +741,13 @@ class MainWindow(QMainWindow):
 
     # Load Video Preview events
     def on_load_video_failed(self, error: str):
+        self.setDisabled(False)
         self.load_video_progress_dialog.hide()
         self.load_video_progress_dialog = None
-        QMessageBox.critical(self, 'Load Failed', error)
+        QMessageBox.critical(self, 'Load Failed', f"Failed to load video preview: {error}")
 
     def on_load_video_finished(self):
+        self.setDisabled(False)
         self.load_video_progress_dialog.hide()
         self.load_video_progress_dialog = None
 

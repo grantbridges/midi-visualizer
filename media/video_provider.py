@@ -94,7 +94,7 @@ class VideoProvider(QObject):
         self.load_finished.emit()
 
     def _on_video_load_failed(self, error: str):
-        logger.info(f"Failed to load video preview: {error}")
+        logger.error(f"Failed to load video preview: {error}")
         self.load_failed.emit(error)
 
     def _on_video_load_progress(self, percent: int):
