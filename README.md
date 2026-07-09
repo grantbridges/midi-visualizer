@@ -6,7 +6,10 @@ I'll update this when I have something interesting!
 
 ### Pre-Reqs
 
-- [Python 3.14.6](https://www.python.org/downloads/release/python-3146/)
+- [Python](https://www.python.org/downloads/release/python-3146/) (3.14.6+)
+- [FFmpeg](https://www.ffmpeg.org/) (8.1.2+)
+  - _(Mac)_ Run `brew install ffmpeg`
+  - _(Windows)_ Run `winget install ffmpeg`
 - [VSCode](https://code.visualstudio.com/) (or your favorite code editor)
 
 ### Initial Setup
