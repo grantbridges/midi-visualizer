@@ -27,6 +27,8 @@ class ExportProgressDialog(QDialog):
             | Qt.WindowType.WindowTitleHint
         )
 
+        self.cancelling: bool = False
+
         # --- Widgets ---
         self.status_label = QLabel("Preparing...")
         self.status_label.setAlignment(Qt.AlignLeft)
@@ -61,6 +63,9 @@ class ExportProgressDialog(QDialog):
         self.cancel_button.clicked.connect(self._on_cancel_clicked)
 
     def update_progress(self, percent: int, message: str):
+        if self.cancelling:
+            return # ignore
+        
         if percent and percent >= 0 and percent <= 100:
             self.progress_bar.setRange(0, 100)
             self.progress_bar.setValue(percent)
@@ -74,4 +79,12 @@ class ExportProgressDialog(QDialog):
         return self.open_file_checkbox.isChecked()
 
     def _on_cancel_clicked(self):
+        self.cancelling = True
+
+        self.progress_bar.setRange(0, 0)
+        self.status_label.setText("Cancelling export...")
+
+        self.cancel_button.setDisabled(True)
+        self.open_file_checkbox.setDisabled(True)
+
         self.cancel_clicked.emit()

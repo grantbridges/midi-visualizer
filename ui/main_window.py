@@ -676,6 +676,7 @@ class MainWindow(QMainWindow):
             self.refresh_window_title()
 
             self.export_progress_dialog = ExportProgressDialog(self.vis_config.track_name)
+            self.export_progress_dialog.cancel_clicked.connect(self.on_render_cancel_requested)
             self.export_progress_dialog.show()
             self.setDisabled(True)
 
@@ -689,9 +690,8 @@ class MainWindow(QMainWindow):
             # connect ui to thread events
             self.render_worker.progress.connect(self.export_progress_dialog.update_progress)
             self.render_worker.finished.connect(self.on_render_finished)
-            self.render_worker.failed.connect(lambda msg: self.on_render_failed(msg))
-
-            self.export_progress_dialog.cancel_clicked.connect(self.on_render_cancelled)
+            self.render_worker.cancelled.connect(self.on_render_cancelled)
+            self.render_worker.failed.connect(self.on_render_failed)
 
             # cleanup thread on any result
             self.render_worker.finished.connect(self.render_thread.quit)
@@ -702,8 +702,10 @@ class MainWindow(QMainWindow):
     
     # Render events
 
-    def on_render_cancelled(self):
+    def on_render_cancel_requested(self):
         self.render_worker.cancel()
+
+    def on_render_cancelled(self):
         self.setDisabled(False)
         self.export_progress_dialog.hide()
         self.export_progress_dialog = None
@@ -713,7 +715,7 @@ class MainWindow(QMainWindow):
         self.export_progress_dialog.hide()
         self.export_progress_dialog = None
 
-        QMessageBox.critical(self, 'Render Failed', error)
+        QMessageBox.critical(self, 'Export Failed', f"Failed to export video: {error}")
 
     def on_render_finished(self):
         open_file = self.export_progress_dialog.get_open_output_file()
