@@ -265,7 +265,6 @@ class RenderWorker(QObject):
         if cancel_event.is_set():
             return
         
-        # TODO check this
         expected_size = job.width * job.height * 4
         frame_bytes = image.constBits().tobytes()
 

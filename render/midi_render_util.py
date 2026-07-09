@@ -36,8 +36,8 @@ class MidiRenderUtil:
         vert_padding = vert_padding_ratio * rect.height() / 2
         vert_offset = vert_offset_ratio * rect.height() / 2
 
-        y_min = vert_padding + vert_offset
-        y_max = rect.height() - vert_padding + vert_offset
+        y_min = rect.top() + vert_padding + vert_offset
+        y_max = rect.top() + rect.height() - vert_padding + vert_offset
 
         t = (pitch - pitch_min) / (pitch_max - pitch_min)
 

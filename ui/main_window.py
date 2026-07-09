@@ -236,7 +236,7 @@ class MainWindow(QMainWindow):
         splitter.setSizes([700, 300])
 
         splitter.setCollapsible(0, False)
-        splitter.setCollapsible(1, False) # TODO - make this true; Preview Canvas ratio messes up currently
+        splitter.setCollapsible(1, True)
         
         root.addWidget(splitter)
 
