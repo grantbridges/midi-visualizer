@@ -66,7 +66,6 @@ class GroupTracksDialog(QDialog):
 
         LayoutUtil.dialog_button_box(column, button_box)
 
-        # -- Wire Events --
         self._refresh_ui()
 
     def _refresh_ui(self):

@@ -173,9 +173,9 @@ class RenderWorker(QObject):
                                 ) from exc
 
                             # emit progress event
-                            percent = int(((next_frame_to_write + 1) / total_frames) * 100)
-                            self.progress.emit(percent, f"Rendering frames...")
                             next_frame_to_write += 1
+                            percent = int((next_frame_to_write / total_frames) * 100)
+                            self.progress.emit(percent, f"Rendering frames...")
 
                         submit_frames_for_render(executor)
             finally:

@@ -30,7 +30,7 @@ from ui.widgets import PreviewWidget
 from ui.dialogs import (
     ExportProgressDialog, 
     ExportOptionsDialog, 
-    ExportOptions
+    ProgressDialog
 )
 
 import logging
@@ -53,14 +53,17 @@ class MainWindow(QMainWindow):
         self.notes_tab: NotesTab = None
         self.preview_widget: PreviewWidget = None
 
+        # dialogs
+        self.export_progress_dialog: ExportProgressDialog = None
+        self.load_video_progress_dialog: ProgressDialog = None
+
         # used to notify user before exit that they have unsaved changes
         self.has_unsaved_changes = False
         self.initialized_editor_view = False
 
         # render components
-        self.render_thread = None
-        self.render_worker = None
-        self.progress_dialog: ExportProgressDialog = None
+        self.render_thread: QThread | None = None
+        self.render_worker: RenderWorker | None = None
 
         # File menu
         menu_bar = self.menuBar()
@@ -95,6 +98,11 @@ class MainWindow(QMainWindow):
         self.space_shortcut = QShortcut(QKeySequence(Qt.Key_Space), self)
         self.space_shortcut.setContext(Qt.WindowShortcut)
         self.space_shortcut.activated.connect(self._on_space_pressed)
+
+        # Load video preview events callbacks
+        video_provider.load_finished.connect(self.on_load_video_finished)
+        video_provider.load_failed.connect(self.on_load_video_failed)
+        video_provider.load_progress.connect(self.on_load_video_progress)
 
         # initial config load
         self.vis_config: VisConfig = None
@@ -339,20 +347,17 @@ class MainWindow(QMainWindow):
         self._load_audio()
 
     def _load_video(self):
-        try:
-            QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
-            video_provider.clear()
-            has_video = (
-                bool(self.vis_config.bg_video_filepath)
-                and Path(self.vis_config.bg_video_filepath).is_file()
-            )
+        video_provider.clear()
+        has_video = (
+            bool(self.vis_config.bg_video_filepath)
+            and Path(self.vis_config.bg_video_filepath).is_file()
+        )
 
-            if has_video:
-                video_provider.load_video(self.vis_config.bg_video_filepath)
-        except Exception as e:
-            QMessageBox.critical(self, "Load Failed", f"Failed to load video: {str(e)}")
-        finally:
-            QApplication.restoreOverrideCursor()
+        if has_video:
+            self.load_video_progress_dialog = ProgressDialog("Load", "Loading video preview...", False, parent=self)
+            self.load_video_progress_dialog.show()
+
+            video_provider.load_video(self.vis_config.bg_video_filepath)
     
     def _load_image(self):
         try:
@@ -669,8 +674,8 @@ class MainWindow(QMainWindow):
             self.has_unsaved_changes = True
             self.refresh_window_title()
 
-            self.progress_dialog = ExportProgressDialog(track_title=self.vis_config.track_name, parent=self)
-            self.progress_dialog.show()
+            self.export_progress_dialog = ExportProgressDialog(track_title=self.vis_config.track_name, parent=self)
+            self.export_progress_dialog.show()
 
             self.render_thread = QThread()
             self.render_worker = RenderWorker(self.vis_config)
@@ -680,11 +685,11 @@ class MainWindow(QMainWindow):
             self.render_thread.started.connect(self.render_worker.run)
 
             # connect ui to thread events
-            self.render_worker.progress.connect(self.progress_dialog.update_progress)
+            self.render_worker.progress.connect(self.export_progress_dialog.update_progress)
             self.render_worker.finished.connect(self.on_render_finished)
             self.render_worker.failed.connect(lambda msg: self.on_render_failed(msg))
 
-            self.progress_dialog.cancel_clicked.connect(self.on_render_cancelled)
+            self.export_progress_dialog.cancel_clicked.connect(self.on_render_cancelled)
 
             # cleanup thread on any result
             self.render_worker.finished.connect(self.render_thread.quit)
@@ -692,25 +697,25 @@ class MainWindow(QMainWindow):
             self.render_worker.cancelled.connect(self.render_thread.quit)
 
             self.render_thread.start()
-
+    
     # Render events
 
     def on_render_cancelled(self):
         self.render_worker.cancel()
-        self.progress_dialog.hide()
-        self.progress_dialog = None
+        self.export_progress_dialog.hide()
+        self.export_progress_dialog = None
 
     def on_render_failed(self, error: str):
-        self.progress_dialog.hide()
-        self.progress_dialog = None
+        self.export_progress_dialog.hide()
+        self.export_progress_dialog = None
 
         QMessageBox.critical(self, 'Render Failed', error)
 
     def on_render_finished(self):
-        open_file = self.progress_dialog.get_open_output_file()
+        open_file = self.export_progress_dialog.get_open_output_file()
 
-        self.progress_dialog.hide()
-        self.progress_dialog = None
+        self.export_progress_dialog.hide()
+        self.export_progress_dialog = None
 
         output_filepath = str(self.vis_config.get_exported_filepath())
 
@@ -722,13 +727,22 @@ class MainWindow(QMainWindow):
             else:  # linux
                 subprocess.run(["xdg-open", output_filepath])
         else:
-            QMessageBox.information(
-                self,
-                "Success",
-                f"Exported video to {output_filepath}"
-            )
+            QMessageBox.information(self, "Success", f"Exported video to {output_filepath}")
                 
     # Key press callbacks
     def _on_space_pressed(self):
         if self.preview_widget is not None:
             self.preview_widget.handle_space_pressed()
+
+    # Load Video Preview events
+    def on_load_video_failed(self, error: str):
+        self.load_video_progress_dialog.hide()
+        self.load_video_progress_dialog = None
+        QMessageBox.critical(self, 'Load Failed', error)
+
+    def on_load_video_finished(self):
+        self.load_video_progress_dialog.hide()
+        self.load_video_progress_dialog = None
+
+    def on_load_video_progress(self, percent: int):
+        self.load_video_progress_dialog.update_progress(percent)
