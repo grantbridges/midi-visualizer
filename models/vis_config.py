@@ -38,6 +38,7 @@ History
   15 - Velocity impacting highlight intensity
   16 - Glow and highlight color
   17 - Note bounce; note fade in/out updates
+  18 - Track group control of note bounce
 '''
 VIS_CONFIG_SCHEMA_VERSION = 17
 
@@ -128,8 +129,7 @@ class VisConfig:
 
     # -- Note Bounce --
     note_bounce_enabled: bool = True
-    note_bounce_height_ratio: float = 1.0 # ratio of bar height that note will bounce up
-    note_bounce_time: float = 0.5 # time (sec) for note to return to original position
+    note_bounce_height_ratio: float = 1.0 # ratio of bar height that note will expand on play
 
     # -- Fade In --
     fade_in_enabled: bool = False
@@ -255,7 +255,6 @@ class VisConfig:
 
             "note_bounce_enabled": self.note_bounce_enabled,
             "note_bounce_height_ratio": self.note_bounce_height_ratio,
-            "note_bounce_time": self.note_bounce_time,
 
             "fade_in_enabled": self.fade_in_enabled,
             "fade_in_color": list(self.fade_in_color),
@@ -407,7 +406,6 @@ class VisConfig:
                 config.note_fadeout_end_ratio = data["note_fadeout_end_ratio"]
                 config.note_bounce_enabled = data["note_bounce_enabled"]
                 config.note_bounce_height_ratio = data["note_bounce_height_ratio"]
-                config.note_bounce_time = data["note_bounce_time"]
 
             size_bytes = asizeof.asizeof(config)
             logger.info(f"Load | Loaded config ({size_bytes / 1024 / 1024:.3f} MB)")

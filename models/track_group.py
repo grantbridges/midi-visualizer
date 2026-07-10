@@ -21,6 +21,7 @@ class TrackGroup:
     bar_sec_across_screen: float = 7.0 
     pitch_offset: int = 0 # -127 - 127
     note_sparks_enabled: bool = True
+    note_bounce_enabled: bool = False
     note_velocity_fx_enabled: bool = True
 
     def save(self) -> dict:
@@ -35,6 +36,7 @@ class TrackGroup:
             "bar_sec_across_screen": self.bar_sec_across_screen,
             "pitch_offset": self.pitch_offset,
             "note_sparks_enabled": self.note_sparks_enabled,
+            "note_bounce_enabled": self.note_bounce_enabled,
             "note_velocity_fx_enabled": self.note_velocity_fx_enabled,
         }
     
@@ -59,6 +61,9 @@ class TrackGroup:
 
         if schema_version >= 15:
             track_group.note_velocity_fx_enabled = data["note_velocity_fx_enabled"]
+
+        if schema_version >= 18:
+            track_group.note_bounce_enabled = data["note_bounce_enabled"]
 
         return track_group
     

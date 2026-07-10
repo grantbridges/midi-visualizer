@@ -18,6 +18,7 @@ class RenderTrack:
     bar_sec_across_screen: float = 2.0
     pitch_offset: int = 0
     note_sparks_enabled: bool = False
+    note_bounce_enabled: bool = False
     note_velocity_fx_enabled: bool = False
     velocity_min: int = 1
     velocity_max: int = 127
@@ -112,6 +113,7 @@ class MidiRenderUtil:
                     bar_sec_across_screen = tg.bar_sec_across_screen,
                     pitch_offset=tg.pitch_offset,
                     note_sparks_enabled=tg.note_sparks_enabled,
+                    note_bounce_enabled=tg.note_bounce_enabled,
                     note_velocity_fx_enabled=tg.note_velocity_fx_enabled,
                     velocity_min=t.velocity_min,
                     velocity_max=t.velocity_max,
@@ -140,11 +142,16 @@ class MidiRenderUtil:
                     # note isn't in visible area - skip rendering
                     continue
 
+                # y and height calc
                 # convert bar height ratio to pixels
                 bar_height_px = int(rect.height() * track.bar_height_ratio * (1 - vis_config.vertical_padding_ratio))
-                bar_height_px = max(bar_height_px, 1) # min of 1 pixel
 
-                # y and height calc
+                if track.note_bounce_enabled and x_left <= playhead_x:
+                    # expand note on play
+                    bar_height_px += bar_height_px * vis_config.note_bounce_height_ratio
+
+                bar_height_px = max(bar_height_px, 1) # min of 1 pixel
+                
                 y_center = MidiRenderUtil.pitch_to_y(
                     note.pitch + track.pitch_offset,
                     pitch_min,
@@ -177,14 +184,14 @@ class MidiRenderUtil:
                     )
 
                 # -- under glow --
-                if x_left < playhead_x and vis_config.note_glow_enabled:
+                if vis_config.note_glow_enabled and x_left <= playhead_x:
                     MidiRenderUtil._draw_note_glow(painter, vis_config, playhead_x, x_left, y_top, w, h, color, alpha, bar_height_px)
 
                 # -- note bar --
                 MidiRenderUtil._draw_note(painter, x_left, y_top, w, h, color, alpha)
 
                 # -- highlight --
-                if x_left < playhead_x and vis_config.note_highlight_enabled:
+                if vis_config.note_highlight_enabled and x_left <= playhead_x:
                     MidiRenderUtil._draw_note_highlight(painter, vis_config, track, note, playhead_x, x_left, y_top, w, h, color, alpha)
 
 

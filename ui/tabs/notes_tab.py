@@ -84,8 +84,6 @@ class NotesTab(QWidget):
         self.note_bounce_checkbox.toggled.connect(self._on_changes)
         self.note_bounce_height_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=5.0, singleStep=0.01)
         self.note_bounce_height_input.valueChanged.connect(self._on_changes)
-        self.note_bounce_time_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=5.00, singleStep=0.01)
-        self.note_bounce_time_input.valueChanged.connect(self._on_changes)
 
     def shutdown(self):
         pass
@@ -150,8 +148,7 @@ class NotesTab(QWidget):
 
         LayoutUtil.section(column, "Bounce")
         LayoutUtil.checkbox(column, "Bounce Enabled", self.note_bounce_checkbox)
-        LayoutUtil.spinbox(column, "Bounce Height", self.note_bounce_height_input)
-        LayoutUtil.spinbox(column, "Bounce Time", self.note_bounce_time_input)
+        LayoutUtil.spinbox(column, "Bounce Grow Size", self.note_bounce_height_input)
 
         column.addStretch()
 
@@ -227,8 +224,6 @@ class NotesTab(QWidget):
         self.note_bounce_checkbox.setChecked(self.vis_config.note_bounce_enabled)
         self.note_bounce_height_input.setValue(self.vis_config.note_bounce_height_ratio)
         self.note_bounce_height_input.setEnabled(self.vis_config.note_bounce_enabled)
-        self.note_bounce_time_input.setValue(self.vis_config.note_bounce_time)
-        self.note_bounce_time_input.setEnabled(self.vis_config.note_bounce_enabled)
 
         self.block_changes_callback = False
 
@@ -266,7 +261,6 @@ class NotesTab(QWidget):
 
         self.vis_config.note_bounce_enabled = self.note_bounce_checkbox.isChecked()
         self.vis_config.note_bounce_height_ratio = self.note_bounce_height_input.value()
-        self.vis_config.note_bounce_time = self.note_bounce_time_input.value()
 
     # callbacks
 
