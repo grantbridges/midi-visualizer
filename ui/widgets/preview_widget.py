@@ -169,7 +169,7 @@ class PreviewWidget(QWidget):
         self.loop_btn.setIcon(Icons.arrow_right_thin() if not user_settings.loop_preview else Icons.loop())
 
         self.mute_btn.setIcon(Icons.audio() if not user_settings.mute_audio else Icons.muted())
-        self.mute_btn.setDisabled(not self.vis_config.has_audio())
+        self.mute_btn.setEnabled(self.vis_config.has_audio())
 
 
     def set_selected_group_id(self, group_id: UUID | None):

@@ -164,7 +164,7 @@ class ConfigTab(QWidget):
 
         LayoutUtil.section(column, "Audio")
         LayoutUtil.checkbox(column, "Use Audio", self.use_audio_checkbox)
-        self.audio_file_row = LayoutUtil.file_picker(column, "Audio File", self.audio_file_input, self.audio_file_browse_btn, self.audio_file_clear_btn)
+        LayoutUtil.file_picker(column, "Audio File", self.audio_file_input, self.audio_file_browse_btn, self.audio_file_clear_btn)
 
         LayoutUtil.section(column, "Background")
         LayoutUtil.combobox(column, "Background Mode", self.bg_mode_combo)
@@ -245,29 +245,33 @@ class ConfigTab(QWidget):
 
         self.bg_color_button.setColor(self.vis_config.bg_color)
         self.bg_image_file_input.setText(self.vis_config.bg_image_filepath)
+        self.bg_image_file_clear_btn.setEnabled(bool(self.vis_config.bg_image_filepath))
         self.bg_video_file_input.setText(self.vis_config.bg_video_filepath)
+        self.bg_video_file_clear_btn.setEnabled(bool(self.vis_config.bg_video_filepath))
         self.bg_video_time_offset_input.setValue(self.vis_config.bg_video_time_offset)
         self.bg_video_loop_checkbox.setChecked(self.vis_config.bg_video_loop)
 
         self.bg_tint_checkbox.setChecked(self.vis_config.bg_tint_enabled)
         self.bg_tint_color_button.setColor(self.vis_config.bg_tint_color)
-        self.bg_tint_color_button.setDisabled(not self.vis_config.bg_tint_enabled)
+        self.bg_tint_color_button.setEnabled(self.vis_config.bg_tint_enabled)
         self.bg_tint_alpha_input.setValue(self.vis_config.bg_tint_alpha)
-        self.bg_tint_alpha_input.setDisabled(not self.vis_config.bg_tint_enabled)
+        self.bg_tint_alpha_input.setEnabled(self.vis_config.bg_tint_enabled)
 
         self.use_audio_checkbox.setChecked(self.vis_config.play_audio)
         self.audio_file_input.setText(self.vis_config.audio_filepath)
-        self.audio_file_row.setVisible(self.vis_config.play_audio)
+        self.audio_file_input.setEnabled(self.vis_config.play_audio)
+        self.audio_file_browse_btn.setEnabled(self.vis_config.play_audio)
+        self.audio_file_clear_btn.setEnabled(self.vis_config.play_audio and bool(self.vis_config.audio_filepath))
 
         self.show_playhead_checkbox.setChecked(self.vis_config.show_playhead)
         self.playhead_color_button.setColor(self.vis_config.playhead_color)
-        self.playhead_color_button.setDisabled(not self.vis_config.show_playhead)
+        self.playhead_color_button.setEnabled(self.vis_config.show_playhead)
         self.playhead_alpha_input.setValue(self.vis_config.playhead_alpha)
-        self.playhead_alpha_input.setDisabled(not self.vis_config.show_playhead)
+        self.playhead_alpha_input.setEnabled(self.vis_config.show_playhead)
         self.playhead_thickness_input.setValue(self.vis_config.playhead_thickness_ratio)
-        self.playhead_thickness_input.setDisabled(not self.vis_config.show_playhead)
+        self.playhead_thickness_input.setEnabled(self.vis_config.show_playhead)
         self.playhead_pos_input.setValue(self.vis_config.playhead_pos_ratio)
-        self.playhead_pos_input.setDisabled(not self.vis_config.show_playhead)
+        self.playhead_pos_input.setEnabled(self.vis_config.show_playhead)
 
         self.vertical_padding_input.setValue(self.vis_config.vertical_padding_ratio)
         self.vertical_offset_input.setValue(self.vis_config.vertical_offset_ratio)
@@ -281,22 +285,22 @@ class ConfigTab(QWidget):
         self.pitch_max_input.setValue(self.vis_config.get_max_pitch() if self.vis_config.auto_calc_pitch_bounds else self.vis_config.manual_pitch_max)  
 
         self.apply_time_offsets_checkbox.setChecked(self.vis_config.apply_time_offsets)
-        self.start_time_input.setDisabled(not self.vis_config.apply_time_offsets)
+        self.start_time_input.setEnabled(self.vis_config.apply_time_offsets)
         self.start_time_input.setValue(self.vis_config.start_time_offset)
-        self.end_time_input.setDisabled(not self.vis_config.apply_time_offsets)
+        self.end_time_input.setEnabled(self.vis_config.apply_time_offsets)
         self.end_time_input.setValue(self.vis_config.end_time_offset)  
 
         self.fade_in_checkbox.setChecked(self.vis_config.fade_in_enabled)
         self.fade_in_color.setColor(self.vis_config.fade_in_color)
-        self.fade_in_color.setDisabled(not self.vis_config.fade_in_enabled)
+        self.fade_in_color.setEnabled(self.vis_config.fade_in_enabled)
         self.fade_in_time.setValue(self.vis_config.fade_in_time)
-        self.fade_in_time.setDisabled(not self.vis_config.fade_in_enabled)
+        self.fade_in_time.setEnabled(self.vis_config.fade_in_enabled)
 
         self.fade_out_checkbox.setChecked(self.vis_config.fade_out_enabled)
         self.fade_out_color.setColor(self.vis_config.fade_out_color)
-        self.fade_out_color.setDisabled(not self.vis_config.fade_out_enabled)
+        self.fade_out_color.setEnabled(self.vis_config.fade_out_enabled)
         self.fade_out_time.setValue(self.vis_config.fade_out_time)
-        self.fade_out_time.setDisabled(not self.vis_config.fade_out_enabled)
+        self.fade_out_time.setEnabled(self.vis_config.fade_out_enabled)
 
         self.block_changes_callback = False
 

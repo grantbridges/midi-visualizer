@@ -9,7 +9,7 @@ from models import VisConfig, user_settings
 from render import MidiRenderUtil
 from utility import QUtil, Util
 
-PREVIEW_MIN_HEIGHT = 240
+PREVIEW_MIN_HEIGHT = 100
 
 class PreviewCanvas(QWidget):
     def __init__(self, parent=None):
