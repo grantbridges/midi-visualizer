@@ -37,8 +37,9 @@ History
   14 - Orientation
   15 - Velocity impacting highlight intensity
   16 - Glow and highlight color
+  17 - Note bounce; note fade in/out updates
 '''
-VIS_CONFIG_SCHEMA_VERSION = 16
+VIS_CONFIG_SCHEMA_VERSION = 17
 
 @dataclass
 class VisConfig:
@@ -86,12 +87,18 @@ class VisConfig:
     # ratio of vertical offset positioning - -1 to 1 (-1 is top, 0 center, 1 bottom)
     vertical_offset_ratio = 0
 
-    # -- Note Fadeout --
-    # Ratio of distance from playhead to left edge that note will fade out over - 0.01 to 1
-    # 1 means fade out over full distance to left edge, 0.5 means fade out to 
-    # halfway from playhead to left edge, etc. It makes sense, trust me.
+    # -- Note Fade --
+
+    # from right edge to playhead, distance ratios where fade in starts and ends
+    # (fade in start must be > end)
+    note_fadein_enabled: bool = True
+    note_fadein_start_ratio: float = 1.0
+    note_fadein_end_ratio: float = 0.5 
+    # from playhead to left edge, distance ratios where fade out starts and ends
+    # (fade out start must be > end)
     note_fadeout_enabled: bool = True
-    note_fadeout_ratio: float = 0.5 
+    note_fadeout_start_ratio: float = 1.0
+    note_fadeout_end_ratio: float = 0.5 
 
     # -- Note Glow --
     note_glow_enabled: bool = True
@@ -118,6 +125,11 @@ class VisConfig:
     note_sparks_count = 4
     note_sparks_max_angle_deg = 35
     note_sparks_time_to_fade_sec = .6
+
+    # -- Note Bounce --
+    note_bounce_enabled: bool = True
+    note_bounce_height_ratio: float = 1.0 # ratio of bar height that note will bounce up
+    note_bounce_time: float = 0.5 # time (sec) for note to return to original position
 
     # -- Fade In --
     fade_in_enabled: bool = False
@@ -213,8 +225,12 @@ class VisConfig:
             "vertical_padding_ratio": self.vertical_padding_ratio,
             "vertical_offset_ratio": self.vertical_offset_ratio,
 
+            "note_fadein_enabled": self.note_fadein_enabled,
+            "note_fadein_start_ratio": self.note_fadein_start_ratio,
+            "note_fadein_end_ratio": self.note_fadein_end_ratio,
             "note_fadeout_enabled": self.note_fadeout_enabled,
-            "note_fadeout_ratio": self.note_fadeout_ratio,
+            "note_fadeout_start_ratio": self.note_fadeout_start_ratio,
+            "note_fadeout_end_ratio": self.note_fadeout_end_ratio,
 
             "note_sparks_enabled": self.note_sparks_enabled,
             "note_sparks_start_dist_ratio": self.note_sparks_start_dist_ratio,
@@ -236,6 +252,10 @@ class VisConfig:
             "note_highlight_intensity": self.note_highlight_intensity,
             "note_highlight_min_intensity": self.note_highlight_min_intensity,
             "note_highlight_max_intensity": self.note_highlight_max_intensity,
+
+            "note_bounce_enabled": self.note_bounce_enabled,
+            "note_bounce_height_ratio": self.note_bounce_height_ratio,
+            "note_bounce_time": self.note_bounce_time,
 
             "fade_in_enabled": self.fade_in_enabled,
             "fade_in_color": list(self.fade_in_color),
@@ -302,8 +322,8 @@ class VisConfig:
                 config.show_playhead = data["show_playhead"]
                 config.playhead_color = data["playhead_color"]
 
-            if schema_version >= 3:
-                config.note_fadeout_ratio = data["note_fadeout_ratio"]
+            if schema_version >= 3 and schema_version < 17:
+                config.note_fadeout_end_ratio = data["note_fadeout_ratio"]
 
             if schema_version >= 4:
                 config.track_groups = [
@@ -378,6 +398,16 @@ class VisConfig:
             if schema_version >= 16:
                 config.note_glow_color = tuple(data["note_glow_color"])
                 config.note_highlight_color = tuple(data["note_highlight_color"])
+
+            if schema_version >= 17:
+                config.note_fadein_enabled = data["note_fadein_enabled"]
+                config.note_fadein_start_ratio = data["note_fadein_start_ratio"]
+                config.note_fadein_end_ratio = data["note_fadein_end_ratio"]
+                config.note_fadeout_start_ratio = data["note_fadeout_start_ratio"]
+                config.note_fadeout_end_ratio = data["note_fadeout_end_ratio"]
+                config.note_bounce_enabled = data["note_bounce_enabled"]
+                config.note_bounce_height_ratio = data["note_bounce_height_ratio"]
+                config.note_bounce_time = data["note_bounce_time"]
 
             size_bytes = asizeof.asizeof(config)
             logger.info(f"Load | Loaded config ({size_bytes / 1024 / 1024:.3f} MB)")

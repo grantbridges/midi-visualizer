@@ -26,10 +26,18 @@ class NotesTab(QWidget):
         self.block_changes_callback: bool = False
 
         # create controls
+        self.note_fadein_checkbox = QCheckBox()
+        self.note_fadein_checkbox.toggled.connect(self._on_changes)
+        self.note_fadein_start_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.00, singleStep=.01)
+        self.note_fadein_start_input.valueChanged.connect(self._on_changes)
+        self.note_fadein_end_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.00, singleStep=.01)
+        self.note_fadein_end_input.valueChanged.connect(self._on_changes)
         self.note_fadeout_checkbox = QCheckBox()
         self.note_fadeout_checkbox.toggled.connect(self._on_changes)
-        self.note_fadeout_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.00, singleStep=.01)
-        self.note_fadeout_input.valueChanged.connect(self._on_changes)
+        self.note_fadeout_start_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.00, singleStep=.01)
+        self.note_fadeout_start_input.valueChanged.connect(self._on_changes)
+        self.note_fadeout_end_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.00, singleStep=.01)
+        self.note_fadeout_end_input.valueChanged.connect(self._on_changes)
 
         self.note_glow_checkbox = QCheckBox()
         self.note_glow_checkbox.toggled.connect(self._on_changes)
@@ -72,6 +80,13 @@ class NotesTab(QWidget):
         self.note_sparks_fade_time_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=5.0, singleStep=0.01, suffix=" sec")
         self.note_sparks_fade_time_input.valueChanged.connect(self._on_changes)
 
+        self.note_bounce_checkbox = QCheckBox()
+        self.note_bounce_checkbox.toggled.connect(self._on_changes)
+        self.note_bounce_height_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=5.0, singleStep=0.01)
+        self.note_bounce_height_input.valueChanged.connect(self._on_changes)
+        self.note_bounce_time_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=5.00, singleStep=0.01)
+        self.note_bounce_time_input.valueChanged.connect(self._on_changes)
+
     def shutdown(self):
         pass
 
@@ -97,8 +112,12 @@ class NotesTab(QWidget):
         column = v_left_layout
 
         LayoutUtil.section(column, "Fade")
-        LayoutUtil.checkbox(column, "Fade Enabled", self.note_fadeout_checkbox)
-        LayoutUtil.spinbox(column, "Fade Distance", self.note_fadeout_input)
+        LayoutUtil.checkbox(column, "Fade In Enabled", self.note_fadein_checkbox)
+        LayoutUtil.spinbox(column, "Fade In Start", self.note_fadein_start_input)
+        LayoutUtil.spinbox(column, "Fade In End", self.note_fadein_end_input)
+        LayoutUtil.checkbox(column, "Fade Out Enabled", self.note_fadeout_checkbox)
+        LayoutUtil.spinbox(column, "Fade Out Start", self.note_fadeout_start_input)
+        LayoutUtil.spinbox(column, "Fade Out End", self.note_fadeout_end_input)
 
         LayoutUtil.section(column, "Highlight")
         LayoutUtil.checkbox(column, "Highlight Enabled", self.note_highlight_checkbox)
@@ -129,6 +148,11 @@ class NotesTab(QWidget):
         LayoutUtil.spinbox(column, "Angle", self.note_sparks_angle_input)
         LayoutUtil.spinbox(column, "Fade Time", self.note_sparks_fade_time_input)
 
+        LayoutUtil.section(column, "Bounce")
+        LayoutUtil.checkbox(column, "Bounce Enabled", self.note_bounce_checkbox)
+        LayoutUtil.spinbox(column, "Bounce Height", self.note_bounce_height_input)
+        LayoutUtil.spinbox(column, "Bounce Time", self.note_bounce_time_input)
+
         column.addStretch()
 
         root_h_layout.addLayout(v_left_layout, 1)
@@ -144,9 +168,21 @@ class NotesTab(QWidget):
     def refresh_ui(self):
         self.block_changes_callback = True # prevent "change" callbacks from triggering while we set values
 
+        self.note_fadein_checkbox.setChecked(self.vis_config.note_fadein_enabled)
+        self.note_fadein_start_input.setValue(self.vis_config.note_fadein_start_ratio)
+        self.note_fadein_start_input.setMinimum(self.vis_config.note_fadein_end_ratio + .01)
+        self.note_fadein_start_input.setDisabled(not self.vis_config.note_fadein_enabled)
+        self.note_fadein_end_input.setValue(self.vis_config.note_fadein_end_ratio)
+        self.note_fadein_end_input.setMaximum(self.vis_config.note_fadein_start_ratio - .01)
+        self.note_fadein_end_input.setDisabled(not self.vis_config.note_fadein_enabled)
+        
         self.note_fadeout_checkbox.setChecked(self.vis_config.note_fadeout_enabled)
-        self.note_fadeout_input.setValue(self.vis_config.note_fadeout_ratio)
-        self.note_fadeout_input.setDisabled(not self.vis_config.note_fadeout_enabled)
+        self.note_fadeout_start_input.setValue(self.vis_config.note_fadeout_start_ratio)
+        self.note_fadein_start_input.setMinimum(self.vis_config.note_fadeout_end_ratio + .01)
+        self.note_fadeout_start_input.setDisabled(not self.vis_config.note_fadeout_enabled)
+        self.note_fadeout_end_input.setValue(self.vis_config.note_fadeout_end_ratio)
+        self.note_fadein_end_input.setMaximum(self.vis_config.note_fadeout_start_ratio - .01)
+        self.note_fadeout_end_input.setDisabled(not self.vis_config.note_fadeout_enabled)
 
         self.note_glow_checkbox.setChecked(self.vis_config.note_glow_enabled)
         self.note_glow_color.setColor(self.vis_config.note_glow_color)
@@ -187,14 +223,24 @@ class NotesTab(QWidget):
         self.note_sparks_angle_input.setDisabled(not self.vis_config.note_sparks_enabled)
         self.note_sparks_fade_time_input.setValue(self.vis_config.note_sparks_time_to_fade_sec)
         self.note_sparks_fade_time_input.setDisabled(not self.vis_config.note_sparks_enabled)
+        
+        self.note_bounce_checkbox.setChecked(self.vis_config.note_bounce_enabled)
+        self.note_bounce_height_input.setValue(self.vis_config.note_bounce_height_ratio)
+        self.note_bounce_height_input.setDisabled(not self.vis_config.note_bounce_enabled)
+        self.note_bounce_time_input.setValue(self.vis_config.note_bounce_time)
+        self.note_bounce_time_input.setDisabled(not self.vis_config.note_bounce_enabled)
 
         self.block_changes_callback = False
 
     def update_model(self):
         # pull UI values out of controls and set on model
         
+        self.vis_config.note_fadein_enabled = self.note_fadein_checkbox.isChecked()
+        self.vis_config.note_fadein_start_ratio = self.note_fadein_start_input.value()
+        self.vis_config.note_fadein_end_ratio = self.note_fadein_end_input.value()
         self.vis_config.note_fadeout_enabled = self.note_fadeout_checkbox.isChecked()
-        self.vis_config.note_fadeout_ratio = self.note_fadeout_input.value()
+        self.vis_config.note_fadeout_start_ratio = self.note_fadeout_start_input.value()
+        self.vis_config.note_fadeout_end_ratio = self.note_fadeout_end_input.value()
 
         self.vis_config.note_glow_enabled = self.note_glow_checkbox.isChecked()
         self.vis_config.note_glow_color = self.note_glow_color.getColor()
@@ -217,6 +263,10 @@ class NotesTab(QWidget):
         self.vis_config.note_sparks_count = self.note_sparks_count_input.value()
         self.vis_config.note_sparks_max_angle_deg = self.note_sparks_angle_input.value()
         self.vis_config.note_sparks_time_to_fade_sec = self.note_sparks_fade_time_input.value()
+
+        self.vis_config.note_bounce_enabled = self.note_bounce_checkbox.isChecked()
+        self.vis_config.note_bounce_height_ratio = self.note_bounce_height_input.value()
+        self.vis_config.note_bounce_time = self.note_bounce_time_input.value()
 
     # callbacks
 

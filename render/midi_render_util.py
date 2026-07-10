@@ -79,7 +79,14 @@ class MidiRenderUtil:
     def draw_notes(painter: QPainter, current_time: float, vis_config: VisConfig, pitch_min: int, pitch_max:int, rect: QRect):
         # convert ratios to pixel values
         playhead_x = rect.left() + rect.width() * vis_config.playhead_pos_ratio
-        note_fade_distance = (playhead_x - rect.left()) * vis_config.note_fadeout_ratio
+        
+        # compute fade start/end positions
+        note_fadein_start_x = playhead_x + (rect.right() - playhead_x) * vis_config.note_fadein_start_ratio
+        note_fadein_end_x = playhead_x + (rect.right() - playhead_x) * vis_config.note_fadein_end_ratio
+        note_fadeout_start_x = rect.left() + (playhead_x - rect.left()) * vis_config.note_fadeout_start_ratio
+        note_fadeout_end_x = rect.left() + (playhead_x - rect.left()) * vis_config.note_fadeout_end_ratio
+
+        #print(f"{rect.left()}\t{note_fadeout_end_x}\t{note_fadeout_start_x}\t{playhead_x}", end="\r", flush=True)
 
         # draw playhead line that notes will cross when they "play"
         if vis_config.show_playhead:
@@ -126,10 +133,10 @@ class MidiRenderUtil:
 
             for note in track.notes:
                 # x and width calc
-                x = int(playhead_x + (note.start - current_time) * pixels_per_sec)
+                x_left = int(playhead_x + (note.start - current_time) * pixels_per_sec)
                 w = int(note.duration * pixels_per_sec)
-                x_right = x + w
-                if x > rect.right() or x_right < rect.left():
+                x_right = x_left + w
+                if x_left > rect.right() or x_right < rect.left():
                     # note isn't in visible area - skip rendering
                     continue
 
@@ -138,7 +145,7 @@ class MidiRenderUtil:
                 bar_height_px = max(bar_height_px, 1) # min of 1 pixel
 
                 # y and height calc
-                note_center_y = MidiRenderUtil.pitch_to_y(
+                y_center = MidiRenderUtil.pitch_to_y(
                     note.pitch + track.pitch_offset,
                     pitch_min,
                     pitch_max,
@@ -146,35 +153,39 @@ class MidiRenderUtil:
                     vis_config.vertical_padding_ratio,
                     vis_config.vertical_offset_ratio,
                 )
-                y = note_center_y - bar_height_px / 2
+                y_top = y_center - bar_height_px / 2
                 h = bar_height_px
 
                 color = track.color
                 alpha = track.alpha
 
-                # start fading out only after the whole note has passed the playhead
+                # start fading in when note is within range of playhead
+                if vis_config.note_fadein_enabled and x_left >= playhead_x:
+                    alpha = alpha * (1 - ((x_left - note_fadein_end_x) / (note_fadein_start_x - note_fadein_end_x)))
+                    alpha = Util.clamp(alpha, 0, track.alpha)
+
+                # start fading out when right edge of note has passed the playhead
                 if vis_config.note_fadeout_enabled and x_right <= playhead_x:
-                    fade_start_x = playhead_x - note_fade_distance
-                    alpha = alpha * ((x_right - fade_start_x) / note_fade_distance)
-                    alpha = max(0, min(255, alpha))
+                    alpha = alpha * (x_right - note_fadeout_end_x) / (note_fadeout_start_x - note_fadeout_end_x)
+                    alpha = Util.clamp(alpha, 0, track.alpha)
 
                 # -- note sparks --
                 if vis_config.note_sparks_enabled and track.note_sparks_enabled:
                     MidiRenderUtil._draw_note_sparks(
-                        painter, vis_config, playhead_x, note.pitch, note.start, note_center_y, bar_height_px, pixels_per_sec,
+                        painter, vis_config, playhead_x, note.pitch, note.start, y_center, bar_height_px, pixels_per_sec,
                         current_time, color, alpha
                     )
 
                 # -- under glow --
-                if x < playhead_x and vis_config.note_glow_enabled:
-                    MidiRenderUtil._draw_note_glow(painter, vis_config, playhead_x, x, y, w, h, color, alpha, bar_height_px)
+                if x_left < playhead_x and vis_config.note_glow_enabled:
+                    MidiRenderUtil._draw_note_glow(painter, vis_config, playhead_x, x_left, y_top, w, h, color, alpha, bar_height_px)
 
                 # -- note bar --
-                MidiRenderUtil._draw_note(painter, x, y, w, h, color, alpha)
+                MidiRenderUtil._draw_note(painter, x_left, y_top, w, h, color, alpha)
 
                 # -- highlight --
-                if x < playhead_x and vis_config.note_highlight_enabled:
-                    MidiRenderUtil._draw_note_highlight(painter, vis_config, track, note, playhead_x, x, y, w, h, color, alpha)
+                if x_left < playhead_x and vis_config.note_highlight_enabled:
+                    MidiRenderUtil._draw_note_highlight(painter, vis_config, track, note, playhead_x, x_left, y_top, w, h, color, alpha)
 
 
     @staticmethod
