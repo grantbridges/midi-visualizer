@@ -231,7 +231,7 @@ class RenderWorker(QObject):
         image.fill(Qt.transparent)
 
         painter = QPainter(image)
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
         try:
             current_time = job.start_time + job.frame_index / job.vis_config.export_fps

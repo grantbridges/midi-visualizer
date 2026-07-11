@@ -3,11 +3,12 @@ from uuid import UUID
 
 from PySide6.QtWidgets import QMessageBox, QWidget
 from PySide6.QtGui import QFont, QPainter, QPen
-from PySide6.QtCore import QRect, Qt
+from PySide6.QtCore import QRect, QRectF, Qt
 from common import Const, Color
 from models import VisConfig, user_settings
 from render import MidiRenderUtil
 from utility import QUtil, Util
+from media.audio_provider import audio_provider
 
 PREVIEW_MIN_HEIGHT = 100
 
@@ -44,7 +45,7 @@ class PreviewCanvas(QWidget):
 
     def paintEvent(self, event):
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
         try:
             rect = self._get_preview_rect()
@@ -59,9 +60,27 @@ class PreviewCanvas(QWidget):
             MidiRenderUtil.draw_notes(painter, self.current_time, self.vis_config, self.pitch_min, self.pitch_max, rect)
             MidiRenderUtil.draw_fade_overlay(painter, self.current_time, self.start_time, self.end_time, self.vis_config, rect)
 
+            self._draw_waveform(painter, rect, self.current_time)
             self._draw_text(painter, rect)
         except Exception as e:
             QMessageBox.critical(self, "Preview Failed", f"Preview render failed: {str(e)}")
+
+    def _draw_waveform(self, painter: QPainter, rect: QRect, current_time: float):
+        if not self.vis_config.has_audio or not audio_provider.waveform_image:
+            return
+        
+        playhead_x = rect.left() + rect.width() * self.vis_config.playhead_pos_ratio
+        img = audio_provider.waveform_image
+        
+        waveform_height_px = rect.height() * 0.20
+        waveform_width_px = img.width()
+
+        waveform_x = playhead_x - (current_time * audio_provider.get_img_px_per_sec())
+        waveform_y = rect.y() + (rect.height() - waveform_height_px) / 2
+
+        target_rect = QRectF(waveform_x, waveform_y,waveform_width_px, waveform_height_px)
+
+        painter.drawImage(target_rect, img)
 
     def _draw_guides(self, painter: QPainter, rect: QRect):
         if not user_settings.show_guides:

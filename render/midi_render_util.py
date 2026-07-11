@@ -87,8 +87,6 @@ class MidiRenderUtil:
         note_fadeout_start_x = rect.left() + (playhead_x - rect.left()) * vis_config.note_fadeout_start_ratio
         note_fadeout_end_x = rect.left() + (playhead_x - rect.left()) * vis_config.note_fadeout_end_ratio
 
-        #print(f"{rect.left()}\t{note_fadeout_end_x}\t{note_fadeout_start_x}\t{playhead_x}", end="\r", flush=True)
-
         # draw playhead line that notes will cross when they "play"
         if vis_config.show_playhead:
             color = QUtil.rgb_to_qcolor(vis_config.playhead_color, vis_config.playhead_alpha)

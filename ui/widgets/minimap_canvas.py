@@ -88,7 +88,7 @@ class MinimapCanvas(QWidget):
 
     def paintEvent(self, event):
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
         try:
             if self._preview_cache_dirty or self._preview_cache is None:
@@ -117,7 +117,7 @@ class MinimapCanvas(QWidget):
         )
 
         painter = QPainter(self._preview_cache)
-        painter.setRenderHint(QPainter.Antialiasing, False)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
 
         self._draw_preview_data(painter, rect)
 
