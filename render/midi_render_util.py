@@ -81,7 +81,7 @@ class MidiRenderUtil:
             painter.fillRect(rect, QUtil.rgb_to_qcolor(vis_config.bg_tint_color, vis_config.bg_tint_alpha))
     
     @staticmethod
-    def draw_waveform(painter: QPainter, rect: QRect, current_time: float, vis_config: VisConfig):
+    def draw_waveform(painter: QPainter, current_time: float, vis_config: VisConfig, rect: QRect):
         if (not vis_config.show_waveform or
             not vis_config.play_audio or
             vis_config.waveform is None or

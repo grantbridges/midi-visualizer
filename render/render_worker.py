@@ -251,11 +251,8 @@ class RenderWorker(QObject):
 
             MidiRenderUtil.draw_background_tint(painter, job.vis_config, rect)
             MidiRenderUtil.draw_notes(painter, current_time, job.vis_config, job.pitch_min, job.pitch_max, rect)
+            MidiRenderUtil.draw_waveform(painter, current_time, job.vis_config, rect)
             MidiRenderUtil.draw_fade_overlay(painter, current_time, job.start_time, job.end_time, job.vis_config, rect)
-            
-            # save image file to disk
-            #path = Path(job.frames_dir).joinpath(f"frame_{job.frame_index:05d}.png")
-            #image.save(str(path))
         except Exception:
             logger.exception("RenderFrame | Render frame failed")
             raise
