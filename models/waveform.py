@@ -11,25 +11,29 @@ from pympler import asizeof
 logger = logging.getLogger("Waveform")
 
 @dataclass
-class WaveformSample():
-    min_amp: float = 0.0
-    max_amp: float = 0.0
-
-@dataclass
 class Waveform():
-    samples: List[WaveformSample] = field(default_factory=list)
-    samples_px_per_sec: int = 100
+    # store min/max amplitudes in parallel arrays - will always be same size
+    min_amps: np.ndarray = field(default_factory=lambda: np.array([], dtype=np.float32))
+    max_amps: np.ndarray = field(default_factory=lambda: np.array([], dtype=np.float32))
+    samples_px_per_sec: int = 120
 
-    def get_sample_at_time(self, time: float) -> WaveformSample | None:
+    def get_sample_at_time(self, time: float) -> tuple[float, float] | None:
+        '''
+        Returns: (min amplitude, max amplitude) for given time, if available
+        '''
         index = int(time * self.samples_px_per_sec)
 
-        if 0 <= index < len(self.samples):
-            return self.samples[index]
-        
+        if 0 <= index < self.get_samples_length():
+            return float(self.min_amps[index]), float(self.max_amps[index])
+
         return None
     
+    def get_samples_length(self):
+        return len(self.min_amps) # min/max are same size
+    
     def clear(self):
-        self.samples.clear()
+        self.min_amps = []
+        self.max_amps = []
     
     def load_from_audio(self, audio_path: str):
         self.clear()
@@ -58,24 +62,29 @@ class Waveform():
             check=True,
         )
 
-        samples = np.frombuffer(result.stdout, dtype=np.float32)
+        raw_samples = np.frombuffer(result.stdout, dtype=np.float32)
 
         samples_per_pixel = sample_rate / self.samples_px_per_sec
-        total_pixels = math.ceil(len(samples) / samples_per_pixel)
+        total_pixels = math.ceil(len(raw_samples) / samples_per_pixel)
 
+        min_amps = []
+        max_amps = []
         for x in range(total_pixels):
             # grab window range of samples needed for each pixel
             start = int(x * samples_per_pixel)
             end = int((x + 1) * samples_per_pixel)
 
-            chunk = samples[start:end]
+            chunk = raw_samples[start:end]
 
-            sample = WaveformSample()
-            if len(chunk) != 0:
-                sample.min_amp = float(chunk.min())
-                sample.max_amp = float(chunk.max())   
-            
-            self.samples.append(sample)
+            if len(chunk) == 0:
+                min_amps.append(0.0)
+                max_amps.append(0.0)
+            else:
+                min_amps.append(float(chunk.min()))
+                max_amps.append(float(chunk.max()))
 
-        size_bytes = asizeof.asizeof(self.samples)
-        logger.info(f"Loaded audio waveform sample data ({len(self.samples)} samples at {self.samples_px_per_sec} px/sec, {size_bytes / 1024 / 1024:.3f} MB)")
+        self.min_amps = np.array(min_amps, dtype=np.float32)
+        self.max_amps = np.array(max_amps, dtype=np.float32)
+
+        size_bytes = asizeof.asizeof(self)
+        logger.info(f"Loaded audio waveform sample data ({self.get_samples_length()} samples at {self.samples_px_per_sec} px/sec, {size_bytes / 1024 / 1024:.3f} MB)")

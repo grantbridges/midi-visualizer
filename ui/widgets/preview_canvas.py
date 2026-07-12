@@ -12,6 +12,9 @@ from media.audio_provider import audio_provider
 
 PREVIEW_MIN_HEIGHT = 100
 
+import logging
+logger = logging.getLogger("PreviewCanvas")
+
 class PreviewCanvas(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -47,8 +50,10 @@ class PreviewCanvas(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
+        rect = self._get_preview_rect()
+        
         try:
-            rect = self._get_preview_rect()
+            painter.save()
             painter.setClipRect(rect)
 
             MidiRenderUtil.draw_preview_background(painter, self.current_time, self.vis_config, rect)
@@ -60,10 +65,22 @@ class PreviewCanvas(QWidget):
             MidiRenderUtil.draw_notes(painter, self.current_time, self.vis_config, self.pitch_min, self.pitch_max, rect)
             MidiRenderUtil.draw_waveform(painter, rect, self.current_time, self.vis_config)
             MidiRenderUtil.draw_fade_overlay(painter, self.current_time, self.start_time, self.end_time, self.vis_config, rect)
-
+           
             self._draw_text(painter, rect)
+
+            painter.restore()
         except Exception as e:
-            QMessageBox.critical(self, "Preview Failed", f"Preview render failed: {str(e)}")
+            logger.exception(f"Preview render failed")
+
+            # try to draw error text on screen
+            try:
+                painter.restore()
+                self._draw_error_text(painter, rect, str(e))
+            except Exception:
+                pass
+        finally:
+            painter.end()
+
 
     def _draw_guides(self, painter: QPainter, rect: QRect):
         if not user_settings.show_guides:
@@ -158,10 +175,8 @@ class PreviewCanvas(QWidget):
                         text_top += track_font_size + 3
 
     def _draw_text(self, painter: QPainter, rect: QRect):
-        text_padding = 5
-        text_top = text_padding
-
         if user_settings.show_time_display:
+            text_padding = 5
             # draw text time display
             time_display_font_size = 10
             color = QUtil.rgb_to_qcolor(Color.WHITE, 200)
@@ -176,7 +191,20 @@ class PreviewCanvas(QWidget):
                 QRect(rect.left() + text_padding, rect.top() + text_padding, 130, time_display_font_size),
                 f"{sign}{m:02d}:{s:05.2f}"
             )
-            text_top += time_display_font_size + text_padding
+
+    def _draw_error_text(self, painter: QPainter, rect: QRect, error_msg: str):
+        text_padding = 3
+        error_display_font_size = 8
+        color = QUtil.rgb_to_qcolor(Color.PREVIEW_ERROR)
+        font = QFont(Const.PRIMARY_FONT, error_display_font_size)
+        painter.setPen(color)
+        painter.setFont(font)
+        painter.drawText(QRect(
+            text_padding, 
+            rect.bottom() - text_padding - error_display_font_size, 
+            self.width(), 
+            error_display_font_size + text_padding
+        ), f"Preview error: {error_msg}. See logs for more details.")
 
     def _get_preview_rect(self) -> QRect:
         rect = self.contentsRect()

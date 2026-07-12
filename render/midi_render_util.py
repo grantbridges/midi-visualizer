@@ -84,7 +84,7 @@ class MidiRenderUtil:
     def draw_waveform(painter: QPainter, rect: QRect, current_time: float, vis_config: VisConfig):
         if (not vis_config.show_waveform or
             vis_config.waveform is None or
-            not vis_config.waveform.samples or
+            vis_config.waveform.get_samples_length() == 0 or
             vis_config.waveform_sec_across_screen <= 0):
             return
 
@@ -104,12 +104,12 @@ class MidiRenderUtil:
             time_at_x = current_time + ((x - playhead_x) * sec_per_px)
 
             sample = vis_config.waveform.get_sample_at_time(time_at_x)
-
             if sample is None:
                 continue
 
-            y1 = waveform_center_y - (sample.max_amp * waveform_height_px / 2)
-            y2 = waveform_center_y - (sample.min_amp * waveform_height_px / 2)
+            min_amp, max_amp = sample
+            y1 = waveform_center_y - (max_amp * waveform_height_px / 2)
+            y2 = waveform_center_y - (min_amp * waveform_height_px / 2)
 
             painter.drawLine(x, y1, x, y2)
 
