@@ -72,7 +72,7 @@ class VisConfig:
     audio_filepath: str = ""
 
     # -- Waveform --
-    show_waveform: bool = True
+    show_waveform: bool = False
     waveform_color: RGB = Color.WHITE
     waveform_alpha: int = 25
     waveform_sec_across_screen: float = 5.1

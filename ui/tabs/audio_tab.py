@@ -121,11 +121,17 @@ class AudioTab(QWidget):
         self.audio_file_clear_btn.setEnabled(self.vis_config.play_audio and bool(self.vis_config.audio_filepath))
 
         self.show_waveform_checkbox.setChecked(self.vis_config.show_waveform)
+        self.show_waveform_checkbox.setEnabled(self.vis_config.has_audio())
         self.waveform_color_button.setColor(self.vis_config.waveform_color)
+        self.waveform_color_button.setEnabled(self.vis_config.show_waveform and self.vis_config.has_audio())
         self.waveform_alpha_input.setValue(self.vis_config.waveform_alpha)
+        self.waveform_alpha_input.setEnabled(self.vis_config.show_waveform and self.vis_config.has_audio())
         self.waveform_speed_input.setValue(Util.internal_to_display(self.vis_config.waveform_sec_across_screen, 0.1, 20.0, 10.0, 0.1 ))
+        self.waveform_speed_input.setEnabled(self.vis_config.show_waveform and self.vis_config.has_audio())
         self.waveform_height_input.setValue(self.vis_config.waveform_height_ratio)
+        self.waveform_height_input.setEnabled(self.vis_config.show_waveform and self.vis_config.has_audio())
         self.waveform_pos_input.setValue(self.vis_config.waveform_pos_ratio)
+        self.waveform_pos_input.setEnabled(self.vis_config.show_waveform and self.vis_config.has_audio())
 
         self.block_changes_callback = False
 
