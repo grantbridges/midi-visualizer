@@ -40,9 +40,9 @@ History
   16 - Glow and highlight color
   17 - Note bounce; note fade in/out updates
   18 - Track group control of note bounce
-  19 - TODO Waveform config
+  19 - Waveform config
 '''
-VIS_CONFIG_SCHEMA_VERSION = 18
+VIS_CONFIG_SCHEMA_VERSION = 19
 
 @dataclass
 class VisConfig:
@@ -75,7 +75,7 @@ class VisConfig:
     show_waveform: bool = True
     waveform_color: RGB = Color.WHITE
     waveform_alpha: int = 25
-    waveform_sec_across_screen: float = 5.0
+    waveform_sec_across_screen: float = 5.1
     waveform_height_ratio: float = 0.2 # ratio of screen height
     waveform_pos_ratio: float = 0.5 # ratio of screen height
 
@@ -225,6 +225,13 @@ class VisConfig:
 
             "play_audio": self.play_audio,
             "audio_filepath": self.audio_filepath,
+
+            "show_waveform": self.show_waveform,
+            "waveform_color": list(self.waveform_color),
+            "waveform_alpha": self.waveform_alpha,
+            "waveform_sec_across_screen": self.waveform_sec_across_screen,
+            "waveform_height_ratio": self.waveform_height_ratio,
+            "waveform_pos_ratio": self.waveform_pos_ratio,
 
             "export_dir": self.export_dir,
             "export_filename": self.export_filename,
@@ -422,6 +429,14 @@ class VisConfig:
                 config.note_fadeout_end_ratio = data["note_fadeout_end_ratio"]
                 config.note_bounce_enabled = data["note_bounce_enabled"]
                 config.note_bounce_height_ratio = data["note_bounce_height_ratio"]
+
+            if schema_version >= 19:
+                config.show_waveform = data["show_waveform"]
+                config.waveform_color = tuple(data["waveform_color"])
+                config.waveform_alpha = data["waveform_alpha"]
+                config.waveform_sec_across_screen = data["waveform_sec_across_screen"]
+                config.waveform_height_ratio = data["waveform_height_ratio"]
+                config.waveform_pos_ratio = data["waveform_pos_ratio"]
 
             size_bytes = asizeof.asizeof(config)
             logger.info(f"Load | Loaded config ({size_bytes / 1024 / 1024:.3f} MB)")

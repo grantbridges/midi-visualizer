@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 
 from models import VisConfig
 from ui.common import ColorButton, LayoutUtil, Icons
+from utility import Util
 
 class AudioTab(QWidget):
     def __init__(self, 
@@ -43,6 +44,19 @@ class AudioTab(QWidget):
         self.audio_file_clear_btn = QPushButton()
         self.audio_file_clear_btn.setIcon(Icons.trash_can())
         self.audio_file_clear_btn.clicked.connect(self._clear_audio_file)
+
+        self.show_waveform_checkbox = QCheckBox()
+        self.show_waveform_checkbox.toggled.connect(self._on_changes)
+        self.waveform_color_button = ColorButton()
+        self.waveform_color_button.valueChanged.connect(self._on_changes)
+        self.waveform_alpha_input = QSpinBox(minimum=0, maximum=255)
+        self.waveform_alpha_input.valueChanged.connect(self._on_changes)
+        self.waveform_speed_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=10.0, singleStep=0.01)
+        self.waveform_speed_input.valueChanged.connect(self._on_changes)
+        self.waveform_height_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.0, singleStep=0.01)
+        self.waveform_height_input.valueChanged.connect(self._on_changes)
+        self.waveform_pos_input = QDoubleSpinBox(decimals=2, minimum=0.00, maximum=1.0, singleStep=0.01)
+        self.waveform_pos_input.valueChanged.connect(self._on_changes)
 
     def shutdown(self):
         pass
@@ -72,6 +86,14 @@ class AudioTab(QWidget):
         LayoutUtil.checkbox(column, "Use Audio", self.use_audio_checkbox)
         LayoutUtil.file_picker(column, "Audio File", self.audio_file_input, self.audio_file_browse_btn, self.audio_file_clear_btn)
 
+        LayoutUtil.section(column, "Waveform")
+        LayoutUtil.checkbox(column, "Show Waveform", self.show_waveform_checkbox)
+        LayoutUtil.button(column, "Waveform Color", self.waveform_color_button)
+        LayoutUtil.spinbox(column, "Waveform Alpha", self.waveform_alpha_input)
+        LayoutUtil.spinbox(column, "Waveform Speed", self.waveform_speed_input)
+        LayoutUtil.spinbox(column, "Waveform Size", self.waveform_height_input)
+        LayoutUtil.spinbox(column, "Waveform Position", self.waveform_pos_input)
+
         column.addStretch()
 
         # --- Right Column ---
@@ -98,12 +120,26 @@ class AudioTab(QWidget):
         self.audio_file_browse_btn.setEnabled(self.vis_config.play_audio)
         self.audio_file_clear_btn.setEnabled(self.vis_config.play_audio and bool(self.vis_config.audio_filepath))
 
+        self.show_waveform_checkbox.setChecked(self.vis_config.show_waveform)
+        self.waveform_color_button.setColor(self.vis_config.waveform_color)
+        self.waveform_alpha_input.setValue(self.vis_config.waveform_alpha)
+        self.waveform_speed_input.setValue(Util.internal_to_display(self.vis_config.waveform_sec_across_screen, 0.1, 20.0, 10.0, 0.1 ))
+        self.waveform_height_input.setValue(self.vis_config.waveform_height_ratio)
+        self.waveform_pos_input.setValue(self.vis_config.waveform_pos_ratio)
+
         self.block_changes_callback = False
 
     def update_model(self):
         # pull UI values out of controls and set on model
         self.vis_config.play_audio = self.use_audio_checkbox.isChecked()
         self.vis_config.audio_filepath = self.audio_file_input.text()
+
+        self.vis_config.show_waveform = self.show_waveform_checkbox.isChecked()
+        self.vis_config.waveform_color = self.waveform_color_button.getColor()
+        self.vis_config.waveform_alpha = self.waveform_alpha_input.value()
+        self.vis_config.waveform_sec_across_screen = Util.display_to_internal(self.waveform_speed_input.value(), 10.0, 0.1, 0.1, 20.0)
+        self.vis_config.waveform_height_ratio = self.waveform_height_input.value()
+        self.vis_config.waveform_pos_ratio = self.waveform_pos_input.value()
 
     # callbacks
 
