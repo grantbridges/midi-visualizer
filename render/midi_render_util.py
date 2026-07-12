@@ -83,6 +83,7 @@ class MidiRenderUtil:
     @staticmethod
     def draw_waveform(painter: QPainter, rect: QRect, current_time: float, vis_config: VisConfig):
         if (not vis_config.show_waveform or
+            not vis_config.play_audio or
             vis_config.waveform is None or
             vis_config.waveform.get_samples_length() == 0 or
             vis_config.waveform_sec_across_screen <= 0):

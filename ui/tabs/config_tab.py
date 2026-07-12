@@ -24,7 +24,6 @@ class ConfigTab(QWidget):
         on_changes_callback: object,
         on_bg_video_selected_callback: object,
         on_bg_image_selected_callback: object,
-        on_audio_selected_callback: object,
         parent=None
     ):
         super().__init__(parent)
@@ -32,7 +31,6 @@ class ConfigTab(QWidget):
         self.on_changes_callback = on_changes_callback
         self.on_bg_video_selected_callback = on_bg_video_selected_callback
         self.on_bg_image_selected_callback = on_bg_image_selected_callback
-        self.on_audio_selected_callback = on_audio_selected_callback
         self.vis_config = vis_config
 
         self.block_changes_callback: bool = False
@@ -80,16 +78,6 @@ class ConfigTab(QWidget):
         self.bg_tint_color_button.valueChanged.connect(self._on_changes)
         self.bg_tint_alpha_input = QSpinBox(minimum=0, maximum=255)
         self.bg_tint_alpha_input.valueChanged.connect(self._on_changes)
-
-        self.use_audio_checkbox = QCheckBox()
-        self.use_audio_checkbox.toggled.connect(self._on_changes)
-        self.audio_file_input = QLineEdit(readOnly=True)
-        self.audio_file_browse_btn = QPushButton()
-        self.audio_file_browse_btn.setIcon(Icons.ellipsis())
-        self.audio_file_browse_btn.clicked.connect(self._browse_audio_file)
-        self.audio_file_clear_btn = QPushButton()
-        self.audio_file_clear_btn.setIcon(Icons.trash_can())
-        self.audio_file_clear_btn.clicked.connect(self._clear_audio_file)
 
         self.show_playhead_checkbox = QCheckBox()
         self.show_playhead_checkbox.toggled.connect(self._on_changes)
@@ -161,10 +149,6 @@ class ConfigTab(QWidget):
         LayoutUtil.section(column, "Track Props")
         LayoutUtil.line_edit(column, "Track Name", self.track_name)
         LayoutUtil.combobox(column, "Orientation", self.orientation_combo)
-
-        LayoutUtil.section(column, "Audio")
-        LayoutUtil.checkbox(column, "Use Audio", self.use_audio_checkbox)
-        LayoutUtil.file_picker(column, "Audio File", self.audio_file_input, self.audio_file_browse_btn, self.audio_file_clear_btn)
 
         LayoutUtil.section(column, "Background")
         LayoutUtil.combobox(column, "Background Mode", self.bg_mode_combo)
@@ -257,12 +241,6 @@ class ConfigTab(QWidget):
         self.bg_tint_alpha_input.setValue(self.vis_config.bg_tint_alpha)
         self.bg_tint_alpha_input.setEnabled(self.vis_config.bg_tint_enabled)
 
-        self.use_audio_checkbox.setChecked(self.vis_config.play_audio)
-        self.audio_file_input.setText(self.vis_config.audio_filepath)
-        self.audio_file_input.setEnabled(self.vis_config.play_audio)
-        self.audio_file_browse_btn.setEnabled(self.vis_config.play_audio)
-        self.audio_file_clear_btn.setEnabled(self.vis_config.play_audio and bool(self.vis_config.audio_filepath))
-
         self.show_playhead_checkbox.setChecked(self.vis_config.show_playhead)
         self.playhead_color_button.setColor(self.vis_config.playhead_color)
         self.playhead_color_button.setEnabled(self.vis_config.show_playhead)
@@ -320,9 +298,6 @@ class ConfigTab(QWidget):
         self.vis_config.bg_tint_enabled = self.bg_tint_checkbox.isChecked()
         self.vis_config.bg_tint_color = self.bg_tint_color_button.getColor()
         self.vis_config.bg_tint_alpha = self.bg_tint_alpha_input.value()
-
-        self.vis_config.play_audio = self.use_audio_checkbox.isChecked()
-        self.vis_config.audio_filepath = self.audio_file_input.text()
 
         self.vis_config.show_playhead = self.show_playhead_checkbox.isChecked()
         self.vis_config.playhead_color = self.playhead_color_button.getColor()
@@ -410,35 +385,6 @@ class ConfigTab(QWidget):
         self.bg_video_file_input.setText("")
         self._on_bg_video_selected()
 
-    def _browse_audio_file(self):
-        default_filepath = self.vis_config.audio_filepath or ""
-
-        audio_file, _ = QFileDialog.getOpenFileName(
-            self,
-            "Select Audio File",
-            default_filepath,
-            "Audio Files (*.wav *.mp3 *.aiff *.aif *.flac *.m4a *.ogg)"
-        )
-
-        if audio_file:
-            self.audio_file_input.setText(audio_file)
-            self._on_audio_selected()
-
-    def _clear_audio_file(self):
-        result = QMessageBox.question(
-            self,
-            "Confirm Audio File Remove",
-            f"Are you sure you want to remove the selected audio file?",
-            QMessageBox.Cancel | QMessageBox.Yes,
-            QMessageBox.Cancel,
-        )
-
-        if result != QMessageBox.Yes:
-            return
-        
-        self.audio_file_input.setText("")
-        self._on_audio_selected()
-
     def _on_changes(self):
         if not self.block_changes_callback:
             self.on_changes_callback()
@@ -454,10 +400,4 @@ class ConfigTab(QWidget):
         if not self.block_changes_callback:
             self.on_changes_callback()
             self.on_bg_image_selected_callback()
-            self.refresh_ui()
-
-    def _on_audio_selected(self):
-        if not self.block_changes_callback:
-            self.on_changes_callback()
-            self.on_audio_selected_callback()
             self.refresh_ui()
