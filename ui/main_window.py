@@ -380,14 +380,21 @@ class MainWindow(QMainWindow):
         try:
             QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
             audio_provider.clear()
-            has_audio = (
-                bool(self.vis_config.audio_filepath)
-                and Path(self.vis_config.audio_filepath).is_file()
-            )
+            self.vis_config.waveform.clear()
 
-            if has_audio:
-                audio_provider.load_audio(self.vis_config.audio_filepath)
+            audio_path = self.vis_config.audio_filepath
+
+            # ensure this is a valid path before loading
+            if bool(audio_path) and Path(audio_path).is_file():
+                audio_provider.load_audio(audio_path)
+
+                try:
+                    self.vis_config.waveform.load_from_audio(audio_path)
+                except:
+                    logger.exception("Load Audio | Failed to load audio waveform data from audio file")
+            
         except Exception as e:
+            logger.exception("Load Audio | Failed to load audio")
             QMessageBox.critical(self, "Load Failed", f"Failed to load audio: {str(e)}")
         finally:
             QApplication.restoreOverrideCursor()

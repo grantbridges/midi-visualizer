@@ -45,6 +45,10 @@ class MidiRenderUtil:
         return y_max + t * (y_min - y_max)
     
     @staticmethod
+    def playhead_x(rect: QRect, vis_config: VisConfig):
+        return rect.left() + rect.width() * vis_config.playhead_pos_ratio
+    
+    @staticmethod
     def draw_preview_background(painter: QPainter, current_time: float, vis_config: VisConfig, rect: QRect, ignore_video: bool = False):
         # Note: only use this method for preview; bg renderer will only use color background
         match vis_config.bg_mode:
@@ -77,9 +81,42 @@ class MidiRenderUtil:
             painter.fillRect(rect, QUtil.rgb_to_qcolor(vis_config.bg_tint_color, vis_config.bg_tint_alpha))
     
     @staticmethod
+    def draw_waveform(painter: QPainter, rect: QRect, current_time: float, vis_config: VisConfig):
+        if (not vis_config.show_waveform or
+            vis_config.waveform is None or
+            not vis_config.waveform.samples or
+            vis_config.waveform_sec_across_screen <= 0):
+            return
+
+        # convert ratios to pixels
+        sec_per_px = vis_config.waveform_sec_across_screen / rect.width()
+        waveform_height_px = rect.height() * vis_config.waveform_height_ratio
+        waveform_center_y = rect.top() + (rect.height() * vis_config.waveform_pos_ratio)
+        playhead_x = MidiRenderUtil.playhead_x(rect, vis_config)
+
+        color = QUtil.rgb_to_qcolor(vis_config.waveform_color, vis_config.waveform_alpha)
+        pen = QPen(color)
+        pen.setWidth(1)
+        painter.setPen(pen)
+
+        # draw waveform over current visible rect, position adjusted for current time
+        for x in range(rect.left(), rect.right() + 1):
+            time_at_x = current_time + ((x - playhead_x) * sec_per_px)
+
+            sample = vis_config.waveform.get_sample_at_time(time_at_x)
+
+            if sample is None:
+                continue
+
+            y1 = waveform_center_y - (sample.max_amp * waveform_height_px / 2)
+            y2 = waveform_center_y - (sample.min_amp * waveform_height_px / 2)
+
+            painter.drawLine(x, y1, x, y2)
+
+    @staticmethod
     def draw_notes(painter: QPainter, current_time: float, vis_config: VisConfig, pitch_min: int, pitch_max:int, rect: QRect):
         # convert ratios to pixel values
-        playhead_x = rect.left() + rect.width() * vis_config.playhead_pos_ratio
+        playhead_x = MidiRenderUtil.playhead_x(rect, vis_config)
         
         # compute fade start/end positions
         note_fadein_start_x = playhead_x + (rect.right() - playhead_x) * vis_config.note_fadein_start_ratio

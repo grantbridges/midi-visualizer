@@ -12,6 +12,7 @@ from models.note import Note
 from models.render_format import RenderFormat
 from models.resolution import Resolution
 from models.bg_mode import BackgroundMode
+from models.waveform import Waveform
 from pympler import asizeof
 
 import logging
@@ -39,8 +40,9 @@ History
   16 - Glow and highlight color
   17 - Note bounce; note fade in/out updates
   18 - Track group control of note bounce
+  19 - TODO Waveform config
 '''
-VIS_CONFIG_SCHEMA_VERSION = 17
+VIS_CONFIG_SCHEMA_VERSION = 18
 
 @dataclass
 class VisConfig:
@@ -68,6 +70,14 @@ class VisConfig:
     # -- Audio --
     play_audio: bool = True
     audio_filepath: str = ""
+
+    # -- Waveform --
+    show_waveform: bool = True
+    waveform_color: RGB = Color.WHITE
+    waveform_alpha: int = 25
+    waveform_sec_across_screen: float = 5.0
+    waveform_height_ratio: float = 0.2 # ratio of screen height
+    waveform_pos_ratio: float = 0.5 # ratio of screen height
 
     # -- Export Props --
     export_dir: str = ""
@@ -153,8 +163,14 @@ class VisConfig:
     tracks: List[Track] = field(default_factory=list)
     track_groups: List[TrackGroup] = field(default_factory=list)
 
+    # ----- local data -----
+
     # cache of track groups for quick lookup
     _track_groups_dict: dict[UUID, TrackGroup] = field(default_factory=dict)
+
+    # cache of loaded audio waveform data for rendering - stored here
+    # for access convenience, but updated by "load_audio" call in main_window
+    waveform: Waveform = field(default_factory=Waveform)
     
     @staticmethod
     def create_from_midi_data(track_name: str, midi_data: pretty_midi.PrettyMIDI) -> None:
