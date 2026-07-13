@@ -42,7 +42,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        logger.info(f"Starting MIDI Visualizer main window")
+        logger.info(f"Starting {Const.APP_NAME} main window")
 
         self.setMinimumSize(Const.SCREEN_MIN_WIDTH, Const.SCREEN_MIN_HEIGHT)
 

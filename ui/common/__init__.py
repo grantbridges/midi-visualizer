@@ -6,3 +6,4 @@ from ui.common.section_divider import SectionDivider
 from ui.common.layout_util import LayoutUtil
 from ui.common.widget_util import WidgetUtil
 from ui.common.icons import Icons
+from ui.common.splashscreen import SplashScreen

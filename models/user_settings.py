@@ -1,28 +1,12 @@
 from __future__ import annotations
+from dataclasses import dataclass
+from PySide6.QtCore import QSettings
+from common import Const
 
-import json
-from dataclasses import dataclass, asdict
-from pathlib import Path
-
-from utility.file_util import FileUtil
 
 import logging
 logger = logging.getLogger("UserSettings")
 
-# ----
-
-'''
-History
-  1 - Initial version
-  2 - Added "show guides" and "mute audio"
-  3 - Added "show pitches"
-  4 - Renamed to "show_track_groups"
-  5 - Added active project path
-  6 - Added preview loop
-  7 - Expanded preview
-'''
-USER_SETTINGS_SCHEMA_VERSION = 7
-USER_SETTINGS_FILENAME = "user_settings.json"
 
 @dataclass
 class UserSettings:
@@ -38,65 +22,42 @@ class UserSettings:
     show_track_groups: bool = False
     show_guides: bool = True
     show_pitches: bool = False
-    mute_audio: bool = True
+    mute_audio: bool = False
     loop_preview: bool = True
 
     @staticmethod
-    def _settings_path() -> Path:
-        return Path(FileUtil.get_app_data_dir()) / USER_SETTINGS_FILENAME
+    def _qsettings() -> QSettings:
+        return QSettings(Const.ORG_NAME, Const.APP_NAME)
 
     def save(self) -> None:
-        path = self._settings_path()
-        path.parent.mkdir(parents=True, exist_ok=True)
+        logger.debug("Saving user settings")
 
-        data = {
-            "schema_version": USER_SETTINGS_SCHEMA_VERSION,
-            **asdict(self),
-        }
+        settings = self._qsettings()
 
-        logger.info(f"Saving user settings")
+        settings.setValue("project/active_project_path", self.active_project_path)
 
-        with path.open("w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2)
+        settings.setValue("preview/show_time_display", self.show_time_display)
+        settings.setValue("preview/show_track_groups", self.show_track_groups)
+        settings.setValue("preview/show_guides", self.show_guides)
+        settings.setValue("preview/show_pitches", self.show_pitches)
+        settings.setValue("preview/mute_audio", self.mute_audio)
+        settings.setValue("preview/loop_preview", self.loop_preview)
+
+        settings.sync()
 
     def load(self) -> None:
-        path = self._settings_path()
+        logger.info("Loading user settings")
 
-        if not path.exists():
-            logger.info("No user settings found on disk - using default")
-            return
-        
-        logger.info(f"Loading user settings from \"{str(path)}\"")
+        settings = self._qsettings()
 
-        with path.open("r", encoding="utf-8") as f:
-            data = json.load(f)
+        self.active_project_path = settings.value("project/active_project_path", None, type=str)
 
-        schema_version = data.get("schema_version", 1)
-
-        self.show_time_display = data["show_time_display"]
-
-        if schema_version >= 2:
-            self.show_guides = data["show_guides"]
-            self.mute_audio = data["mute_audio"]
-
-        if schema_version >= 3:
-            self.show_pitches = data["show_pitches"]
-
-        if schema_version >= 4:
-            self.show_track_groups = data["show_track_groups"]
-        else:
-            self.show_track_groups = data["show_track_names"]
-
-        if schema_version >= 5:
-            self.active_project_path = data["active_project_path"]
-
-        if schema_version >= 6:
-            self.loop_preview = data["loop_preview"]
-
-        if schema_version >= 7:
-            # removed tracked "expanded preview" field
-            pass
-
+        self.show_time_display = settings.value("preview/show_time_display", self.show_time_display, type=bool)
+        self.show_track_groups = settings.value("preview/show_track_groups",self.show_track_groups, type=bool)
+        self.show_guides = settings.value( "preview/show_guides",self.show_guides,type=bool)
+        self.show_pitches = settings.value("preview/show_pitches",self.show_pitches,type=bool)
+        self.mute_audio = settings.value("preview/mute_audio", self.mute_audio, type=bool)
+        self.loop_preview = settings.value("preview/loop_preview", self.loop_preview, type=bool)
 
 # module-level singleton instance
 user_settings = UserSettings()

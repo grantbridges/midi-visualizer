@@ -202,7 +202,7 @@ class PreviewWidget(QWidget):
                             if self.current_time <= audio_provider.get_duration_seconds():
                                 audio_out_of_sync_sec = abs(audio_provider.get_position_seconds() - self.current_time)
                                 if audio_out_of_sync_sec >= self.audio_sync_tolerance_sec:
-                                    logger.debug(f"Audio out of sync by {audio_out_of_sync_sec:.2f} sec - resyncing")
+                                    # logger.debug(f"Audio out of sync by {audio_out_of_sync_sec:.2f} sec - resyncing")
                                     audio_provider.seek_seconds(self.current_time)
                     else:
                         if audio_provider.is_playing():

@@ -4,6 +4,7 @@ from common.types import RGB
 
 class Color(tuple, Enum):
     WHITE = (255, 255, 255)
+    SPLASH_SCREEN_TEXT = (224, 224, 224)
     BLACK = (0, 0, 0)
     LIGHTISH_GRAY = (109, 109, 109)
     LIGHT_GRAY = (180, 180, 180)

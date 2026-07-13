@@ -1,6 +1,6 @@
-# MIDI Visualizer
+# Illustri MIDI Studio
 
-I'll update this when I have something interesting!
+Bring your composition to the next level with Illustri MIDI Studio, a free MIDI video illustration app available now on both Windows and Mac
 
 ## Dev Setup
 

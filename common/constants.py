@@ -3,10 +3,13 @@ class Const:
         raise TypeError("Const is static")
     
     # app props
-    APP_NAME = "MIDI Visualizer"
-    APP_ALT_NAME = "midi-vis"
+    ORG_NAME = "Grant Bridges"
+    APP_NAME = "Illustri MIDI Studio"
+    APP_ALT_NAME = "illustri"
+    VERSION = "1.0.0-beta"
+    BUILD_DATE = "July 12, 2026"
 
-    PROJECT_EXT = "mvp" # midi visualizer project
+    PROJECT_EXT = "mvp" # #TODO ipr illustri project
 
     SCREEN_INITIAL_WIDTH = 1200
     SCREEN_INITIAL_HEIGHT = 900

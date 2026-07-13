@@ -1,1 +1,1 @@
-pyinstaller "MIDI Visualizer.spec" --clean --noconfirm
+pyinstaller "Illustri MIDI Studio.spec" --clean --noconfirm

@@ -21,7 +21,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='MIDI Visualizer',
+    name='Illustri MIDI Studio',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -40,11 +40,11 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='MIDI Visualizer',
+    name='Illustri MIDI Studio',
 )
 app = BUNDLE(
     coll,
-    name='MIDI Visualizer.app',
+    name='Illustri MIDI Studio.app',
     icon=None,
     bundle_identifier=None,
 )
