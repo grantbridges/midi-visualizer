@@ -1,6 +1,8 @@
+from datetime import datetime
 import logging
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
+from zipfile import ZipFile, ZIP_DEFLATED
 from common import Const
 
 import logging
@@ -58,7 +60,7 @@ class LogUtil:
         debug_enabled: bool = False,
         retention_days: int = 14,
     ):
-        log_dir = Path(FileUtil.get_app_data_dir()) / "logs"
+        log_dir = FileUtil.get_logs_dir()
         log_dir.mkdir(parents=True, exist_ok=True)
 
         log_level = logging.DEBUG if debug_enabled else logging.INFO
@@ -96,4 +98,19 @@ class LogUtil:
         console_handler.setLevel(log_level)
         console_handler.setFormatter(console_formatter)
         logger.addHandler(console_handler)
+
+    @staticmethod
+    def zip_logs_to_dir(output_dir: Path):
+        date_str = datetime.now().strftime("%Y-%m-%d")
+        output_zip = FileUtil.get_unique_path(Path(output_dir) / f"{Const.APP_ALT_NAME}-logs-{date_str}.zip")
+
+        # grab all log files from log dir
+        log_files = [
+            path for path in FileUtil.get_logs_dir().glob(f"{Const.APP_ALT_NAME}.log*")
+            if path.is_file()
+        ]
+
+        with ZipFile(output_zip, "w", compression=ZIP_DEFLATED) as zip_file:
+            for path in log_files:
+                zip_file.write(path, arcname=path.name)
         

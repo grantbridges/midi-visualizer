@@ -32,6 +32,7 @@ from ui.dialogs import (
     ExportOptionsDialog, 
     ProgressDialog
 )
+from utility import LogUtil
 
 import logging
 logger = logging.getLogger("MainWindow")
@@ -66,34 +67,7 @@ class MainWindow(QMainWindow):
         self.render_thread: QThread | None = None
         self.render_worker: RenderWorker | None = None
 
-        # File menu
-        menu_bar = self.menuBar()
-        file_menu = menu_bar.addMenu("File")
-
-        # Actions
-        self.new_project_action = QAction("New Project...", self, shortcut="Ctrl+N")
-        self.new_project_action.triggered.connect(self.on_new_project_action)
-        self.update_project_action = QAction("Update Project MIDI...", self, shortcut="Ctrl+U")
-        self.update_project_action.triggered.connect(self.on_update_project_action)
-        self.open_action = QAction("Open...", parent=self, shortcut="Ctrl+O")
-        self.open_action.triggered.connect(self.on_open_action)
-        self.save_action = QAction("Save", parent=self, shortcut="Ctrl+S")
-        self.save_action.triggered.connect(self.on_save_action)
-        self.save_as_action = QAction("Save As...", parent=self, shortcut="Ctrl+Shift+S")
-        self.save_as_action.triggered.connect(self.on_save_as_action)
-        self.export_action = QAction("Export...", parent=self, shortcut="Ctrl+Shift+X")
-        self.export_action.triggered.connect(self.on_export_action)
-
-        # Add actions to menu
-        file_menu.addAction(self.new_project_action)
-        file_menu.addAction(self.update_project_action)
-        file_menu.addSeparator()
-        file_menu.addAction(self.open_action)
-        file_menu.addSeparator()
-        file_menu.addAction(self.save_action)
-        file_menu.addAction(self.save_as_action)
-        file_menu.addSeparator()
-        file_menu.addAction(self.export_action)
+        self.init_menu_bar()
 
         # Key shortcuts
         self.space_shortcut = QShortcut(QKeySequence(Qt.Key_Space), self)
@@ -138,7 +112,44 @@ class MainWindow(QMainWindow):
 
         self.resize(Const.SCREEN_INITIAL_WIDTH, Const.SCREEN_INITIAL_HEIGHT)
         #self.showFullScreen()
-        
+
+    def init_menu_bar(self):
+        menu_bar = self.menuBar()
+
+        # File menu
+        file_menu = menu_bar.addMenu("File")
+
+        self.new_project_action = QAction("New Project...", self, shortcut="Ctrl+N")
+        self.new_project_action.triggered.connect(self.on_new_project_action)
+        self.update_project_action = QAction("Update Project MIDI...", self, shortcut="Ctrl+U")
+        self.update_project_action.triggered.connect(self.on_update_project_action)
+        self.open_action = QAction("Open...", parent=self, shortcut="Ctrl+O")
+        self.open_action.triggered.connect(self.on_open_action)
+        self.save_action = QAction("Save", parent=self, shortcut="Ctrl+S")
+        self.save_action.triggered.connect(self.on_save_action)
+        self.save_as_action = QAction("Save As...", parent=self, shortcut="Ctrl+Shift+S")
+        self.save_as_action.triggered.connect(self.on_save_as_action)
+        self.export_action = QAction("Export...", parent=self, shortcut="Ctrl+Shift+X")
+        self.export_action.triggered.connect(self.on_export_action)
+
+        file_menu.addAction(self.new_project_action)
+        file_menu.addAction(self.update_project_action)
+        file_menu.addSeparator()
+        file_menu.addAction(self.open_action)
+        file_menu.addSeparator()
+        file_menu.addAction(self.save_action)
+        file_menu.addAction(self.save_as_action)
+        file_menu.addSeparator()
+        file_menu.addAction(self.export_action)
+
+        # Help menu
+        help_menu = menu_bar.addMenu("Help")
+
+        self.export_logs_action = QAction("Export Logs...", self)
+        self.export_logs_action.triggered.connect(self.on_export_logs_action)
+
+        help_menu.addAction(self.export_logs_action)
+
     def init_default_view(self):
         central = QWidget()
         self.setCentralWidget(central)
@@ -719,6 +730,19 @@ class MainWindow(QMainWindow):
             self.render_worker.cancelled.connect(self.render_thread.quit)
 
             self.render_thread.start()
+
+    def on_export_logs_action(self):
+        folder = QFileDialog.getExistingDirectory(self, "Choose Output Folder", str(Path.home() / "Desktop"))
+        if folder:
+            try:
+                QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+                LogUtil.zip_logs_to_dir(folder)
+            except Exception as e:
+                logger.exception("Failed to export logs to \"%s\"", folder)
+                QMessageBox.critical(self, "Logs Export Failed", f"Failed to export logs image: {str(e)}")
+            finally:
+                QApplication.restoreOverrideCursor()
+            
     
     # Render events
 

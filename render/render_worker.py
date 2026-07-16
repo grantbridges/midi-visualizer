@@ -18,7 +18,7 @@ logger = logging.getLogger("Render")
 
 # If True and using a BG image, generate a fresh QImage from the 
 # provided BG image filepath on each frame. Otherwise, layer in the
-# image during video encoding. The latter is far more efficeint,
+# image during video encoding. The latter is far more efficient,
 # but if we ever want to do fancier things with background images,
 # we'll need to do the per-frame drawing.
 RENDER_BG_IMAGE_EACH_FRAME = False
