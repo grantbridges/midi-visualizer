@@ -138,7 +138,7 @@ class MainWindow(QMainWindow):
 
         self.resize(Const.SCREEN_INITIAL_WIDTH, Const.SCREEN_INITIAL_HEIGHT)
         #self.showFullScreen()
-
+        
     def init_default_view(self):
         central = QWidget()
         self.setCentralWidget(central)

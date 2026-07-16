@@ -12,7 +12,7 @@ from media import audio_provider, video_provider, image_provider
 
 logger = logging.getLogger("Main")
 
-SPLASH_SCREEN_MIN_TIME_MS = 1000
+SPLASH_SCREEN_MIN_TIME_MS = 2000
 
 # create main window and start
 def main():
@@ -41,9 +41,9 @@ def main():
     video_provider.init()
     image_provider.init()
 
-    window = MainWindow()
 
     def show_main_window():
+        window = MainWindow()
         window.show()
         splash.finish(window)
 
