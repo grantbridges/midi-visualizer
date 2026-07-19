@@ -5,7 +5,7 @@ from PySide6.QtCore import QSize, Qt
 
 from common import Color, Const
 import build_info
-from utility import QUtil
+from utility import QUtil, FileUtil
 
 class SplashScreen(QSplashScreen):
     def mousePressEvent(self, event):
@@ -19,7 +19,8 @@ class SplashScreen(QSplashScreen):
         dpr = screen.devicePixelRatio() if screen else 1.0
 
         # load in splash screen image and grab dimenions to set up pixmap
-        img = QPixmap("assets/illustri-splash-screen.png")
+        str_filepath = str(FileUtil.get_assets_dir() / "illustri-splash-screen.png")
+        img = QPixmap(str_filepath)
         img_width = img.width()
         img_height = img.height()
 

@@ -13,6 +13,14 @@ class FileUtil:
         )
     
     @staticmethod
+    def get_root_app_dir() -> Path:
+        return Path(__file__).resolve().parent.parent
+    
+    @staticmethod
+    def get_assets_dir() -> Path:
+        return FileUtil.get_root_app_dir() / "assets" 
+    
+    @staticmethod
     def get_logs_dir() -> Path:
         return Path(FileUtil.get_app_data_dir()) / "logs"
     

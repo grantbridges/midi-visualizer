@@ -2,7 +2,7 @@
 
 Bring your composition to the next level with Illustri MIDI Studio, a free MIDI video illustration app available now on both Windows and Mac
 
-## Dev Setup
+## Illustri App Dev Setup
 
 ### Pre-Reqs
 
