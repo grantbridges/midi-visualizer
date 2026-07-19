@@ -4,7 +4,7 @@ from PySide6.QtGui import QFont, QPainter, QPixmap
 from PySide6.QtCore import QSize, Qt
 
 from common import Color, Const
-import app_version
+import build_info
 from utility import QUtil
 
 class SplashScreen(QSplashScreen):
@@ -42,7 +42,7 @@ class SplashScreen(QSplashScreen):
         painter.drawText(
             rect.adjusted(5, 0, 0, -5),
             Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignLeft,
-            f"Version {app_version.VERSION} - Built {app_version.BUILD_DATE}",
+            f"Version {build_info.VERSION} - Built {build_info.BUILD_DATE}",
         )
 
         # draw organization text
