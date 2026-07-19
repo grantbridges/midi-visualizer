@@ -30,10 +30,7 @@ def main():
     app.processEvents()
 
     # startup work happens after event loop has started
-    LogUtil.configure_logging(
-        debug_enabled=True,
-        retention_days=14,
-    )
+    LogUtil.configure_logging()
 
     user_settings.load()
 

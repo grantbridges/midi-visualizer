@@ -6,8 +6,6 @@ class Const:
     ORG_NAME = "Grant Bridges"
     APP_NAME = "Illustri MIDI Studio"
     APP_ALT_NAME = "illustri"
-    VERSION = "1.0.0-beta"
-    BUILD_DATE = "July 12, 2026"
 
     PROJECT_EXT = "mvp" # #TODO ipr illustri project
 

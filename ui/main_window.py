@@ -314,7 +314,7 @@ class MainWindow(QMainWindow):
         self.preview_widget.refresh_ui()
 
     def refresh_window_title(self):
-        title = f"{Const.APP_NAME} {Const.VERSION}"
+        title = f"{Const.APP_NAME}"
 
         if self.vis_config:
             title += f" - {self.vis_config.track_name}"

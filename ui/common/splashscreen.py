@@ -1,9 +1,10 @@
-from PySide6.QtWidgets import QSplashScreen
+from PySide6.QtWidgets import QApplication, QSplashScreen
 from PySide6.QtWidgets import QSplashScreen
 from PySide6.QtGui import QFont, QPainter, QPixmap
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QSize, Qt
 
 from common import Color, Const
+import app_version
 from utility import QUtil
 
 class SplashScreen(QSplashScreen):
@@ -13,23 +14,44 @@ class SplashScreen(QSplashScreen):
 
     @staticmethod
     def create():
-        pixmap = QPixmap("assets/illustri-splash-screen.png")
+        # grab screen DPR for properly scaling splash to minimize blurriness/scaling artifacts
+        screen = QApplication.primaryScreen()
+        dpr = screen.devicePixelRatio() if screen else 1.0
+
+        # load in splash screen image and grab dimenions to set up pixmap
+        img = QPixmap("assets/illustri-splash-screen.png")
+        img_width = img.width()
+        img_height = img.height()
+
+        # scale pixmap for screen
+        pixmap = QPixmap(int(img_width * dpr), int(img_height * dpr))
+        pixmap.setDevicePixelRatio(dpr)
+        pixmap.fill(Qt.GlobalColor.transparent)
+
         painter = QPainter(pixmap)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.TextAntialiasing)
+        painter.drawPixmap(0, 0, img_width, img_height, img)
+
         painter.setPen(QUtil.rgb_to_qcolor(Color.SPLASH_SCREEN_TEXT))
         painter.setFont(QFont("Arial", 12))
 
+        rect = pixmap.rect()
+        rect.setSize(QSize(img_width, img_height))
+
+        # draw version text
         painter.drawText(
-            pixmap.rect().adjusted(5, 0, 0, -5),
+            rect.adjusted(5, 0, 0, -5),
             Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignLeft,
-            f"Version {Const.VERSION} - Built {Const.BUILD_DATE}",
+            f"Version {app_version.VERSION} - Built {app_version.BUILD_DATE}",
         )
 
+        # draw organization text
         painter.drawText(
-            pixmap.rect().adjusted(0, 0, -5, -5),
+            rect.adjusted(0, 0, -5, -5),
             Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignRight,
             f"by {Const.ORG_NAME}",
         )
+
         painter.end()
 
         splash = SplashScreen(pixmap)

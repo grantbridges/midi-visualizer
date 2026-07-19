@@ -4,6 +4,7 @@ from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
 from common import Const
+import app_config
 
 import logging
 
@@ -56,14 +57,11 @@ class LogUtil:
         raise TypeError("LogUtil is static")
 
     @staticmethod
-    def configure_logging(
-        debug_enabled: bool = False,
-        retention_days: int = 14,
-    ):
+    def configure_logging():
         log_dir = FileUtil.get_logs_dir()
         log_dir.mkdir(parents=True, exist_ok=True)
 
-        log_level = logging.DEBUG if debug_enabled else logging.INFO
+        log_level = logging.DEBUG if app_config.LOG_DEBUG else logging.INFO
 
         logger = logging.getLogger()
         logger.setLevel(logging.DEBUG)
@@ -82,7 +80,7 @@ class LogUtil:
             filename=log_dir / f"{Const.APP_ALT_NAME}.log",
             when="midnight",
             interval=1,
-            backupCount=retention_days,
+            backupCount=app_config.LOG_RETENTION_DAYS,
             encoding="utf-8",
         )
         file_handler.setLevel(log_level)

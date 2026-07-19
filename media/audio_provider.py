@@ -1,11 +1,8 @@
 from pathlib import Path
-from PySide6.QtCore import QObject, QUrl, Qt
-from PySide6.QtGui import QImage, QBrush, QLinearGradient, QPainter, QPen
+from PySide6.QtCore import QObject, QUrl
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 from utility import Util
 from models import user_settings
-from common import Color
-from utility import QUtil
 
 import logging
 logger = logging.getLogger("AudioProvider")
