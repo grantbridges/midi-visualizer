@@ -7,22 +7,13 @@ from common import Color, Const
 from utility import QUtil
 
 class SplashScreen(QSplashScreen):
-    WIDTH = 600
-    HEIGHT = 338
-
     def mousePressEvent(self, event):
         # ignore mouse events
         event.ignore()
 
     @staticmethod
     def create():
-        pixmap = QPixmap("assets/illustri-splash-screen.png").scaled(
-            SplashScreen.WIDTH,
-            SplashScreen.HEIGHT,
-            Qt.AspectRatioMode.KeepAspectRatio,
-            Qt.TransformationMode.SmoothTransformation,
-        )
-
+        pixmap = QPixmap("assets/illustri-splash-screen.png")
         painter = QPainter(pixmap)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setPen(QUtil.rgb_to_qcolor(Color.SPLASH_SCREEN_TEXT))
