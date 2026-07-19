@@ -38,13 +38,23 @@ class TracksTab(QWidget):
         self.sort_by_group_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         self.sort_by_group_btn.clicked.connect(self._on_sort_by_group)
 
-        self.track_columns = ["", "", "Name", "Group", "Pitch Min", "Pitch Max", "Start (sec)", "End (sec)", "Vel. Min", "Vel. Max", "Vel. Avg"]
+        self.group_tracks_btn = QPushButton("") # set text in refresh_buttons()
+        self.group_tracks_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+        self.group_tracks_btn.clicked.connect(self._on_group_tracks)
+
+        self.clear_selection_btn = QPushButton("Clear Selection")
+        self.clear_selection_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+        self.clear_selection_btn.clicked.connect(self._on_clear_selection)
+
+        self.track_columns = ["", "", "Name", "Group", "Notes Count", "Pitch Min", "Pitch Max", "Start (sec)", "End (sec)", "Vel. Min", "Vel. Max"]
         self.table = QTableWidget(0, len(self.track_columns))
         self.table.setHorizontalHeaderLabels(self.track_columns)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         # set button columns to shrink
         for col in [0, 1]:
             self.table.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeToContents)
+
+        self.table.itemSelectionChanged.connect(self._on_selection_changed)
 
         # set up right-click handling
         self.table.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -60,13 +70,17 @@ class TracksTab(QWidget):
         # layout controls
         v_layout = QVBoxLayout(self)
         btns_layout = QHBoxLayout()
+        btns_layout.addWidget(self.group_tracks_btn)
+        btns_layout.addWidget(self.clear_selection_btn)
         btns_layout.addWidget(self.sort_by_group_btn)
         btns_layout.addStretch()
         v_layout.addLayout(btns_layout)
         v_layout.addWidget(self.table)
 
     def refresh_ui(self):
-        # prevent callbacks while populating
+        self._refresh_buttons()
+
+        # prevent callbacks while populating table
         self.table.blockSignals(True)
 
         self.table.setRowCount(len(self.vis_config.tracks))
@@ -117,6 +131,13 @@ class TracksTab(QWidget):
             self.table.setCellWidget(row, col, combo)
             col += 1
 
+            # notes count
+            notes_count_item = QTableWidgetItem(f"{len(track.notes)}")
+            notes_count_item.setFlags(notes_count_item.flags() & ~Qt.ItemIsEditable)
+            notes_count_item.setTextAlignment(Qt.AlignCenter)
+            self.table.setItem(row, col, notes_count_item)
+            col += 1
+
             # pitch min
             pitch_min_item = QTableWidgetItem(f"{track.pitch_min} ({MidiUtil.midi_pitch_to_note(track.pitch_min)})")
             pitch_min_item.setFlags(pitch_min_item.flags() & ~Qt.ItemIsEditable)
@@ -146,28 +167,29 @@ class TracksTab(QWidget):
             col += 1
 
             # velocity min
-            velocity_min_item = QTableWidgetItem(f"{track.velocity_min:.2f}")
+            velocity_min_item = QTableWidgetItem(f"{track.velocity_min:.0f}")
             velocity_min_item.setFlags(velocity_min_item.flags() & ~Qt.ItemIsEditable)
             velocity_min_item.setTextAlignment(Qt.AlignCenter)
             self.table.setItem(row, col, velocity_min_item)
             col += 1
 
             # velocity max
-            velocity_max_item = QTableWidgetItem(f"{track.velocity_max:.2f}")
+            velocity_max_item = QTableWidgetItem(f"{track.velocity_max:.0f}")
             velocity_max_item.setFlags(velocity_max_item.flags() & ~Qt.ItemIsEditable)
             velocity_max_item.setTextAlignment(Qt.AlignCenter)
             self.table.setItem(row, col, velocity_max_item)
             col += 1
 
-            # velocity avg
-            velocity_avg_item = QTableWidgetItem(f"{track.velocity_avg:.2f}")
-            velocity_avg_item.setFlags(velocity_avg_item.flags() & ~Qt.ItemIsEditable)
-            velocity_avg_item.setTextAlignment(Qt.AlignCenter)
-            self.table.setItem(row, col, velocity_avg_item)
-            col += 1
-
         # resume callbacks
         self.table.blockSignals(False)
+
+    def _refresh_buttons(self):
+        count = len(self._get_selected_rows())
+
+        self.group_tracks_btn.setEnabled(count > 0)
+        self.group_tracks_btn.setText(f"Group {count} Track{"s" if count > 1 else ""}" if count > 0 else "Group Tracks")
+
+        self.clear_selection_btn.setEnabled(count > 0)
 
     def update_model(self):
         # No work here - we update vis_config tracks directly on changes
@@ -217,6 +239,15 @@ class TracksTab(QWidget):
         self.refresh_ui()
         self.on_changes_callback()
 
+    def _on_group_tracks(self):
+        self._group_from_selected_tracks()
+
+    def _on_clear_selection(self):
+        self.table.clearSelection()
+        self.table.setCurrentCell(-1, -1)
+
+        self._refresh_buttons()
+
     # Getters
     def _get_selected_rows(self) -> List[int]:
         selected_rows: set[int] = set()
@@ -234,6 +265,9 @@ class TracksTab(QWidget):
             if row >= 0 and row < len(self.vis_config.tracks):
                 tracks.append(self.vis_config.tracks[row])
         return tracks
+    
+    def _on_selection_changed(self):
+        self._refresh_buttons()
     
     def _on_table_context_menu(self, pos: QPoint):
         rows = self._get_selected_rows()

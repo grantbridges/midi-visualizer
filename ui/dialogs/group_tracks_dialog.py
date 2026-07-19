@@ -23,12 +23,15 @@ class GroupTracksDialog(QDialog):
         self.vis_config = vis_config
 
         self.setWindowTitle("Group Tracks")
+
         self.setModal(True)
+
+        self.setFixedSize(400, 240)
 
         # -- Create Controls --
 
         track_names = ", ".join(track.name for track in self.tracks)
-        description = WidgetUtil.hint_label(f"Set group for selected tracks ({track_names}).")
+        description = WidgetUtil.hint_label(f"Set group for {track_names}.")
 
         self.create_new_group_checkbox = QCheckBox()
         self.create_new_group_checkbox.setChecked(True)

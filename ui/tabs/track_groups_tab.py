@@ -72,8 +72,7 @@ class TrackGroupsTab(QWidget):
         v_layout.addWidget(self.table)
 
     def refresh_ui(self):
-        self._refresh_clear_selection_btn()
-        self._refresh_clear_solo_btn()
+        self._refresh_buttons()
 
         # prevent callbacks while populating table
         self.table.blockSignals(True)
@@ -205,11 +204,10 @@ class TrackGroupsTab(QWidget):
         # No work here - we update vis_config track groups directly on changes
         pass
 
-    def _refresh_clear_selection_btn(self):
+    def _refresh_buttons(self):
         row = self.table.currentRow()
         self.clear_selection_btn.setDisabled(row == -1)
 
-    def _refresh_clear_solo_btn(self):
         solo_count = sum(tg.solo for tg in self.vis_config.track_groups)
         self.clear_solo_btn.setDisabled(solo_count == 0)
 
@@ -237,13 +235,13 @@ class TrackGroupsTab(QWidget):
         self.table.clearSelection()
         self.table.setCurrentCell(-1, -1)
 
-        self._refresh_clear_selection_btn()
+        self._refresh_buttons()
 
     def _on_clear_solo(self):
         for tg in self.vis_config.track_groups:
             tg.solo = False
         
-        self.refresh_ui()
+        self._refresh_buttons()
         self.on_changes_callback()
 
     def _on_remove_group(self, row: int):
@@ -303,7 +301,7 @@ class TrackGroupsTab(QWidget):
         else:
             self.on_track_group_selected_callback(None)
 
-        self._refresh_clear_selection_btn()
+        self._refresh_buttons()
         
     def _on_solo_changed(self, row: int, checked: bool):
         if self.table.signalsBlocked():
@@ -312,7 +310,7 @@ class TrackGroupsTab(QWidget):
         track_group = self.vis_config.track_groups[row]
         track_group.solo = checked
 
-        self._refresh_clear_solo_btn()
+        self._refresh_buttons()
 
         self.on_changes_callback()
         
