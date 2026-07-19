@@ -17,6 +17,9 @@ class UserSettings:
     # persisted so we can reload last project on startup
     active_project_path: str | None = None
 
+    # display settings
+    fullscreen: bool = False
+
     # preview area displays
     show_time_display: bool = True
     show_track_groups: bool = False
@@ -36,6 +39,8 @@ class UserSettings:
 
         settings.setValue("project/active_project_path", self.active_project_path)
 
+        settings.setValue("display/fullscreen", self.fullscreen)
+
         settings.setValue("preview/show_time_display", self.show_time_display)
         settings.setValue("preview/show_track_groups", self.show_track_groups)
         settings.setValue("preview/show_guides", self.show_guides)
@@ -51,6 +56,8 @@ class UserSettings:
         settings = self._qsettings()
 
         self.active_project_path = settings.value("project/active_project_path", None, type=str)
+
+        self.fullscreen = settings.value("display/fullscreen", False, type=bool)
 
         self.show_time_display = settings.value("preview/show_time_display", self.show_time_display, type=bool)
         self.show_track_groups = settings.value("preview/show_track_groups",self.show_track_groups, type=bool)

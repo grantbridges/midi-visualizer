@@ -1,4 +1,5 @@
 from ui.tabs.config_tab import ConfigTab
+from ui.tabs.background_tab import BackgroundTab
 from ui.tabs.audio_tab import AudioTab
 from ui.tabs.track_groups_tab import TrackGroupsTab
 from ui.tabs.tracks_tab import TracksTab

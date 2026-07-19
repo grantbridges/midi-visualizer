@@ -5,7 +5,7 @@ import sys
 from typing import List
 import pretty_midi
 from uuid import UUID
-from PySide6.QtCore import QThread, Qt
+from PySide6.QtCore import QEvent, QThread, Qt
 from PySide6.QtWidgets import (
     QApplication,
     QLabel,
@@ -25,7 +25,8 @@ from common import Const
 from models import VisConfig, Track, Resolution, user_settings, BackgroundMode
 from render import RenderWorker
 from media import video_provider, audio_provider, image_provider
-from ui.tabs import ConfigTab, AudioTab, TrackGroupsTab, TracksTab, NotesTab
+from ui.tabs import ConfigTab, BackgroundTab, AudioTab, TrackGroupsTab, TracksTab, NotesTab
+from ui.common import Icons
 from ui.widgets import PreviewWidget
 from ui.dialogs import (
     ExportProgressDialog, 
@@ -49,6 +50,7 @@ class MainWindow(QMainWindow):
 
         # child widgets
         self.config_tab: ConfigTab = None
+        self.background_tab: BackgroundTab = None
         self.audio_tab: AudioTab = None
         self.track_groups_tab: TrackGroupsTab = None
         self.tracks_tab: TracksTab = None
@@ -110,8 +112,10 @@ class MainWindow(QMainWindow):
         else:
             self.init_default_view()
 
-        self.resize(Const.SCREEN_INITIAL_WIDTH, Const.SCREEN_INITIAL_HEIGHT)
-        #self.showFullScreen()
+        if user_settings.fullscreen:
+            self.showFullScreen()
+        else:
+            self.resize(Const.SCREEN_INITIAL_WIDTH, Const.SCREEN_INITIAL_HEIGHT)
 
     def init_menu_bar(self):
         menu_bar = self.menuBar()
@@ -181,6 +185,8 @@ class MainWindow(QMainWindow):
         if self.initialized_editor_view:
             self.config_tab.shutdown()
             self.config_tab.deleteLater()
+            self.background_tab.shutdown()
+            self.background_tab.deleteLater()
             self.audio_tab.shutdown()
             self.audio_tab.deleteLater()
             self.track_groups_tab.shutdown()
@@ -197,6 +203,10 @@ class MainWindow(QMainWindow):
         # tabs
         self.tabs = QTabWidget()
         self.config_tab = ConfigTab(
+            self.vis_config, 
+            self.on_config_changed
+        )
+        self.background_tab = BackgroundTab(
             self.vis_config, 
             self.on_config_changed, 
             self.on_bg_video_changed, 
@@ -220,11 +230,13 @@ class MainWindow(QMainWindow):
             self.vis_config, 
             self.on_config_changed
         )
+
         self.tabs.addTab(self.config_tab, "General")
-        self.tabs.addTab(self.audio_tab, "Audio")
-        self.tabs.addTab(self.tracks_tab, "Tracks")
-        self.tabs.addTab(self.track_groups_tab, "Track Groups")
-        self.tabs.addTab(self.notes_tab, "Note Effects")
+        self.tabs.addTab(self.background_tab, Icons.image_outline(), "Background")
+        self.tabs.addTab(self.audio_tab, Icons.audio(), "Audio")
+        self.tabs.addTab(self.tracks_tab, Icons.music(), "Tracks")
+        self.tabs.addTab(self.track_groups_tab, Icons.group(), "Track Groups")
+        self.tabs.addTab(self.notes_tab, Icons.magic(), "Note Effects")
         self.tabs.currentChanged.connect(self.on_tab_changed)
         
         # preview area
@@ -268,6 +280,7 @@ class MainWindow(QMainWindow):
         root.addWidget(splitter)
 
         self.config_tab.layout_controls()
+        self.background_tab.layout_controls()
         self.audio_tab.layout_controls()
         self.track_groups_tab.layout_controls()
         self.tracks_tab.layout_controls()
@@ -277,6 +290,7 @@ class MainWindow(QMainWindow):
     def refresh_ui(self, refresh_all: bool = False):
         if refresh_all:
             self.config_tab.refresh_ui()
+            self.background_tab.refresh_ui()
             self.audio_tab.refresh_ui()
             self.track_groups_tab.refresh_ui()
             self.tracks_tab.refresh_ui()
@@ -287,18 +301,20 @@ class MainWindow(QMainWindow):
                 case 0:
                     self.config_tab.refresh_ui()
                 case 1:
-                    self.audio_tab.refresh_ui()
+                    self.background_tab.refresh_ui()
                 case 2:
-                    self.track_groups_tab.refresh_ui()
+                    self.audio_tab.refresh_ui()
                 case 3:
-                    self.tracks_tab.refresh_ui()
+                    self.track_groups_tab.refresh_ui()
                 case 4:
+                    self.tracks_tab.refresh_ui()
+                case 5:
                     self.notes_tab.refresh_ui()
 
         self.preview_widget.refresh_ui()
 
     def refresh_window_title(self):
-        title = Const.APP_NAME
+        title = f"{Const.APP_NAME} {Const.VERSION}"
 
         if self.vis_config:
             title += f" - {self.vis_config.track_name}"
@@ -319,6 +335,7 @@ class MainWindow(QMainWindow):
     def update_model(self):
         # ask individual tabs to copy their local UI models into the data model
         self.config_tab.update_model()
+        self.background_tab.update_model()
         self.audio_tab.update_model()
         self.track_groups_tab.update_model()
         self.tracks_tab.update_model()
@@ -481,6 +498,13 @@ class MainWindow(QMainWindow):
 
         else:  # Cancel
             event.ignore()
+
+    def changeEvent(self, event):
+        super().changeEvent(event)
+
+        if event.type() == QEvent.Type.WindowStateChange:
+            user_settings.fullscreen = self.isFullScreen()
+            user_settings.save()
 
     # action callbacks
 

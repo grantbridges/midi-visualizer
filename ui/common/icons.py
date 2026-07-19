@@ -2,8 +2,8 @@ import qtawesome as qta
 
 class Icons:
     '''
-    Utility class for instantiating new icon objects
-    Use `qta-browser` to browse options
+    Utility class for instantiating new icon objects (prefer mdi6)
+    Run `qta-browser` in terminal to browse options
     '''
     def __new__(cls):
         raise TypeError("Icons is static")
@@ -71,6 +71,26 @@ class Icons:
     @staticmethod
     def ellipsis():
         return Icons._get_icon("mdi6.dots-horizontal")
+    
+    @staticmethod
+    def image_outline():
+        return Icons._get_icon("mdi6.image-outline")
+    
+    @staticmethod
+    def music_note():
+        return Icons._get_icon("mdi6.music-note")
+    
+    @staticmethod
+    def music():
+        return Icons._get_icon("mdi6.music")
+    
+    @staticmethod
+    def magic():
+        return Icons._get_icon("mdi6.magic-staff")
+    
+    @staticmethod
+    def group():
+        return Icons._get_icon("mdi6.group")
     
     @staticmethod
     def _get_icon(name: str):

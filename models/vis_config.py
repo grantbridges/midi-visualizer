@@ -91,8 +91,11 @@ class VisConfig:
     # ratio of view area width playhead's located at - 0 to 1 (0 is far left, 1 is far right)
     playhead_pos_ratio: float = 0.5 
     playhead_color: RGB = Color.LIGHT_GRAY
-    playhead_alpha: int = 255
-    playhead_thickness_ratio: float = .001
+    playhead_alpha: int = 50
+    playhead_thickness_ratio: float = .005
+
+    # -- Scaling/Position --
+
     # ratio of vertical compression of midi area - 0 to 1 (1 is maximally crunched)
     vertical_padding_ratio = 0.15 
     # ratio of vertical offset positioning - -1 to 1 (-1 is top, 0 center, 1 bottom)

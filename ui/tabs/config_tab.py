@@ -15,22 +15,18 @@ from PySide6.QtWidgets import (
     QFileDialog
 )
 
-from models import VisConfig, BackgroundMode, Orientation
+from models import VisConfig, Orientation
 from ui.common import ColorButton, LayoutUtil, Icons
 
 class ConfigTab(QWidget):
     def __init__(self, 
         vis_config: VisConfig, 
         on_changes_callback: object,
-        on_bg_video_selected_callback: object,
-        on_bg_image_selected_callback: object,
         parent=None
     ):
         super().__init__(parent)
 
         self.on_changes_callback = on_changes_callback
-        self.on_bg_video_selected_callback = on_bg_video_selected_callback
-        self.on_bg_image_selected_callback = on_bg_image_selected_callback
         self.vis_config = vis_config
 
         self.block_changes_callback: bool = False
@@ -43,41 +39,6 @@ class ConfigTab(QWidget):
         for mode in Orientation:
             self.orientation_combo.addItem(str(mode), mode)
         self.orientation_combo.currentIndexChanged.connect(self._on_changes)
-
-        self.bg_mode_combo = QComboBox()
-        for mode in BackgroundMode:
-            self.bg_mode_combo.addItem(mode.value, mode)
-        self.bg_mode_combo.currentIndexChanged.connect(self._on_changes)
-
-        self.bg_color_button = ColorButton()
-        self.bg_color_button.valueChanged.connect(self._on_changes)
-
-        self.bg_image_file_input = QLineEdit(readOnly=True)
-        self.bg_image_file_browse_btn = QPushButton()
-        self.bg_image_file_browse_btn.setIcon(Icons.ellipsis())
-        self.bg_image_file_browse_btn.clicked.connect(self._browse_bg_image_file)
-        self.bg_image_file_clear_btn = QPushButton()
-        self.bg_image_file_clear_btn.setIcon(Icons.trash_can())
-        self.bg_image_file_clear_btn.clicked.connect(self._clear_bg_image_file)
-
-        self.bg_video_file_input = QLineEdit(readOnly=True)
-        self.bg_video_file_browse_btn = QPushButton()
-        self.bg_video_file_browse_btn.setIcon(Icons.ellipsis())
-        self.bg_video_file_browse_btn.clicked.connect(self._browse_bg_video_file)
-        self.bg_video_file_clear_btn = QPushButton()
-        self.bg_video_file_clear_btn.setIcon(Icons.trash_can())
-        self.bg_video_file_clear_btn.clicked.connect(self._clear_bg_video_file)
-        self.bg_video_time_offset_input = QDoubleSpinBox(decimals=2, minimum=-10.0, maximum=10.0, singleStep=0.01, suffix=" sec")
-        self.bg_video_time_offset_input.valueChanged.connect(self._on_changes)
-        self.bg_video_loop_checkbox = QCheckBox()
-        self.bg_video_loop_checkbox.toggled.connect(self._on_changes)
-
-        self.bg_tint_checkbox = QCheckBox()
-        self.bg_tint_checkbox.toggled.connect(self._on_changes)
-        self.bg_tint_color_button = ColorButton()
-        self.bg_tint_color_button.valueChanged.connect(self._on_changes)
-        self.bg_tint_alpha_input = QSpinBox(minimum=0, maximum=255)
-        self.bg_tint_alpha_input.valueChanged.connect(self._on_changes)
 
         self.show_playhead_checkbox = QCheckBox()
         self.show_playhead_checkbox.toggled.connect(self._on_changes)
@@ -109,19 +70,6 @@ class ConfigTab(QWidget):
         self.end_time_input = QDoubleSpinBox(decimals=2, minimum=-10.0, maximum=10.0, singleStep=0.01, suffix=" sec")
         self.end_time_input.valueChanged.connect(self._on_changes)
 
-        self.fade_in_checkbox = QCheckBox()
-        self.fade_in_checkbox.toggled.connect(self._on_changes)
-        self.fade_in_color = ColorButton()
-        self.fade_in_color.valueChanged.connect(self._on_changes)
-        self.fade_in_time = QDoubleSpinBox(decimals=2, minimum=0.1, maximum=10.00, singleStep=0.1, suffix=" sec")
-        self.fade_in_time.valueChanged.connect(self._on_changes)
-        self.fade_out_checkbox = QCheckBox()
-        self.fade_out_checkbox.toggled.connect(self._on_changes)
-        self.fade_out_color = ColorButton()
-        self.fade_out_color.valueChanged.connect(self._on_changes)
-        self.fade_out_time = QDoubleSpinBox(decimals=2, minimum=0.1, maximum=10.00, singleStep=0.1, suffix=" sec")
-        self.fade_out_time.valueChanged.connect(self._on_changes)
-
     def shutdown(self):
         pass
 
@@ -150,36 +98,21 @@ class ConfigTab(QWidget):
         LayoutUtil.line_edit(column, "Track Name", self.track_name)
         LayoutUtil.combobox(column, "Orientation", self.orientation_combo)
 
-        LayoutUtil.section(column, "Background")
-        LayoutUtil.combobox(column, "Background Mode", self.bg_mode_combo)
-        self.bg_color_row = LayoutUtil.button(column, "Background Color", self.bg_color_button)
-        self.bg_image_row = LayoutUtil.file_picker(column, "Background Image File", self.bg_image_file_input, self.bg_image_file_browse_btn, self.bg_image_file_clear_btn)
-        self.bg_video_row = LayoutUtil.file_picker(column, "Background Video File", self.bg_video_file_input, self.bg_video_file_browse_btn, self.bg_video_file_clear_btn)
+        LayoutUtil.section(column, "Scaling/Position")
+        LayoutUtil.spinbox(column, "Vertical Padding", self.vertical_padding_input)
+        LayoutUtil.spinbox(column, "Vertical Offset", self.vertical_offset_input)
 
-        self.bg_video_time_offset_row = LayoutUtil.spinbox(column, "Background Video Time Offset", self.bg_video_time_offset_input)
-        self.bg_video_loop_row = LayoutUtil.checkbox(column, "Background Video Loop", self.bg_video_loop_checkbox)
-
-        LayoutUtil.section(column, "Background Tint")
-        LayoutUtil.checkbox(column, "Background Tint", self.bg_tint_checkbox)
-        LayoutUtil.button(column, "Background Tint Color", self.bg_tint_color_button)
-        LayoutUtil.spinbox(column, "Background Tint Alpha", self.bg_tint_alpha_input)
-
-        LayoutUtil.section(column, "Fade In/Out")
-        LayoutUtil.checkbox(column, "Fade In", self.fade_in_checkbox)
-        LayoutUtil.button(column, "Fade In Color", self.fade_in_color)
-        LayoutUtil.spinbox(column, "Fade In Time", self.fade_in_time)
-        LayoutUtil.checkbox(column, "Fade Out", self.fade_out_checkbox)
-        LayoutUtil.button(column, "Fade Out Color", self.fade_out_color)
-        LayoutUtil.spinbox(column, "Fade Out Time", self.fade_out_time)
+        LayoutUtil.section(column, "Playhead")
+        LayoutUtil.checkbox(column, "Show Playhead", self.show_playhead_checkbox)
+        LayoutUtil.button(column, "Playhead Color", self.playhead_color_button)
+        LayoutUtil.spinbox(column, "Playhead Alpha", self.playhead_alpha_input)
+        LayoutUtil.spinbox(column, "Playhead Thickness", self.playhead_thickness_input)
+        LayoutUtil.spinbox(column, "Playhead Position", self.playhead_pos_input)
 
         column.addStretch()
 
         # --- Right Column ---
         column = v_right_layout
-
-        LayoutUtil.section(column, "Scaling/Position")
-        LayoutUtil.spinbox(column, "Vertical Padding", self.vertical_padding_input)
-        LayoutUtil.spinbox(column, "Vertical Offset", self.vertical_offset_input)
 
         LayoutUtil.section(column, "Pitch Settings")
         LayoutUtil.checkbox(column, "Auto-Calc Pitch Min/Max", self.auto_calc_pitch_bounds_checkbox)
@@ -190,13 +123,6 @@ class ConfigTab(QWidget):
         LayoutUtil.checkbox(column, "Apply Time Offsets", self.apply_time_offsets_checkbox)
         LayoutUtil.spinbox(column, "Start Time Offset", self.start_time_input)
         LayoutUtil.spinbox(column, "End Time Offset", self.end_time_input)
-
-        LayoutUtil.section(column, "Playhead")
-        LayoutUtil.checkbox(column, "Show Playhead", self.show_playhead_checkbox)
-        LayoutUtil.button(column, "Playhead Color", self.playhead_color_button)
-        LayoutUtil.spinbox(column, "Playhead Alpha", self.playhead_alpha_input)
-        LayoutUtil.spinbox(column, "Playhead Thickness", self.playhead_thickness_input)
-        LayoutUtil.spinbox(column, "Playhead Position", self.playhead_pos_input)
 
         column.addStretch()
 
@@ -217,29 +143,6 @@ class ConfigTab(QWidget):
 
         index = self.orientation_combo.findData(self.vis_config.orientation)
         self.orientation_combo.setCurrentIndex(index)
-
-        index = self.bg_mode_combo.findData(self.vis_config.bg_mode)
-        self.bg_mode_combo.setCurrentIndex(index)
-
-        self.bg_color_row.setVisible(self.vis_config.bg_mode == BackgroundMode.Color)
-        self.bg_image_row.setVisible(self.vis_config.bg_mode == BackgroundMode.Image)
-        self.bg_video_row.setVisible(self.vis_config.bg_mode == BackgroundMode.Video)
-        self.bg_video_time_offset_row.setVisible(self.vis_config.bg_mode == BackgroundMode.Video)
-        self.bg_video_loop_row.setVisible(self.vis_config.bg_mode == BackgroundMode.Video)
-
-        self.bg_color_button.setColor(self.vis_config.bg_color)
-        self.bg_image_file_input.setText(self.vis_config.bg_image_filepath)
-        self.bg_image_file_clear_btn.setEnabled(bool(self.vis_config.bg_image_filepath))
-        self.bg_video_file_input.setText(self.vis_config.bg_video_filepath)
-        self.bg_video_file_clear_btn.setEnabled(bool(self.vis_config.bg_video_filepath))
-        self.bg_video_time_offset_input.setValue(self.vis_config.bg_video_time_offset)
-        self.bg_video_loop_checkbox.setChecked(self.vis_config.bg_video_loop)
-
-        self.bg_tint_checkbox.setChecked(self.vis_config.bg_tint_enabled)
-        self.bg_tint_color_button.setColor(self.vis_config.bg_tint_color)
-        self.bg_tint_color_button.setEnabled(self.vis_config.bg_tint_enabled)
-        self.bg_tint_alpha_input.setValue(self.vis_config.bg_tint_alpha)
-        self.bg_tint_alpha_input.setEnabled(self.vis_config.bg_tint_enabled)
 
         self.show_playhead_checkbox.setChecked(self.vis_config.show_playhead)
         self.playhead_color_button.setColor(self.vis_config.playhead_color)
@@ -268,36 +171,12 @@ class ConfigTab(QWidget):
         self.end_time_input.setEnabled(self.vis_config.apply_time_offsets)
         self.end_time_input.setValue(self.vis_config.end_time_offset)  
 
-        self.fade_in_checkbox.setChecked(self.vis_config.fade_in_enabled)
-        self.fade_in_color.setColor(self.vis_config.fade_in_color)
-        self.fade_in_color.setEnabled(self.vis_config.fade_in_enabled)
-        self.fade_in_time.setValue(self.vis_config.fade_in_time)
-        self.fade_in_time.setEnabled(self.vis_config.fade_in_enabled)
-
-        self.fade_out_checkbox.setChecked(self.vis_config.fade_out_enabled)
-        self.fade_out_color.setColor(self.vis_config.fade_out_color)
-        self.fade_out_color.setEnabled(self.vis_config.fade_out_enabled)
-        self.fade_out_time.setValue(self.vis_config.fade_out_time)
-        self.fade_out_time.setEnabled(self.vis_config.fade_out_enabled)
-
         self.block_changes_callback = False
 
     def update_model(self):
         # pull UI values out of controls and set on model
         self.vis_config.track_name = self.track_name.text()
         self.vis_config.orientation = self.orientation_combo.currentData()
-
-        self.vis_config.bg_mode = self.bg_mode_combo.currentData()
-        self.vis_config.bg_color = self.bg_color_button.getColor()
-        self.vis_config.bg_image_filepath = self.bg_image_file_input.text()
-        self.vis_config.bg_video_filepath = self.bg_video_file_input.text()
-
-        self.vis_config.bg_video_time_offset = self.bg_video_time_offset_input.value()
-        self.vis_config.bg_video_loop = self.bg_video_loop_checkbox.isChecked()
-
-        self.vis_config.bg_tint_enabled = self.bg_tint_checkbox.isChecked()
-        self.vis_config.bg_tint_color = self.bg_tint_color_button.getColor()
-        self.vis_config.bg_tint_alpha = self.bg_tint_alpha_input.value()
 
         self.vis_config.show_playhead = self.show_playhead_checkbox.isChecked()
         self.vis_config.playhead_color = self.playhead_color_button.getColor()
@@ -318,86 +197,9 @@ class ConfigTab(QWidget):
         self.vis_config.start_time_offset = self.start_time_input.value()
         self.vis_config.end_time_offset = self.end_time_input.value()
 
-        self.vis_config.fade_in_enabled = self.fade_in_checkbox.isChecked()
-        self.vis_config.fade_in_color = self.fade_in_color.getColor()
-        self.vis_config.fade_in_time = self.fade_in_time.value()
-        self.vis_config.fade_out_enabled = self.fade_out_checkbox.isChecked()
-        self.vis_config.fade_out_color = self.fade_out_color.getColor()
-        self.vis_config.fade_out_time = self.fade_out_time.value()
-
     # callbacks
-
-    def _browse_bg_image_file(self):
-        default_filepath = self.vis_config.bg_image_filepath or ""
-
-        image_file, _ = QFileDialog.getOpenFileName(
-            self,
-            "Select Background Image File",
-            default_filepath,
-            "Image Files (*.png *.jpg *.jpeg *.bmp *.webp)"
-        )
-
-        if image_file:
-            self.bg_image_file_input.setText(image_file)
-            self._on_bg_image_selected()
-
-    def _clear_bg_image_file(self):
-        result = QMessageBox.question(
-            self,
-            "Confirm Image File Remove",
-            f"Are you sure you want to remove the selected background image file?",
-            QMessageBox.Cancel | QMessageBox.Yes,
-            QMessageBox.Cancel,
-        )
-
-        if result != QMessageBox.Yes:
-            return
-
-        self.bg_image_file_input.setText("")
-        self._on_bg_image_selected()
-
-    def _browse_bg_video_file(self):
-        default_filepath = self.vis_config.bg_video_filepath or ""
-
-        video_file, _ = QFileDialog.getOpenFileName(
-            self,
-            "Select Background Video File",
-            default_filepath,
-            "Video Files (*.mp4 *.mov *.webm *.avi)"
-        )
-
-        if video_file:
-            self.bg_video_file_input.setText(video_file)
-            self._on_bg_video_selected()
-
-    def _clear_bg_video_file(self):
-        result = QMessageBox.question(
-            self,
-            "Confirm Video File Remove",
-            f"Are you sure you want to remove the selected background video file?",
-            QMessageBox.Cancel | QMessageBox.Yes,
-            QMessageBox.Cancel,
-        )
-
-        if result != QMessageBox.Yes:
-            return
-
-        self.bg_video_file_input.setText("")
-        self._on_bg_video_selected()
 
     def _on_changes(self):
         if not self.block_changes_callback:
             self.on_changes_callback()
-            self.refresh_ui()
-
-    def _on_bg_video_selected(self):
-        if not self.block_changes_callback:
-            self.on_changes_callback()
-            self.on_bg_video_selected_callback()
-            self.refresh_ui()
-
-    def _on_bg_image_selected(self):
-        if not self.block_changes_callback:
-            self.on_changes_callback()
-            self.on_bg_image_selected_callback()
             self.refresh_ui()
