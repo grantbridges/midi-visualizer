@@ -49,16 +49,11 @@ class TracksTab(QWidget):
         self.track_columns = ["", "", "Name", "Group", "Notes Count", "Pitch Min", "Pitch Max", "Start (sec)", "End (sec)", "Vel. Min", "Vel. Max"]
         self.table = QTableWidget(0, len(self.track_columns))
         self.table.setHorizontalHeaderLabels(self.track_columns)
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        # set button columns to shrink
-        for col in [0, 1]:
-            self.table.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
 
         self.table.itemSelectionChanged.connect(self._on_selection_changed)
 
-        # set up right-click handling
-        self.table.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.table.customContextMenuRequested.connect(self._on_table_context_menu)
         # set whole-row multi-select
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.ExtendedSelection)        
@@ -268,19 +263,6 @@ class TracksTab(QWidget):
     
     def _on_selection_changed(self):
         self._refresh_buttons()
-    
-    def _on_table_context_menu(self, pos: QPoint):
-        rows = self._get_selected_rows()
-
-        menu = QMenu(self)
-
-        create_group = menu.addAction("Group Selected Tracks...")
-
-        # create menu on right-click location
-        action = menu.exec(self.table.viewport().mapToGlobal(pos))
-
-        if action == create_group:
-            self._group_from_selected_tracks()
 
     def _group_from_selected_tracks(self):
         selected_tracks = self._get_selected_tracks()

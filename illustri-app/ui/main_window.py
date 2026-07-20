@@ -305,9 +305,9 @@ class MainWindow(QMainWindow):
                 case 2:
                     self.audio_tab.refresh_ui()
                 case 3:
-                    self.track_groups_tab.refresh_ui()
-                case 4:
                     self.tracks_tab.refresh_ui()
+                case 4:
+                    self.track_groups_tab.refresh_ui()
                 case 5:
                     self.notes_tab.refresh_ui()
 

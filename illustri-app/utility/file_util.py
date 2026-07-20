@@ -1,4 +1,5 @@
 from pathlib import Path
+import sys
 
 from PySide6.QtCore import QStandardPaths
 
@@ -14,6 +15,9 @@ class FileUtil:
     
     @staticmethod
     def get_root_app_dir() -> Path:
+        if getattr(sys, "frozen", False):
+            return Path(sys._MEIPASS)
+    
         return Path(__file__).resolve().parent.parent
     
     @staticmethod
@@ -27,9 +31,8 @@ class FileUtil:
     @staticmethod
     def get_unique_path(path: Path) -> Path:
         '''
-        For a given path, add numbers to the end of the file name
-        until it is unique in its directory. Used for unique file
-        generation.
+        For a given path, add numbers to the end of the file name until it's
+        unique in its directory. Used to ensure unique file generation.
         '''
         if not path.exists():
             return path

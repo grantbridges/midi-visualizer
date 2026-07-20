@@ -1,1 +1,1 @@
-pyinstaller "Illustri MIDI Studio.spec" --clean --noconfirm
+pyinstaller "Illustri.spec" --clean --noconfirm

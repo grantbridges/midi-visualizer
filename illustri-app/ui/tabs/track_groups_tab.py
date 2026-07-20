@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QMessageBox,
@@ -44,13 +46,13 @@ class TrackGroupsTab(QWidget):
         self.clear_solo_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         self.clear_solo_btn.clicked.connect(self._on_clear_solo)
 
-        self.track_columns = ["", "", "Name", "Tracks", "Solo", "Visible", "Color", "Alpha", "Note Sparks", "Note Bounce", "Note Velocity Fx", "Bar Height", "Speed", "Pitch Offset", ""]
+        self.track_columns = ["", "", "Name", "Tracks", "Solo", "Visible", "Color", "Alpha", "Note Sparks", "Note Bounce", "Note Vel. Fx", "Bar Height", "Speed", "Pitch Offset", ""]
         self.table = QTableWidget(0, len(self.track_columns))
         self.table.setHorizontalHeaderLabels(self.track_columns)
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        # set button columns to shrink
-        for col in [0, 1, len(self.track_columns) - 1]:
-            self.table.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.table.horizontalHeader().setMinimumSectionSize(40)
+        # set name column to stretch
+        self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
         self.table.itemChanged.connect(self._on_item_changed)
         self.table.currentCellChanged.connect(self._on_cell_changed)
         # set whole-row multi-select
@@ -228,8 +230,8 @@ class TrackGroupsTab(QWidget):
         track_group.group_id = uuid4()
         self.vis_config.add_track_group(track_group, insert_index)
 
-        self.on_changes_callback()
         self.refresh_ui()
+        self.on_changes_callback()
 
     def _on_clear_selection(self):
         self.table.clearSelection()
@@ -241,7 +243,7 @@ class TrackGroupsTab(QWidget):
         for tg in self.vis_config.track_groups:
             tg.solo = False
         
-        self._refresh_buttons()
+        self.refresh_ui()
         self.on_changes_callback()
 
     def _on_remove_group(self, row: int):
