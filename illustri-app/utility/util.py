@@ -80,3 +80,15 @@ class Util:
         Swaps two entries in an array in place
         '''
         arr[first_index], arr[second_index] = arr[second_index], arr[first_index]
+
+    @staticmethod
+    def format_ms(ms: int) -> str:
+        '''
+        Formats time string as mm:ss
+        '''
+        total_seconds = max(0, ms // 1000)
+
+        minutes = total_seconds // 60
+        seconds = total_seconds % 60
+
+        return f"{minutes:02}:{seconds:02}"

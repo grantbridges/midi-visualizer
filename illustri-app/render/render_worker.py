@@ -40,7 +40,7 @@ class RenderFrameJobOutput:
     frame_bytes: bytes
 
 class RenderWorker(QObject):
-    progress = Signal(int, str) # percent, message
+    progress = Signal(float, str) # percent, message
     finished = Signal()
     failed = Signal(str)
     cancelled = Signal()
@@ -174,7 +174,7 @@ class RenderWorker(QObject):
 
                             # emit progress event
                             next_frame_to_write += 1
-                            percent = int((next_frame_to_write / total_frames) * 100)
+                            percent = (next_frame_to_write / total_frames) * 100
                             self.progress.emit(percent, f"Rendering frames...")
 
                         submit_frames_for_render(executor)
