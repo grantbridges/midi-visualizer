@@ -1,11 +1,8 @@
-from uuid import UUID
-import time
-from PySide6.QtWidgets import QMessageBox, QWidget
-from PySide6.QtGui import QBrush, QFont, QImage, QPainter, QPen
+from PySide6.QtWidgets import QWidget
+from PySide6.QtGui import QBrush, QImage, QPainter, QPen
 from PySide6.QtCore import QRect, QRectF, Qt, Signal
-from common import Const, Color
-from media import image_provider
-from models import VisConfig, user_settings, BackgroundMode
+from common import Color
+from models import VisConfig
 from render import MidiRenderUtil
 from utility import QUtil, Util
 
@@ -41,6 +38,8 @@ class MinimapCanvas(QWidget):
         self.is_dragging: bool = False
 
         self.setFixedHeight(MINIMAP_HEIGHT)
+
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
 
     # parent API
     def refresh(self, current_time: float, vis_config: VisConfig, start_time: float, end_time: float, pitch_min: int, pitch_max: int):
@@ -97,7 +96,6 @@ class MinimapCanvas(QWidget):
             # draw preview data
             rect = self.rect()
             painter.drawImage(rect.x(), rect.y(), self._preview_cache)
-            #self._draw_preview_data(painter, self.rect())
 
             # draw cursor
             self._draw_cursor(painter)
@@ -156,17 +154,17 @@ class MinimapCanvas(QWidget):
         rect = self.rect()
         cursor_x = self._get_x_pos_from_time(self.current_time)
 
-        cursor_width = 3
+        cursor_width = 4
         cursor_border_thickness = 1
         cursor_rect = QRectF(
             cursor_x - cursor_width / 2,
-            cursor_border_thickness,
+            rect.top(),
             cursor_width,
-            rect.height() - 2 * cursor_border_thickness,
+            rect.height(),
         )
 
         border_color = QUtil.rgb_to_qcolor(Color.BLACK)
-        fill_color = QUtil.rgb_to_qcolor(Color.WHITE)
+        fill_color = QUtil.rgb_to_qcolor(Color.WHITE, 180)
         painter.setPen(QPen(border_color, cursor_border_thickness))
         painter.setBrush(QBrush(fill_color))
         painter.drawRect(cursor_rect)
@@ -174,7 +172,7 @@ class MinimapCanvas(QWidget):
     # helpers
     def _get_time_from_x_pos(self, x_pos: int) -> float:
         ratio = x_pos / self.rect().width()
-        new_time = ratio * (self.end_time - self.start_time)
+        new_time = self.start_time + ratio * (self.end_time - self.start_time)
         new_time = Util.clamp(new_time, self.start_time, self.end_time)
         return new_time
     
@@ -183,7 +181,7 @@ class MinimapCanvas(QWidget):
             return 0
         
         ratio = (time - self.start_time) / (self.end_time - self.start_time)
-        x_pos = int(ratio * self.rect().width())
+        x_pos = self.rect().left() + int(ratio * self.rect().width())
         return x_pos
     
     def _get_y_pos_from_pitch(self, pitch: int) -> int:
