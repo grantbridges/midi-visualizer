@@ -89,6 +89,8 @@ class MainWindow(QMainWindow):
                 logger.info(f"Previous active project detected at \"{load_path}\"")
             else:
                 logger.warning(f"Previous active project filepath is invalid (\"{load_path}\") - starting default view")
+                user_settings.remove_from_recent_projects(load_path)
+                user_settings.save()
                 load_path = None
         else:
             logger.info(f" No previous active project detected - starting default view")
@@ -104,6 +106,7 @@ class MainWindow(QMainWindow):
                 QMessageBox.critical(self, "Load Failed", f"Unable to load previous project at {load_path}. See logs for details.")
 
         self.refresh_file_menu()
+        self.refresh_recent_projects_menu()
         self.refresh_window_title()
 
         # initialize views
@@ -140,6 +143,7 @@ class MainWindow(QMainWindow):
         file_menu.addAction(self.update_project_action)
         file_menu.addSeparator()
         file_menu.addAction(self.open_action)
+        self.open_recent_menu = file_menu.addMenu("Open Recent")
         file_menu.addSeparator()
         file_menu.addAction(self.save_action)
         file_menu.addAction(self.save_as_action)
@@ -332,6 +336,29 @@ class MainWindow(QMainWindow):
         self.save_as_action.setVisible(has_project)
         self.export_action.setVisible(has_project)
 
+    def refresh_recent_projects_menu(self):
+        self.open_recent_menu.clear()
+
+        recent_projects = user_settings.recent_projects
+
+        if not recent_projects:
+            empty_action = self.open_recent_menu.addAction("Empty")
+            empty_action.setEnabled(False)
+            return
+        
+        for filepath in recent_projects:
+            if filepath == user_settings.active_project_path:
+                continue # don't need to show the currently active one
+
+            filename = Path(filepath).stem
+            action = self.open_recent_menu.addAction(filename)
+            action.triggered.connect(lambda checked=False, filepath=filepath: self.open_config(filepath))
+
+        self.open_recent_menu.addSeparator()
+
+        clear_action = self.open_recent_menu.addAction("Clear Recent Projects")
+        clear_action.triggered.connect(self.on_clear_recent_projects)
+
     def update_model(self):
         # ask individual tabs to copy their local UI models into the data model
         self.config_tab.update_model()
@@ -341,8 +368,10 @@ class MainWindow(QMainWindow):
         self.tracks_tab.update_model()
         self.notes_tab.update_model()
 
-    # returns True on successful save
     def save_config(self, force_select_save_location: bool = False) -> bool:
+        '''
+        Returns True on successful save
+        '''
         self.update_model()
 
         # if we don't have a path, prompt user for where to save it
@@ -370,7 +399,9 @@ class MainWindow(QMainWindow):
             
             # update active project path
             user_settings.active_project_path = str(path)
+            user_settings.add_recent_project(str(path))
             user_settings.save()
+            self.refresh_recent_projects_menu()
         
         try:
             self.vis_config.save(user_settings.active_project_path)
@@ -380,6 +411,54 @@ class MainWindow(QMainWindow):
         except Exception as e:
             QMessageBox.critical(self, "Save failed", f"Failed to save config: {str(e)}")
             return False
+        
+    def open_config(self, load_path: str):
+        # first prompt for saving unsaved changes
+        if self.has_unsaved_changes:
+            result = QMessageBox.question(
+                self,
+                "Unsaved Changes",
+                "You have unsaved changes. Save before closing?",
+                QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel,
+                QMessageBox.Save,
+            )
+
+            if result == QMessageBox.Save:
+                save_result = self.save_config()
+                if not save_result:
+                    return # something went wrong while saving
+            elif result == QMessageBox.Discard:
+                pass # ignore, continue loading
+            elif result == QMessageBox.Cancel:
+                return # user cancelled load
+        
+        # load new file in
+        vis_config = VisConfig.load(load_path)
+        if vis_config is None:
+            user_settings.remove_from_recent_projects(load_path)
+            user_settings.save()
+            self.refresh_recent_projects_menu()
+            QMessageBox.critical(self, "Load Failed", f'Unable to load {Const.APP_NAME} project file')
+            return
+        
+        # update local working model
+        self.vis_config = vis_config
+        self.vis_config.init()
+        self._load_config_resources()
+
+        # update active project entry
+        user_settings.active_project_path = load_path
+        user_settings.add_recent_project(load_path)
+        user_settings.save()
+        self.refresh_recent_projects_menu()
+
+        # clear working state
+        self.has_unsaved_changes = False
+        self.refresh_window_title()
+        self.refresh_file_menu()
+
+        # re-init UI
+        self.init_vis_config_editor_view()
         
     def _load_config_resources(self):
         # will only load each of these if present
@@ -665,47 +744,7 @@ class MainWindow(QMainWindow):
         if not load_path:
             return
         
-        # first prompt for saving unsaved changes
-        if self.has_unsaved_changes:
-            result = QMessageBox.question(
-                self,
-                "Unsaved Changes",
-                "You have unsaved changes. Save before closing?",
-                QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel,
-                QMessageBox.Save,
-            )
-
-            if result == QMessageBox.Save:
-                save_result = self.save_config()
-                if not save_result:
-                    return # something went wrong while saving
-            elif result == QMessageBox.Discard:
-                pass # ignore, continue loading
-            elif result == QMessageBox.Cancel:
-                return # user cancelled load
-        
-        # load new file in
-        vis_config = VisConfig.load(load_path)
-        if vis_config is None:
-            QMessageBox.critical(self, "Load Failed", f'Unable to load {Const.APP_NAME} project file')
-            return
-        
-        # update local working model
-        self.vis_config = vis_config
-        self.vis_config.init()
-        self._load_config_resources()
-
-        # update active project entry
-        user_settings.active_project_path = load_path
-        user_settings.save()
-
-        # clear working state
-        self.has_unsaved_changes = False
-        self.refresh_window_title()
-        self.refresh_file_menu()
-
-        # re-init UI
-        self.init_vis_config_editor_view()
+        self.open_config(load_path)
 
     def on_save_action(self):
         self.save_config()
@@ -766,7 +805,11 @@ class MainWindow(QMainWindow):
                 QMessageBox.critical(self, "Logs Export Failed", f"Failed to export logs image: {str(e)}")
             finally:
                 QApplication.restoreOverrideCursor()
-            
+
+    def on_clear_recent_projects(self):
+        user_settings.recent_projects = []
+        user_settings.save()
+        self.refresh_recent_projects_menu()            
     
     # Render events
 

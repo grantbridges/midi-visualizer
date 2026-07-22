@@ -188,16 +188,16 @@ class VisConfig:
         inst_names = set()
         for inst in instruments:
             if not inst.name:
-                logger.warning("Loaded track from MIDI data with no name - skipping")
+                logger.warning("Create | Loaded track from MIDI data with no name - skipping")
                 continue
 
             if inst.name in inst_names:
-                logger.warning(f"Loaded track with duplicate name \"{inst.name}\" - skipping")
+                logger.warning(f"Create | Loaded track with duplicate name \"{inst.name}\" - skipping")
                 continue
 
             track = Track.create_from_midi_data(inst)
             if len(track.notes) == 0:
-                logger.warning(f"Loaded track with no notes \"{inst.name}\" - skipping")
+                logger.warning(f"Create | Loaded track with no notes \"{inst.name}\" - skipping")
                 continue
 
             track.group_id = track_group.group_id
@@ -207,7 +207,7 @@ class VisConfig:
         return vis_config
 
     def save(self, path: str) -> None:
-        logger.info(f'Saving config to "{path}"')
+        logger.debug(f'Save | Saving config to "{path}"')
 
         data = {
             "schema_version": VIS_CONFIG_SCHEMA_VERSION,
