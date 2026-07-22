@@ -3,6 +3,7 @@ import math
 from pathlib import Path
 import subprocess
 import numpy as np
+from utility import FileUtil
 from typing import List
 
 import logging
@@ -45,7 +46,7 @@ class Waveform():
 
         # use ffmpeg to parse samples from audio file
         cmd = [
-            "ffmpeg",
+            FileUtil.get_ffmpeg_path(),
             "-i", audio_path,
             "-vn",
             "-f", "f32le",

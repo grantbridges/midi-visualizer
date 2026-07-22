@@ -8,6 +8,7 @@ from pathlib import Path
 from PySide6.QtGui import QImage, QPainter
 from render.midi_render_util import MidiRenderUtil
 from dataclasses import dataclass
+from utility import FileUtil
 import uuid
 import tempfile
 import subprocess
@@ -300,7 +301,7 @@ class RenderWorker(QObject):
         has_background = has_bg_image or has_bg_video
 
         cmd = [
-            "ffmpeg",
+            FileUtil.get_ffmpeg_path(),
             "-y",
 
             # input 0: rendered MIDI overlay frames from stdin

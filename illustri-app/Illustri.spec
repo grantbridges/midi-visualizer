@@ -1,13 +1,34 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import sys
+import platform
+
+datas = [
+    ("assets", "assets"),
+]
+
+binaries = []
+
+if sys.platform == "win32":
+    binaries += [
+        ("third-party/ffmpeg/win32-x64/ffmpeg.exe", "bin"),
+    ]
+elif sys.platform == "darwin":
+    arch = platform.machine()
+    if arch == "arm64":
+        binaries += [
+            ("third-party/ffmpeg/darwin-arm64/ffmpeg", "bin"),
+        ]
+    elif arch == "x86_64":
+        binaries += [
+            ("third-party/ffmpeg/darwin-x64/ffmpeg", "bin"),
+        ]
 
 a = Analysis(
     ['main.py'],
     pathex=[],
-    binaries=[],
-    datas=[
-        ("assets", "assets"),
-    ],
+    binaries=binaries,
+    datas=datas,
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
