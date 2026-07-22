@@ -44,7 +44,7 @@ set -x # todo: remove
 echo 'windows x64'
 echo '  downloading from github.com/GyanD/codexffmpeg'
 # todo: 404
-download 'https://github.com/GyanD/codexffmpeg/releases/download/6.1.1/ffmpeg-6.1.1-essentials_build.7z' win32-x64.7z
+download 'https://github.com/GyanD/codexffmpeg/releases/download/8.1.2/ffmpeg-8.1.2-essentials_build.7z' win32-x64.7z
 echo '  extracting'
 tmpdir=$(mktemp -d)
 $p7zip_exec e -y -bd -o"$tmpdir" win32-x64.7z >/dev/null
@@ -56,7 +56,7 @@ rm win32-x64.7z
 
 echo 'darwin x64'
 echo '  downloading from evermeet.cx'
-download $(curl 'https://evermeet.cx/ffmpeg/info/ffmpeg/6.1.1' -fsS| jq -rc '.download.zip.url') ffmpeg-darwin-x64.zip
+download $(curl 'https://evermeet.cx/ffmpeg/info/ffmpeg/8.1.2' -fsS| jq -rc '.download.zip.url') ffmpeg-darwin-x64.zip
 echo '  extracting'
 unzip -o -d darwin-x64 -j ffmpeg-darwin-x64.zip ffmpeg
 chmod +x darwin-x64/ffmpeg
@@ -66,10 +66,10 @@ rm ffmpeg-darwin-x64.zip
 
 echo 'darwin arm64'
 echo '  downloading from osxexperts.net'
-download 'https://www.osxexperts.net/ffmpeg6arm.zip' ffmpeg-darwin-arm64.zip
+download 'https://www.osxexperts.net/ffmpeg81arm.zip' ffmpeg-darwin-arm64.zip
 echo '  extracting'
 unzip -o -d darwin-arm64 -j ffmpeg-darwin-arm64.zip ffmpeg
 chmod +x darwin-arm64/ffmpeg
-curl -fsSL 'https://git.ffmpeg.org/gitweb/ffmpeg.git/blob_plain/n6.1.1:/LICENSE.md'  -o darwin-arm64/ffmpeg.LICENSE
-curl -fsSL 'https://git.ffmpeg.org/gitweb/ffmpeg.git/blob_plain/n6.1.1:/README.md'  -o darwin-arm64/ffmpeg.README
+curl -fsSL 'https://git.ffmpeg.org/gitweb/ffmpeg.git/blob_plain/n8.1.2:/LICENSE.md'  -o darwin-arm64/ffmpeg.LICENSE
+curl -fsSL 'https://git.ffmpeg.org/gitweb/ffmpeg.git/blob_plain/n8.1.2:/README.md'  -o darwin-arm64/ffmpeg.README
 rm ffmpeg-darwin-arm64.zip

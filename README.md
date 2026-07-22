@@ -7,9 +7,6 @@ Bring your composition to the next level with Illustri MIDI Studio, a free MIDI 
 ### Pre-Reqs
 
 - [Python](https://www.python.org/downloads/release/python-3146/) (3.14.6+)
-- [FFmpeg](https://www.ffmpeg.org/) (8.1.2+)
-  - _(Mac)_ Run `brew install ffmpeg`
-  - _(Windows)_ Run `winget install ffmpeg`
 - [VSCode](https://code.visualstudio.com/) (or your favorite code editor)
 
 ### Initial Setup
@@ -26,7 +23,7 @@ When package dependencies are changed, run `python -m pigar generate --auto-sele
 
 ## Build
 
-1. Ensure you have `pyinstaller` (at least version 6.21.0) installed
+1. Ensure you have `pyinstaller` (6.21.0+) installed
    - `python -m pip install pyinstaller`
 1. Run `sh ./build.sh` inside of `/illustri-app` folder to generate build artifacts under `/dist`
 1. Build output found under `/dist/Illustri MIDI Studio` (Mac)
