@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
 )
 
 from models import VisConfig
-from ui.common import ColorButton, LayoutUtil, Icons, ScaledSpinbox
+from ui.common import ColorButton, LayoutUtil, Icons, ScaledSpinbox, ScaledDoubleSpinbox
 from utility import Util
 
 class AudioTab(QWidget):
@@ -51,7 +51,7 @@ class AudioTab(QWidget):
         self.waveform_color_button.valueChanged.connect(self._on_changes)
         self.waveform_opacity_input = ScaledSpinbox(display_min=0, display_max=100, internal_min=0, internal_max=255)
         self.waveform_opacity_input.valueChanged.connect(self._on_changes)
-        self.waveform_speed_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=10.0, singleStep=0.01)
+        self.waveform_speed_input = ScaledDoubleSpinbox(decimals=2, singleStep=0.01, display_min=0.1, display_max=10.0, internal_min=20.0, internal_max=0.1)
         self.waveform_speed_input.valueChanged.connect(self._on_changes)
         self.waveform_height_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.0, singleStep=0.01)
         self.waveform_height_input.valueChanged.connect(self._on_changes)
@@ -126,7 +126,7 @@ class AudioTab(QWidget):
         self.waveform_color_button.setEnabled(self.vis_config.show_waveform and self.vis_config.has_audio())
         self.waveform_opacity_input.setInternalValue(self.vis_config.waveform_alpha)
         self.waveform_opacity_input.setEnabled(self.vis_config.show_waveform and self.vis_config.has_audio())
-        self.waveform_speed_input.setValue(Util.internal_to_display(self.vis_config.waveform_sec_across_screen, 0.1, 20.0, 10.0, 0.1 ))
+        self.waveform_speed_input.setInternalValue(self.vis_config.waveform_sec_across_screen)
         self.waveform_speed_input.setEnabled(self.vis_config.show_waveform and self.vis_config.has_audio())
         self.waveform_height_input.setValue(self.vis_config.waveform_height_ratio)
         self.waveform_height_input.setEnabled(self.vis_config.show_waveform and self.vis_config.has_audio())
@@ -143,7 +143,7 @@ class AudioTab(QWidget):
         self.vis_config.show_waveform = self.show_waveform_checkbox.isChecked()
         self.vis_config.waveform_color = self.waveform_color_button.getColor()
         self.vis_config.waveform_alpha = self.waveform_opacity_input.getInternalValue()
-        self.vis_config.waveform_sec_across_screen = Util.display_to_internal(self.waveform_speed_input.value(), 10.0, 0.1, 0.1, 20.0)
+        self.vis_config.waveform_sec_across_screen = self.waveform_speed_input.getInternalValue()
         self.vis_config.waveform_height_ratio = self.waveform_height_input.value()
         self.vis_config.waveform_pos_ratio = self.waveform_pos_input.value()
 

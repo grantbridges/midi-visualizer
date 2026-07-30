@@ -18,7 +18,15 @@ from PySide6.QtWidgets import (
 from common import RGB, Color
 from models import VisConfig, TrackGroup
 from utility import Util, QUtil
-from ui.common import ColorButton, TableCheckbox, TableSpinbox, TableDoubleSpinbox, LayoutUtil, Icons, ScaledSpinbox
+from ui.common import (
+    ColorButton, 
+    TableCheckbox, 
+    TableSpinbox,
+    LayoutUtil, 
+    Icons, 
+    ScaledSpinbox, 
+    ScaledDoubleSpinbox
+)
 import copy
 from uuid import uuid4
 
@@ -133,7 +141,14 @@ class TrackGroupsTab(QWidget):
             col += 1
 
             # opacity
-            opacity = ScaledSpinbox(internal_value=track_group.alpha, display_min=0, display_max=100, internal_min=0, internal_max=255)
+            opacity = ScaledSpinbox(
+                internal_value=track_group.alpha, 
+                display_min=0, 
+                display_max=100, 
+                internal_min=0, 
+                internal_max=255,
+                disable_mouse_wheel=True
+            )
             opacity.valueChanged.connect(lambda _, row=row, widget=opacity: self._on_opacity_changed(row, widget.getInternalValue()))
             self.table.setCellWidget(row, col, opacity)
             col += 1
@@ -157,24 +172,32 @@ class TrackGroupsTab(QWidget):
             col += 1
 
             # bar height ratio
-            bar_height = TableDoubleSpinbox()
-            bar_height.setDecimals(2)
-            bar_height.setRange(1.0, 10.0)
-            bar_height.setSingleStep(0.01)
-            bar_height_ratio_display_value = Util.internal_to_display(track_group.bar_height_ratio, 0.001, 1.000, 1.0, 10.0)
-            bar_height.setValue(bar_height_ratio_display_value)
-            bar_height.valueChanged.connect(lambda height, row=row: self._on_bar_height_changed(row, height))
+            bar_height = ScaledDoubleSpinbox(
+                decimals=2, 
+                singleStep=0.01, 
+                display_min=1.0, 
+                display_max=10.0, 
+                internal_min=0.001, 
+                internal_max=1.000, 
+                internal_value=track_group.bar_height_ratio,
+                disable_mouse_wheel=True
+            )
+            bar_height.valueChanged.connect(lambda _, row=row, widget=bar_height: self._on_bar_height_changed(row, widget.getInternalValue()))
             self.table.setCellWidget(row, col, bar_height)
             col += 1
 
             # pixels/sec
-            sec_across_screen = TableDoubleSpinbox()
-            sec_across_screen.setDecimals(1)
-            sec_across_screen.setRange(0.1, 10.0)
-            sec_across_screen.setSingleStep(.1)
-            speed_display_value = Util.internal_to_display(track_group.bar_sec_across_screen, 0.1, 10.0, 10.0, 0.1)
-            sec_across_screen.setValue(speed_display_value)
-            sec_across_screen.valueChanged.connect(lambda speed, row=row: self._on_bar_speed_changed(row, speed))
+            sec_across_screen = ScaledDoubleSpinbox(
+                decimals=1,
+                singleStep=0.1,
+                display_min=0.1,
+                display_max=10.0,
+                internal_min=10.0,
+                internal_max=0.1,
+                internal_value=track_group.bar_sec_across_screen,
+                disable_mouse_wheel=True
+            )
+            sec_across_screen.valueChanged.connect(lambda _, row=row, widget=sec_across_screen: self._on_bar_speed_changed(row, widget.getInternalValue()))
             self.table.setCellWidget(row, col, sec_across_screen)
             col += 1
 
@@ -367,7 +390,7 @@ class TrackGroupsTab(QWidget):
             return
         
         track_group = self.vis_config.track_groups[row]
-        track_group.bar_height_ratio = Util.display_to_internal(value, 1.0, 10.0, 0.001, 1.0)
+        track_group.bar_height_ratio = value
         self.on_changes_callback()
 
     def _on_bar_speed_changed(self, row: int, value: float):
@@ -375,7 +398,7 @@ class TrackGroupsTab(QWidget):
             return
         
         track_group = self.vis_config.track_groups[row]
-        track_group.bar_sec_across_screen = Util.display_to_internal(value, 10.0, 0.1, 0.1, 10.0)
+        track_group.bar_sec_across_screen = value
         self.on_changes_callback()
 
     def _on_pitch_offset_changed(self, row: int, value: int):
