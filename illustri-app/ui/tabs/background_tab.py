@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
 )
 
 from models import VisConfig, BackgroundMode
-from ui.common import ColorButton, LayoutUtil, Icons
+from ui.common import ColorButton, LayoutUtil, Icons, ScaledSpinbox
 
 class BackgroundTab(QWidget):
     def __init__(self, 
@@ -69,8 +69,8 @@ class BackgroundTab(QWidget):
         self.bg_tint_checkbox.toggled.connect(self._on_changes)
         self.bg_tint_color_button = ColorButton()
         self.bg_tint_color_button.valueChanged.connect(self._on_changes)
-        self.bg_tint_alpha_input = QSpinBox(minimum=0, maximum=255)
-        self.bg_tint_alpha_input.valueChanged.connect(self._on_changes)
+        self.bg_tint_opacity_input = ScaledSpinbox(display_min=0, display_max=100, internal_min=0, internal_max=255)
+        self.bg_tint_opacity_input.valueChanged.connect(self._on_changes)
 
         self.fade_in_checkbox = QCheckBox()
         self.fade_in_checkbox.toggled.connect(self._on_changes)
@@ -121,7 +121,7 @@ class BackgroundTab(QWidget):
         LayoutUtil.section(column, "Background Tint")
         LayoutUtil.checkbox(column, "Background Tint", self.bg_tint_checkbox)
         LayoutUtil.button(column, "Background Tint Color", self.bg_tint_color_button)
-        LayoutUtil.spinbox(column, "Background Tint Alpha", self.bg_tint_alpha_input)
+        LayoutUtil.spinbox(column, "Background Tint Opacity", self.bg_tint_opacity_input)
 
         column.addStretch()
 
@@ -171,8 +171,8 @@ class BackgroundTab(QWidget):
         self.bg_tint_checkbox.setChecked(self.vis_config.bg_tint_enabled)
         self.bg_tint_color_button.setColor(self.vis_config.bg_tint_color)
         self.bg_tint_color_button.setEnabled(self.vis_config.bg_tint_enabled)
-        self.bg_tint_alpha_input.setValue(self.vis_config.bg_tint_alpha)
-        self.bg_tint_alpha_input.setEnabled(self.vis_config.bg_tint_enabled)
+        self.bg_tint_opacity_input.setInternalValue(self.vis_config.bg_tint_alpha)
+        self.bg_tint_opacity_input.setEnabled(self.vis_config.bg_tint_enabled)
 
         self.fade_in_checkbox.setChecked(self.vis_config.fade_in_enabled)
         self.fade_in_color.setColor(self.vis_config.fade_in_color)
@@ -201,7 +201,7 @@ class BackgroundTab(QWidget):
 
         self.vis_config.bg_tint_enabled = self.bg_tint_checkbox.isChecked()
         self.vis_config.bg_tint_color = self.bg_tint_color_button.getColor()
-        self.vis_config.bg_tint_alpha = self.bg_tint_alpha_input.value()
+        self.vis_config.bg_tint_alpha = self.bg_tint_opacity_input.getInternalValue()
 
         self.vis_config.fade_in_enabled = self.fade_in_checkbox.isChecked()
         self.vis_config.fade_in_color = self.fade_in_color.getColor()

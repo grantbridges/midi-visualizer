@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
 from common import RGB, Color
 from models import VisConfig, TrackGroup
 from utility import Util, QUtil
-from ui.common import ColorButton, TableCheckbox, TableSpinbox, TableDoubleSpinbox, LayoutUtil, Icons
+from ui.common import ColorButton, TableCheckbox, TableSpinbox, TableDoubleSpinbox, LayoutUtil, Icons, ScaledSpinbox
 import copy
 from uuid import uuid4
 
@@ -46,7 +46,7 @@ class TrackGroupsTab(QWidget):
         self.clear_solo_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         self.clear_solo_btn.clicked.connect(self._on_clear_solo)
 
-        self.track_columns = ["", "", "Name", "Tracks", "Solo", "Visible", "Color", "Alpha", "Note Sparks", "Note Bounce", "Note Vel. Fx", "Bar Height", "Speed", "Pitch Offset", ""]
+        self.track_columns = ["", "", "Name", "Tracks", "Solo", "Visible", "Color", "Opacity", "Note Sparks", "Note Bounce", "Note Vel. Fx", "Bar Height", "Speed", "Pitch Offset", ""]
         self.table = QTableWidget(0, len(self.track_columns))
         self.table.setHorizontalHeaderLabels(self.track_columns)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
@@ -132,12 +132,10 @@ class TrackGroupsTab(QWidget):
             self.table.setCellWidget(row, col, color_btn)
             col += 1
 
-            # alpha
-            alpha = TableSpinbox()
-            alpha.setRange(0, 255)
-            alpha.setValue(track_group.alpha)
-            alpha.valueChanged.connect(lambda alpha, row=row: self._on_alpha_changed(row, alpha))
-            self.table.setCellWidget(row, col, alpha)
+            # opacity
+            opacity = ScaledSpinbox(internal_value=track_group.alpha, display_min=0, display_max=100, internal_min=0, internal_max=255)
+            opacity.valueChanged.connect(lambda _, row=row, widget=opacity: self._on_opacity_changed(row, widget.getInternalValue()))
+            self.table.setCellWidget(row, col, opacity)
             col += 1
 
             # sparks
@@ -332,12 +330,12 @@ class TrackGroupsTab(QWidget):
         track_group.color = color
         self.on_changes_callback()
 
-    def _on_alpha_changed(self, row: int, alpha: int):
+    def _on_opacity_changed(self, row: int, opacity: int):
         if self.table.signalsBlocked():
             return
         
         track_group = self.vis_config.track_groups[row]
-        track_group.alpha = alpha
+        track_group.alpha = opacity
         self.on_changes_callback()
     
     def _on_sparks_changed(self, row: int, checked: bool):

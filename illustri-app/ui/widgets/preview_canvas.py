@@ -58,14 +58,12 @@ class PreviewCanvas(QWidget):
 
             MidiRenderUtil.draw_preview_background(painter, self.current_time, self.vis_config, rect)
             MidiRenderUtil.draw_background_tint(painter, self.vis_config, rect)
-
-            self._draw_guides(painter, rect)
-            self._draw_pitches(painter, rect)
-
             MidiRenderUtil.draw_notes(painter, self.current_time, self.vis_config, self.pitch_min, self.pitch_max, rect)
             MidiRenderUtil.draw_waveform(painter, self.current_time, self.vis_config, rect)
             MidiRenderUtil.draw_fade_overlay(painter, self.current_time, self.start_time, self.end_time, self.vis_config, rect)
-           
+
+            self._draw_guides(painter, rect)
+            self._draw_pitches(painter, rect)
             self._draw_text(painter, rect)
 
             painter.restore()

@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
 )
 
 from models import VisConfig, Orientation
-from ui.common import ColorButton, LayoutUtil, Icons
+from ui.common import ColorButton, LayoutUtil, Icons, ScaledSpinbox
 
 class ConfigTab(QWidget):
     def __init__(self, 
@@ -44,8 +44,8 @@ class ConfigTab(QWidget):
         self.show_playhead_checkbox.toggled.connect(self._on_changes)
         self.playhead_color_button = ColorButton()
         self.playhead_color_button.valueChanged.connect(self._on_changes)
-        self.playhead_alpha_input = QSpinBox(minimum=0, maximum=255)
-        self.playhead_alpha_input.valueChanged.connect(self._on_changes)
+        self.playhead_opacity_input = ScaledSpinbox(display_min=0, display_max=100, internal_min=0, internal_max=255)
+        self.playhead_opacity_input.valueChanged.connect(self._on_changes)
         self.playhead_thickness_input = QDoubleSpinBox(decimals=4, minimum=0.0001, maximum=0.1, singleStep=0.001)
         self.playhead_thickness_input.valueChanged.connect(self._on_changes)
         self.playhead_pos_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.00, singleStep=0.01)
@@ -105,7 +105,7 @@ class ConfigTab(QWidget):
         LayoutUtil.section(column, "Playhead")
         LayoutUtil.checkbox(column, "Show Playhead", self.show_playhead_checkbox)
         LayoutUtil.button(column, "Playhead Color", self.playhead_color_button)
-        LayoutUtil.spinbox(column, "Playhead Alpha", self.playhead_alpha_input)
+        LayoutUtil.spinbox(column, "Playhead Opacity", self.playhead_opacity_input)
         LayoutUtil.spinbox(column, "Playhead Thickness", self.playhead_thickness_input)
         LayoutUtil.spinbox(column, "Playhead Position", self.playhead_pos_input)
 
@@ -147,8 +147,8 @@ class ConfigTab(QWidget):
         self.show_playhead_checkbox.setChecked(self.vis_config.show_playhead)
         self.playhead_color_button.setColor(self.vis_config.playhead_color)
         self.playhead_color_button.setEnabled(self.vis_config.show_playhead)
-        self.playhead_alpha_input.setValue(self.vis_config.playhead_alpha)
-        self.playhead_alpha_input.setEnabled(self.vis_config.show_playhead)
+        self.playhead_opacity_input.setInternalValue(self.vis_config.playhead_alpha)
+        self.playhead_opacity_input.setEnabled(self.vis_config.show_playhead)
         self.playhead_thickness_input.setValue(self.vis_config.playhead_thickness_ratio)
         self.playhead_thickness_input.setEnabled(self.vis_config.show_playhead)
         self.playhead_pos_input.setValue(self.vis_config.playhead_pos_ratio)
@@ -180,7 +180,7 @@ class ConfigTab(QWidget):
 
         self.vis_config.show_playhead = self.show_playhead_checkbox.isChecked()
         self.vis_config.playhead_color = self.playhead_color_button.getColor()
-        self.vis_config.playhead_alpha = self.playhead_alpha_input.value()
+        self.vis_config.playhead_alpha = self.playhead_opacity_input.getInternalValue()
         self.vis_config.playhead_thickness_ratio = self.playhead_thickness_input.value()
         self.vis_config.playhead_pos_ratio = self.playhead_pos_input.value()
 
