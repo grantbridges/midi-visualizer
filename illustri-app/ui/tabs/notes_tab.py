@@ -1,6 +1,7 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QScrollArea,
+    QSlider,
     QSpinBox,
     QDoubleSpinBox,
     QCheckBox,
@@ -77,7 +78,11 @@ class NotesTab(QWidget):
         self.sparks_speed_var_input.valueChanged.connect(self._on_changes)
         self.sparks_opacity_ratio_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.0, singleStep=0.01)
         self.sparks_opacity_ratio_input.valueChanged.connect(self._on_changes)
-        self.sparks_count_input = QSpinBox(minimum=1, maximum=50)
+        self.sparks_count_input = QSlider(Qt.Orientation.Horizontal)
+        self.sparks_count_input.setMinimum(1)
+        self.sparks_count_input.setMaximum(50)
+        self.sparks_count_input.setSingleStep(1)
+        self.sparks_count_input.setPageStep(5)
         self.sparks_count_input.valueChanged.connect(self._on_changes)
         self.sparks_angle_input = QSpinBox(minimum=0, maximum=180, suffix="°")
         self.sparks_angle_input.valueChanged.connect(self._on_changes)
@@ -148,7 +153,7 @@ class NotesTab(QWidget):
         LayoutUtil.spinbox(column, "Speed Min", self.sparks_speed_input)
         LayoutUtil.spinbox(column, "Speed Max", self.sparks_speed_var_input)
         LayoutUtil.spinbox(column, "Opacity Ratio", self.sparks_opacity_ratio_input)
-        LayoutUtil.spinbox(column, "Particle Count", self.sparks_count_input)
+        LayoutUtil.slider(column, "Particle Count", self.sparks_count_input)
         LayoutUtil.spinbox(column, "Angle", self.sparks_angle_input)
         LayoutUtil.spinbox(column, "Fade Time", self.sparks_fade_time_input)
 

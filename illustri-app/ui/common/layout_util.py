@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QPushButton,
+    QSlider,
     QWidget,
 )
 from PySide6.QtCore import Qt
@@ -76,8 +77,18 @@ class LayoutUtil:
         row = QWidget()
         h_layout = QHBoxLayout(row)
         h_layout.setContentsMargins(0, 0, 0, 0)
-        h_layout.addWidget(QLabel(label))
-        h_layout.addWidget(spinbox)
+        h_layout.addWidget(QLabel(label), 1)
+        h_layout.addWidget(spinbox, 1)
+        parent_layout.addWidget(row)
+        return row
+    
+    @staticmethod
+    def slider(parent_layout: QBoxLayout, label: str, slider: QSlider) -> QWidget:
+        row = QWidget()
+        h_layout = QHBoxLayout(row)
+        h_layout.setContentsMargins(0, 0, 0, 0)
+        h_layout.addWidget(QLabel(label), 1)
+        h_layout.addWidget(slider, 1)
         parent_layout.addWidget(row)
         return row
     
@@ -86,8 +97,8 @@ class LayoutUtil:
         row = QWidget()
         h_layout = QHBoxLayout(row)
         h_layout.setContentsMargins(0, 0, 0, 0)
-        h_layout.addWidget(QLabel(label))
-        h_layout.addWidget(combobox)
+        h_layout.addWidget(QLabel(label), 1)
+        h_layout.addWidget(combobox, 1)
         parent_layout.addWidget(row)
         return row
     
@@ -96,8 +107,8 @@ class LayoutUtil:
         row = QWidget()
         h_layout = QHBoxLayout(row)
         h_layout.setContentsMargins(0, 0, 0, 0)
-        h_layout.addWidget(QLabel(label))
-        h_layout.addWidget(button)
+        h_layout.addWidget(QLabel(label), 1)
+        h_layout.addWidget(button, 1)
         parent_layout.addWidget(row)
         return row
     
