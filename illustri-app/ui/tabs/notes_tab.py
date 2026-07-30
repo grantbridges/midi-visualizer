@@ -125,7 +125,7 @@ class NotesTab(QWidget):
         LayoutUtil.checkbox(column, "Highlight Enabled", self.highlight_checkbox)
         LayoutUtil.checkbox(column, "Highlight Only Played Region", self.highlight_played_region_checkbox)
         LayoutUtil.button(column, "Highlight Color", self.highlight_color)
-        LayoutUtil.checkbox(column, "Highlight Use Velocity", self.highlight_use_vel_checkbox)
+        LayoutUtil.checkbox(column, "Highlight Intensity by Velocity", self.highlight_use_vel_checkbox)
         self.highlight_intensity_row = LayoutUtil.spinbox(column, "Highlight Intensity", self.highlight_intensity_input)
         self.highlight_min_intensity_row = LayoutUtil.spinbox(column, "Highlight Min Intensity", self.highlight_min_intensity_input)
         self.highlight_max_intensity_row = LayoutUtil.spinbox(column, "Highlight Max Intensity", self.highlight_max_intensity_input)
