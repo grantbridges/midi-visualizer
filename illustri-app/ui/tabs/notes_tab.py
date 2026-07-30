@@ -41,6 +41,8 @@ class NotesTab(QWidget):
 
         self.glow_checkbox = QCheckBox()
         self.glow_checkbox.toggled.connect(self._on_changes)
+        self.glow_played_region_checkbox = QCheckBox()
+        self.glow_played_region_checkbox.toggled.connect(self._on_changes)
         self.glow_color = ColorButton()
         self.glow_color.valueChanged.connect(self._on_changes)
         self.glow_size_input = QDoubleSpinBox(decimals=2, minimum=0.00, maximum=2.0, singleStep=0.01)
@@ -50,6 +52,8 @@ class NotesTab(QWidget):
 
         self.highlight_checkbox = QCheckBox()
         self.highlight_checkbox.toggled.connect(self._on_changes)
+        self.highlight_played_region_checkbox = QCheckBox()
+        self.highlight_played_region_checkbox.toggled.connect(self._on_changes)
         self.highlight_use_vel_checkbox = QCheckBox()
         self.highlight_use_vel_checkbox.toggled.connect(self._on_changes)
         self.highlight_color = ColorButton()
@@ -119,6 +123,7 @@ class NotesTab(QWidget):
 
         LayoutUtil.section(column, "Highlight")
         LayoutUtil.checkbox(column, "Highlight Enabled", self.highlight_checkbox)
+        LayoutUtil.checkbox(column, "Highlight Only Played Region", self.highlight_played_region_checkbox)
         LayoutUtil.button(column, "Highlight Color", self.highlight_color)
         LayoutUtil.checkbox(column, "Highlight Use Velocity", self.highlight_use_vel_checkbox)
         self.highlight_intensity_row = LayoutUtil.spinbox(column, "Highlight Intensity", self.highlight_intensity_input)
@@ -126,6 +131,7 @@ class NotesTab(QWidget):
         self.highlight_max_intensity_row = LayoutUtil.spinbox(column, "Highlight Max Intensity", self.highlight_max_intensity_input)
         LayoutUtil.section(column, "Glow")
         LayoutUtil.checkbox(column, "Glow Enabled", self.glow_checkbox)
+        LayoutUtil.checkbox(column, "Glow Only Played Region", self.glow_played_region_checkbox)
         LayoutUtil.button(column, "Glow Color", self.glow_color)
         LayoutUtil.spinbox(column, "Glow Size", self.glow_size_input)
         LayoutUtil.spinbox(column, "Glow Intensity", self.glow_intensity_input)
@@ -182,6 +188,8 @@ class NotesTab(QWidget):
         self.fadeout_end_input.setEnabled(self.vis_config.note_fadeout_enabled)
 
         self.glow_checkbox.setChecked(self.vis_config.note_glow_enabled)
+        self.glow_played_region_checkbox.setChecked(self.vis_config.note_glow_played_region)
+        self.glow_played_region_checkbox.setEnabled(self.vis_config.note_glow_enabled)
         self.glow_color.setColor(self.vis_config.note_glow_color)
         self.glow_color.setEnabled(self.vis_config.note_glow_enabled)
         self.glow_size_input.setValue(self.vis_config.note_glow_size)
@@ -190,6 +198,8 @@ class NotesTab(QWidget):
         self.glow_intensity_input.setEnabled(self.vis_config.note_glow_enabled)
 
         self.highlight_checkbox.setChecked(self.vis_config.note_highlight_enabled)
+        self.highlight_played_region_checkbox.setChecked(self.vis_config.note_highlight_played_region)
+        self.highlight_played_region_checkbox.setEnabled(self.vis_config.note_highlight_enabled)
         self.highlight_use_vel_checkbox.setChecked(self.vis_config.note_highlight_use_velocity)
         self.highlight_use_vel_checkbox.setEnabled(self.vis_config.note_highlight_enabled)
         self.highlight_color.setColor(self.vis_config.note_highlight_color)
@@ -241,11 +251,13 @@ class NotesTab(QWidget):
         self.vis_config.note_fadeout_end_ratio = self.fadeout_end_input.value()
 
         self.vis_config.note_glow_enabled = self.glow_checkbox.isChecked()
+        self.vis_config.note_glow_played_region = self.glow_played_region_checkbox.isChecked()
         self.vis_config.note_glow_color = self.glow_color.getColor()
         self.vis_config.note_glow_size = self.glow_size_input.value()
         self.vis_config.note_glow_intensity = self.glow_intensity_input.value()
 
         self.vis_config.note_highlight_enabled = self.highlight_checkbox.isChecked()
+        self.vis_config.note_highlight_played_region = self.highlight_played_region_checkbox.isChecked()
         self.vis_config.note_highlight_use_velocity = self.highlight_use_vel_checkbox.isChecked()
         self.vis_config.note_highlight_color = self.highlight_color.getColor()
         self.vis_config.note_highlight_intensity = self.highlight_intensity_input.value()

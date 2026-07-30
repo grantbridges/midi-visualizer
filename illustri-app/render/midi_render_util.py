@@ -265,7 +265,7 @@ class MidiRenderUtil:
         bar_height: int
     ):
         x_right = x + w
-        glow_w = min(playhead_x, x_right) - x
+        glow_w = min(playhead_x, x_right) - x if vis_config.note_glow_played_region else w
         color_glow = Util.mix_colors(color, vis_config.note_glow_color, 0.75)
 
         # padding for how far glow extends vertically
@@ -369,7 +369,7 @@ class MidiRenderUtil:
     ):
         # draw transparent overlay over played note area to brighten
         x_right = x + w
-        highlight_w = min(playhead_x, x_right) - x
+        highlight_w = min(playhead_x, x_right) - x if vis_config.note_highlight_played_region else w
 
         highlight_factor = vis_config.note_highlight_intensity
 

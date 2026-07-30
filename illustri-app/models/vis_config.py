@@ -41,8 +41,9 @@ History
   17 - Note bounce; note fade in/out updates
   18 - Track group control of note bounce
   19 - Waveform config
+  20 - Highlight/glow only played region
 '''
-VIS_CONFIG_SCHEMA_VERSION = 19
+VIS_CONFIG_SCHEMA_VERSION = 20
 
 @dataclass
 class VisConfig:
@@ -116,6 +117,7 @@ class VisConfig:
 
     # -- Note Glow --
     note_glow_enabled: bool = True
+    note_glow_played_region: bool = True
     note_glow_color: RGB = Color.WHITE
     note_glow_size: float = 0.8 # ratio of computed bar height - applies to y padding
     note_glow_intensity: float = 0.33
@@ -123,6 +125,7 @@ class VisConfig:
     # -- Note Highlight --
     note_highlight_enabled: bool = True
     note_highlight_use_velocity: bool = True
+    note_highlight_played_region: bool = True
     note_highlight_color: RGB = Color.WHITE
     note_highlight_intensity: float = 0.75 # ratio of how much we lighten to white (0.0 - 1.0)
     # these two are used if we're using velocity for dynamic highlighting
@@ -269,10 +272,12 @@ class VisConfig:
             "note_sparks_time_to_fade_sec": self.note_sparks_time_to_fade_sec,
 
             "note_glow_enabled": self.note_glow_enabled,
+            "note_glow_played_region": self.note_glow_played_region,
             "note_glow_color": list(self.note_glow_color),
             "note_glow_size": self.note_glow_size,
             "note_glow_intensity": self.note_glow_intensity,
             "note_highlight_enabled": self.note_highlight_enabled,
+            "note_highlight_played_region": self.note_highlight_played_region,
             "note_highlight_use_velocity": self.note_highlight_use_velocity,
             "note_highlight_color": list(self.note_highlight_color),
             "note_highlight_intensity": self.note_highlight_intensity,
@@ -440,6 +445,10 @@ class VisConfig:
                 config.waveform_sec_across_screen = data["waveform_sec_across_screen"]
                 config.waveform_height_ratio = data["waveform_height_ratio"]
                 config.waveform_pos_ratio = data["waveform_pos_ratio"]
+
+            if schema_version >= 20:
+                config.note_glow_played_region = data["note_glow_played_region"]
+                config.note_highlight_played_region = data["note_highlight_played_region"]
 
             size_bytes = asizeof.asizeof(config)
             logger.info(f"Load | Loaded config ({size_bytes / 1024 / 1024:.3f} MB)")
