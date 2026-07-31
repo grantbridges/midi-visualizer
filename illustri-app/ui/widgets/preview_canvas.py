@@ -64,6 +64,7 @@ class PreviewCanvas(QWidget):
 
             self._draw_guides(painter, rect)
             self._draw_pitches(painter, rect)
+            self._draw_fade_lines(painter, rect)
             self._draw_text(painter, rect)
 
             painter.restore()
@@ -79,7 +80,6 @@ class PreviewCanvas(QWidget):
         finally:
             painter.end()
 
-
     def _draw_guides(self, painter: QPainter, rect: QRect):
         if not user_settings.show_guides:
             return
@@ -88,9 +88,9 @@ class PreviewCanvas(QWidget):
         vert_offset = self.vis_config.vertical_offset_ratio * rect.height() / 2
 
         # positions
-        y_center = rect.height() / 2 + vert_offset
-        y_min = vert_padding + vert_offset
-        y_max = rect.height() - vert_padding + vert_offset
+        y_center = rect.top() + rect.height() / 2 + vert_offset
+        y_min = rect.top() + vert_padding + vert_offset
+        y_max = rect.bottom() - vert_padding + vert_offset
 
         # draw pitches
         color = QUtil.rgb_to_qcolor(Util.invert_color(self.vis_config.bg_color), 200)
@@ -106,9 +106,41 @@ class PreviewCanvas(QWidget):
         # draw center line
         pen.setStyle(Qt.DashLine)
         pen.setWidth(1)
-        pen.setDashPattern([4, 8])  # 4px dash,8px gap
+        pen.setDashPattern([4, 8])  # 4 dash, 8 gap
         painter.setPen(pen)
         painter.drawLine(rect.left(), y_center, rect.right(), y_center)
+
+    def _draw_fade_lines(self, painter: QPainter, rect: QRect):
+        if not user_settings.show_note_fades:
+            return
+
+        color = QUtil.rgb_to_qcolor(Util.contrast_color(self.vis_config.bg_color), 80)
+
+        # draw vertical padding guides
+        pen = QPen(color)
+        pen.setStyle(Qt.DashLine)
+        pen.setWidth(1)
+        pen.setDashPattern([1, 2])  # 1 dash, 2 gap
+        painter.setPen(pen)
+
+        y_min = rect.top()
+        y_max = rect.bottom()
+
+        playhead_x = MidiRenderUtil.playhead_x(rect, self.vis_config)
+
+        if self.vis_config.note_fadein_enabled:
+            right_line_x = playhead_x + self.vis_config.note_fadein_start_ratio * (rect.right() - playhead_x)
+            left_line_x = playhead_x + self.vis_config.note_fadein_end_ratio * (rect.right() - playhead_x)
+
+            painter.drawLine(right_line_x, y_min, right_line_x, y_max)
+            painter.drawLine(left_line_x, y_min, left_line_x, y_max)
+
+        if self.vis_config.note_fadeout_enabled:
+            right_line_x = rect.left() + self.vis_config.note_fadeout_start_ratio * (playhead_x - rect.left())
+            left_line_x = rect.left() + self.vis_config.note_fadeout_end_ratio * (playhead_x - rect.left())
+
+            painter.drawLine(right_line_x, y_min, right_line_x, y_max)
+            painter.drawLine(left_line_x, y_min, left_line_x, y_max)
 
     def _draw_pitches(self, painter: QPainter, rect: QRect):
         # shorthand a few vars

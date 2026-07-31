@@ -37,6 +37,7 @@ class UserSettings:
     show_track_groups: bool = False
     show_guides: bool = True
     show_pitches: bool = False
+    show_note_fades: bool = False
     mute_audio: bool = False
     loop_preview: bool = True
 
@@ -60,6 +61,7 @@ class UserSettings:
                 "show_track_groups": self.show_track_groups,
                 "show_guides": self.show_guides,
                 "show_pitches": self.show_pitches,
+                "show_note_fades": self.show_note_fades,
                 "mute_audio": self.mute_audio,
                 "loop_preview": self.loop_preview,
             }
@@ -91,6 +93,7 @@ class UserSettings:
             self.show_track_groups = data["show_track_groups"]
             self.show_guides = data["show_guides"]
             self.show_pitches = data["show_pitches"]
+            self.show_note_fades = data["show_note_fades"]
             self.mute_audio = data["mute_audio"]
             self.loop_preview = data["loop_preview"]
 

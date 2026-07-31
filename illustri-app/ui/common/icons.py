@@ -93,6 +93,10 @@ class Icons:
         return Icons._get_icon("mdi6.group")
     
     @staticmethod
+    def menu():
+        return Icons._get_icon("mdi6.menu")
+    
+    @staticmethod
     def _get_icon(name: str):
         return qta.icon(
             name,

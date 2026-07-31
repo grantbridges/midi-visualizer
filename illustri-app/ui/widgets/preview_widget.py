@@ -75,8 +75,9 @@ class PreviewWidget(QWidget):
         settings_menu = QMenu(self)
         for action in [
             self._create_settings_action("Show Time Display", "show_time_display"),
-            self._create_settings_action("Show Guides", "show_guides"),
+            self._create_settings_action("Show Padding Guides", "show_guides"),
             self._create_settings_action("Show Pitch Lines", "show_pitches"),
+            self._create_settings_action("Show Note Fade Guides", "show_note_fades"),
             self._create_settings_action("Show Track Groups", "show_track_groups")
         ]:
             settings_menu.addAction(action)
