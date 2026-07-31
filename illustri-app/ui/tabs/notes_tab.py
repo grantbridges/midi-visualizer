@@ -181,10 +181,10 @@ class NotesTab(QWidget):
 
         self.fadeout_checkbox.setChecked(self.vis_config.note_fadeout_enabled)
         self.fadeout_start_input.setValue(self.vis_config.note_fadeout_start_ratio)
-        self.fadein_start_input.setMinimum(self.vis_config.note_fadeout_end_ratio + .01)
+        self.fadeout_start_input.setMinimum(self.vis_config.note_fadeout_end_ratio + .01)
         self.fadeout_start_input.setEnabled(self.vis_config.note_fadeout_enabled)
         self.fadeout_end_input.setValue(self.vis_config.note_fadeout_end_ratio)
-        self.fadein_end_input.setMaximum(self.vis_config.note_fadeout_start_ratio - .01)
+        self.fadeout_end_input.setMaximum(self.vis_config.note_fadeout_start_ratio - .01)
         self.fadeout_end_input.setEnabled(self.vis_config.note_fadeout_enabled)
 
         self.glow_checkbox.setChecked(self.vis_config.note_glow_enabled)
