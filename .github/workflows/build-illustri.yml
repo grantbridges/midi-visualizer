@@ -30,7 +30,7 @@ jobs:
           - os: macos-latest # Apple Silicon (ARM) runner
             platform_label: macos-arm64
             artifact_name: illustri-macos-arm64.zip
-          - os: macos-13 # last Intel (x86_64) runner image
+          - os: macos-15-intel # last Intel (x86_64) runner image
             platform_label: macos-x86_64
             artifact_name: illustri-macos-x86_64.zip
 
