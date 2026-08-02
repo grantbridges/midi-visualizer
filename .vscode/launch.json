@@ -8,7 +8,7 @@
       "name": "Debug Illustri App",
       "type": "debugpy",
       "request": "launch",
-      "program": "./illustri-app/main.py",
+      "program": "./main.py",
       "console": "integratedTerminal",
       "args": []
     }

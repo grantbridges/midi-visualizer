@@ -1,0 +1,1 @@
+pyinstaller "illustri.spec" --clean --noconfirm
