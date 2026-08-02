@@ -24,15 +24,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: windows-latest
-            platform_label: windows
-            artifact_name: illustri-windows.zip
+          # - os: windows-latest
+          #   platform_label: windows
+          #   artifact_name: illustri-windows.zip
           - os: macos-latest # Apple Silicon (ARM) runner
             platform_label: macos-arm64
-            artifact_name: illustri-macos-arm64.zip
-          - os: macos-15-intel # last Intel (x86_64) runner image
-            platform_label: macos-x86_64
-            artifact_name: illustri-macos-x86_64.zip
+            artifact_name: illustri-macos-arm64.dmg
+          # - os: macos-15-intel # last Intel (x86_64) runner image, available until Aug 2027
+          #   platform_label: macos-x86_64
+          #   artifact_name: illustri-macos-x86_64.zip
 
     runs-on: ${{ matrix.os }}
 
@@ -58,8 +58,26 @@ jobs:
       - name: Build with PyInstaller
         run: pyinstaller illustri.spec --clean --noconfirm
 
-      - name: Package output (macOS)
-        if: runner.os == 'macOS'
+      - name: Install create-dmg (macOS ARM)
+        if: matrix.platform_label == 'macos-arm64'
+        run: brew install create-dmg
+
+      - name: Package output (macOS ARM - dmg)
+        if: matrix.platform_label == 'macos-arm64'
+        run: |
+          create-dmg \
+            --volname "Illustri MIDI Studio" \
+            --window-pos 200 120 \
+            --window-size 600 400 \
+            --icon-size 100 \
+            --icon "Illustri MIDI Studio.app" 175 190 \
+            --hide-extension "Illustri MIDI Studio.app" \
+            --app-drop-link 425 190 \
+            "${{ matrix.artifact_name }}" \
+            "dist/Illustri MIDI Studio.app"
+
+      - name: Package output (macOS Intel - zip)
+        if: matrix.platform_label == 'macos-x86_64'
         run: |
           cd dist
           zip -r "../${{ matrix.artifact_name }}" .
@@ -91,4 +109,6 @@ jobs:
         with:
           tag_name: ${{ inputs.version }}
           name: ${{ inputs.version }}
-          files: artifacts/**/*.zip
+          files: |
+            artifacts/**/*.zip
+            artifacts/**/*.dmg
