@@ -13,6 +13,7 @@ on:
         description: "Release version/tag (e.g. v1.2.3)"
         required: true
         type: string
+        default: "v1.0.0-beta"
 
 permissions:
   contents: write # needed to create the GitHub Release
