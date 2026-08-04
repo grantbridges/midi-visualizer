@@ -45,6 +45,7 @@ exe = EXE(
     [],
     exclude_binaries=True,
     name='Illustri MIDI Studio',
+    icon='assets/icons/Illustri.ico',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -68,6 +69,6 @@ coll = COLLECT(
 app = BUNDLE(
     coll,
     name='Illustri MIDI Studio.app',
-    icon=None,
+    icon='assets/icons/Illustri.icns',
     bundle_identifier=None,
 )

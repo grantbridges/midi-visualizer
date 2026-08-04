@@ -13,7 +13,7 @@ import build_info
 
 logger = logging.getLogger("Main")
 
-SPLASH_SCREEN_MIN_TIME_MS = 2000
+SPLASH_SCREEN_SHOW_TIME_SEC = 2
 
 # create main window and start
 def main():
@@ -34,7 +34,7 @@ def main():
     video_provider.init()
     image_provider.init()
 
-    time.sleep(2) # block on splash screen for a moment
+    time.sleep(SPLASH_SCREEN_SHOW_TIME_SEC) # block on splash screen for a moment
 
     #def show_main_window():
     window = MainWindow()

@@ -21,8 +21,8 @@ class SplashScreen(QSplashScreen):
         # load in splash screen image and grab dimenions to set up pixmap
         str_filepath = str(FileUtil.get_assets_dir() / "illustri-splash-screen.png")
         img = QPixmap(str_filepath)
-        img_width = img.width()
-        img_height = img.height()
+        img_width = 720
+        img_height = 405
 
         # scale pixmap for screen
         pixmap = QPixmap(int(img_width * dpr), int(img_height * dpr))
