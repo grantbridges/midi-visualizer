@@ -15,10 +15,16 @@
 AppName=Illustri MIDI Studio
 AppVersion={#AppVersion}
 AppPublisher=Grant Bridges
+; The script lives in installer/, but assets/ and dist/ live at the repo
+; root - SourceDir tells Inno Setup to resolve relative Source/Icon paths
+; below from one directory up (the repo root) instead of from installer/.
+SourceDir=..
 DefaultDirName={autopf}\Illustri MIDI Studio
 DefaultGroupName=Illustri MIDI Studio
 DisableProgramGroupPage=yes
-OutputDir=installer_output
+; OutputDir is NOT affected by SourceDir - it's always relative to the
+; script's own directory - so "..\" is needed here to land at repo root.
+OutputDir=..\installer_output
 OutputBaseFilename=IllustriMIDIStudio-Setup
 SetupIconFile=assets\icons\illustri.ico
 Compression=lzma2
