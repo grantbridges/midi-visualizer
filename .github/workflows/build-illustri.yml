@@ -24,9 +24,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # - os: windows-latest
-          #   platform_label: windows
-          #   artifact_name: illustri-windows.zip
+          - os: windows-latest
+            platform_label: windows
+            artifact_name: IllustriMIDIStudio-Setup.exe
           - os: macos-latest # Apple Silicon (ARM) runner
             platform_label: macos-arm64
             artifact_name: illustri-macos-arm64.dmg
@@ -82,11 +82,16 @@ jobs:
           cd dist
           zip -r "../${{ matrix.artifact_name }}" .
 
-      - name: Package output (Windows)
+      - name: Install Inno Setup (Windows)
+        if: runner.os == 'Windows'
+        run: choco install innosetup --no-progress -y
+
+      - name: Build installer with Inno Setup (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          Compress-Archive -Path dist\* -DestinationPath ${{ matrix.artifact_name }}
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\windows.iss /DAppVersion=${{ inputs.version }}
+          Copy-Item "installer_output\IllustriMIDIStudio-Setup.exe" -Destination "${{ matrix.artifact_name }}"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
@@ -112,3 +117,4 @@ jobs:
           files: |
             artifacts/**/*.zip
             artifacts/**/*.dmg
+            artifacts/**/*.exe
