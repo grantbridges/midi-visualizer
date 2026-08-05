@@ -22,9 +22,9 @@ SourceDir=..
 DefaultDirName={autopf}\Illustri MIDI Studio
 DefaultGroupName=Illustri MIDI Studio
 DisableProgramGroupPage=yes
-; OutputDir is NOT affected by SourceDir - it's always relative to the
-; script's own directory - so "..\" is needed here to land at repo root.
-OutputDir=..\installer_output
+; OutputDir is relative to SourceDir (set above), not the script's own
+; directory - so this lands directly at the repo root alongside dist/.
+OutputDir=installer_output
 OutputBaseFilename=IllustriMIDIStudio-Setup
 SetupIconFile=assets\icons\illustri.ico
 Compression=lzma2
