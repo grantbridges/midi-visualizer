@@ -61,7 +61,7 @@ jobs:
             ENTRIES=$(echo "$ENTRIES" | jq -c '. += [{
               "os": "macos-15-intel",
               "platform_label": "macos-x86_64",
-              "artifact_name": "illustri-macos-x86_64.zip"
+              "artifact_name": "illustri-macos-x86_64.dmg"
             }]')
           fi
 
@@ -103,12 +103,12 @@ jobs:
       - name: Build with PyInstaller
         run: pyinstaller illustri.spec --clean --noconfirm
 
-      - name: Install create-dmg (macOS ARM)
-        if: matrix.platform_label == 'macos-arm64'
+      - name: Install create-dmg (macOS)
+        if: runner.os == 'macOS'
         run: brew install create-dmg
 
-      - name: Package output (macOS ARM - dmg)
-        if: matrix.platform_label == 'macos-arm64'
+      - name: Package output (macOS - dmg)
+        if: runner.os == 'macOS'
         run: |
           create-dmg \
             --volname "Illustri MIDI Studio" \
@@ -120,12 +120,6 @@ jobs:
             --app-drop-link 425 190 \
             "${{ matrix.artifact_name }}" \
             "dist/Illustri MIDI Studio.app"
-
-      - name: Package output (macOS Intel - zip)
-        if: matrix.platform_label == 'macos-x86_64'
-        run: |
-          cd dist
-          zip -r "../${{ matrix.artifact_name }}" .
 
       - name: Install Inno Setup (Windows)
         if: runner.os == 'Windows'
@@ -161,6 +155,5 @@ jobs:
           tag_name: ${{ inputs.version }}
           name: ${{ inputs.version }}
           files: |
-            artifacts/**/*.zip
             artifacts/**/*.dmg
             artifacts/**/*.exe
