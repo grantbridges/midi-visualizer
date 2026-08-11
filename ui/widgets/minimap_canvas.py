@@ -39,7 +39,7 @@ class MinimapCanvas(QWidget):
 
         self.setFixedHeight(MINIMAP_HEIGHT)
 
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setCursor(Qt.CursorShape.SizeAllCursor)
 
     # parent API
     def refresh(self, current_time: float, vis_config: VisConfig, start_time: float, end_time: float, pitch_min: int, pitch_max: int):

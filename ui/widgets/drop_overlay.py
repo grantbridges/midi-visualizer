@@ -37,7 +37,7 @@ class DropOverlay(QWidget):
         padding = 15 # px
         rect = self.rect().adjusted(padding, padding, -padding, -padding)
 
-        painter.fillRect(rect, QUtil.rgb_to_qcolor(Color.BLACK, 100))
+        painter.fillRect(rect, QUtil.rgb_to_qcolor(Color.WHITE, 30))
 
         pen = QPen(QColor(255, 255, 255, 200))
         pen.setWidth(3)

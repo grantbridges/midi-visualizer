@@ -54,6 +54,10 @@ class TracksTab(QWidget):
 
         self.table.itemSelectionChanged.connect(self._on_selection_changed)
 
+        # set up right-click handling
+        self.table.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.table.customContextMenuRequested.connect(self._on_table_context_menu)
+
         # set whole-row multi-select
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.ExtendedSelection)        
@@ -242,6 +246,21 @@ class TracksTab(QWidget):
         self.table.setCurrentCell(-1, -1)
 
         self._refresh_buttons()
+
+    def _on_table_context_menu(self, pos: QPoint):
+        rows = self._get_selected_rows()
+
+        menu = QMenu(self)
+
+        count = len(rows)
+        group_text = "Group Track..." if count == 1 else f"Group {count} Selected Tracks..."
+        create_group = menu.addAction(group_text)
+
+        # create menu on right-click location
+        action = menu.exec(self.table.viewport().mapToGlobal(pos))
+
+        if action == create_group:
+            self._group_from_selected_tracks()
 
     # Getters
     def _get_selected_rows(self) -> List[int]:
