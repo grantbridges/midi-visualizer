@@ -43,7 +43,8 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       has-entries: ${{ steps.set-matrix.outputs.has-entries }}
-      version: ${{ steps.set-version.outputs.version }}
+      release_version: ${{ steps.set-version.outputs.release_version }}
+      build_version: ${{ steps.set-version.outputs.build_version }}
     steps:
       # Based on checked build inputs, injects new matrix entries
       # for each OS build/release type
@@ -83,11 +84,18 @@ jobs:
             echo "has-entries=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # Computes version string for use in rest of script
+      # Computes two version strings:
+      #  - release_version (major.minor.patch): used for the Release tag,
+      #    Release name, and the Inno Setup installer's version metadata.
+      #  - build_version (release_version + run number): used only for the
+      #    VERSION baked into build_info.py, so each build is uniquely
+      #    identifiable in-app without cluttering the public release tag.
       - id: set-version
         run: |
-          VERSION="v${{ inputs.major_version }}.${{ inputs.minor_version }}.${{ inputs.patch_version }}.${{ github.run_number }}"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          RELEASE_VERSION="v${{ inputs.major_version }}.${{ inputs.minor_version }}.${{ inputs.patch_version }}"
+          BUILD_VERSION="${RELEASE_VERSION}.${{ github.run_number }}"
+          echo "release_version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "build_version=$BUILD_VERSION" >> "$GITHUB_OUTPUT"
 
   build:
     needs: prepare-matrix
@@ -122,7 +130,7 @@ jobs:
         env:
           # Passed via env + os.environ rather than templated directly into
           # the script body
-          BUILD_VERSION: ${{ needs.prepare-matrix.outputs.version }}
+          BUILD_VERSION: ${{ needs.prepare-matrix.outputs.build_version }}
         run: |
           import os
           import re
@@ -171,9 +179,9 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         env:
-          BUILD_VERSION: ${{ needs.prepare-matrix.outputs.version }}
+          RELEASE_VERSION: ${{ needs.prepare-matrix.outputs.release_version }}
         run: |
-          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\windows.iss /DAppVersion=$env:BUILD_VERSION
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\windows.iss /DAppVersion=$env:RELEASE_VERSION
           Copy-Item "installer_output\IllustriMIDIStudio-Setup.exe" -Destination "${{ matrix.artifact_name }}"
 
       - name: Upload build artifact
@@ -197,8 +205,8 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ needs.prepare-matrix.outputs.version }}
-          name: ${{ needs.prepare-matrix.outputs.version }}
+          tag_name: ${{ needs.prepare-matrix.outputs.release_version }}
+          name: ${{ needs.prepare-matrix.outputs.release_version }}
           files: |
             artifacts/**/*.dmg
             artifacts/**/*.exe
