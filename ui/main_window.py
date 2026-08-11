@@ -14,8 +14,6 @@ from PySide6.QtWidgets import (
     QTabWidget,
     QWidget,
     QVBoxLayout,
-    QHBoxLayout,
-    QPushButton,
     QMessageBox,
     QDialog,
     QFileDialog
@@ -27,7 +25,7 @@ from render import RenderWorker
 from media import video_provider, audio_provider, image_provider
 from ui.tabs import ConfigTab, BackgroundTab, AudioTab, TrackGroupsTab, TracksTab, NotesTab
 from ui.common import Icons
-from ui.widgets import PreviewWidget
+from ui.widgets import PreviewWidget, DropOverlay
 from ui.dialogs import (
     ExportProgressDialog, 
     ExportOptionsDialog, 
@@ -47,6 +45,9 @@ class MainWindow(QMainWindow):
         logger.info(f"Starting {Const.APP_NAME} main window")
 
         self.setMinimumSize(Const.SCREEN_MIN_WIDTH, Const.SCREEN_MIN_HEIGHT)
+
+        self.setAcceptDrops(True)
+        self.drop_overlay = DropOverlay(self)
 
         # child widgets
         self.config_tab: ConfigTab = None
@@ -93,7 +94,7 @@ class MainWindow(QMainWindow):
                 user_settings.save()
                 load_path = None
         else:
-            logger.info(f" No previous active project detected - starting default view")
+            logger.info(f"No previous active project detected - starting default view")
         
         if load_path:
             loaded_vis_config = VisConfig.load(load_path)
@@ -459,6 +460,52 @@ class MainWindow(QMainWindow):
 
         # re-init UI
         self.init_vis_config_editor_view()
+
+    def create_project_from_midi(self, midi_path: str):
+        logger.info("Project Create | Creating new project from \"%s\" midi file", midi_path)
+
+        # first prompt for saving unsaved changes
+        if self.has_unsaved_changes:
+            result = QMessageBox.question(
+                self,
+                "Unsaved Changes",
+                "You have unsaved changes. Save before closing?",
+                QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel,
+                QMessageBox.Save,
+            )
+
+            if result == QMessageBox.Save:
+                save_result = self.save_config()
+                if not save_result:
+                    return # something went wrong while saving
+            elif result == QMessageBox.Discard:
+                pass # ignore, continue loading
+            elif result == QMessageBox.Cancel:
+                return # user cancelled load
+            
+        try:
+            midi_data = pretty_midi.PrettyMIDI(midi_path)
+        except Exception as e:
+            logger.exception("Project Create | Unable to create new project from midi file")
+            QMessageBox.critical(self, "Project Creation Failed", f'Unable to create new {Const.APP_NAME} project from provided midi file.\n\n{e}')
+            return
+            
+        # import into local working model
+        self.vis_config = VisConfig.create_from_midi_data(Path(midi_path).stem, midi_data)
+        self.vis_config.init()
+        self._load_config_resources()
+
+        # update active project entry
+        user_settings.active_project_path = None
+        user_settings.save()
+
+        # clear working state
+        self.has_unsaved_changes = True # to prompt user to save this project
+        self.refresh_window_title()
+        self.refresh_file_menu()
+
+        # re-init UI
+        self.init_vis_config_editor_view()
         
     def _load_config_resources(self):
         # will only load each of these if present
@@ -585,6 +632,76 @@ class MainWindow(QMainWindow):
             user_settings.fullscreen = self.isFullScreen()
             user_settings.save()
 
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+
+        # Keep overlay matching window size whenever the window resizes
+        self.drop_overlay.setGeometry(self.rect())
+
+    # drag handling for dropping a .midi or .ipr file
+    def dragEnterEvent(self, event):
+        if self._is_valid_drop_file(event):
+            event.acceptProposedAction()
+
+            path = event.mimeData().urls()[0].toLocalFile()
+            ext = Path(path).suffix
+
+            if ext in (".midi", ".mid"):
+                self.drop_overlay.set_text(f"Drop to create new {Const.APP_NAME_SHORT} project")
+            elif ext in (f".{Const.PROJECT_EXT}"):
+                self.drop_overlay.set_text(f"Drop to load {Const.APP_NAME_SHORT} project")
+
+            self.drop_overlay.setGeometry(self.rect())
+            self.drop_overlay.show()
+            self.drop_overlay.raise_()
+        else:
+            event.ignore()
+
+    def dragLeaveEvent(self, event):
+        self.drop_overlay.hide()
+
+    def dragMoveEvent(self, event):
+        # Required on some platforms even though dragEnterEvent already validated
+        if self._is_valid_drop_file(event):
+            event.acceptProposedAction()
+        else:
+            event.ignore()
+
+    def dropEvent(self, event):
+        self.drop_overlay.hide()
+
+        if not self._is_valid_drop_file(event):
+            event.ignore()
+            return
+
+        event.acceptProposedAction()
+        path = event.mimeData().urls()[0].toLocalFile()
+        ext = Path(path).suffix
+
+        logger.info("Handling dropped file \"%s\" on main window", path)
+
+        if ext in (".midi", ".mid"):
+            self.create_project_from_midi(path)
+        elif ext in (f".{Const.PROJECT_EXT}"):
+            self.open_config(path)
+
+    def _is_valid_drop_file(self, event) -> bool:
+        mime = event.mimeData()
+        if not mime.hasUrls():
+            return False
+
+        # only accept one drop at a time - reject multiple
+        urls = mime.urls()
+        if len(urls) != 1:
+            return False
+
+        url = urls[0]
+        if not url.isLocalFile():
+            return False
+
+        path = url.toLocalFile()
+        return os.path.splitext(path)[1].lower() in (".mid", ".midi", f".{Const.PROJECT_EXT}")
+
     # action callbacks
 
     def on_new_project_action(self):
@@ -597,49 +714,9 @@ class MainWindow(QMainWindow):
         
         if not midi_path:
             return
+
+        self.create_project_from_midi(midi_path)
        
-        # first prompt for saving unsaved changes
-        if self.has_unsaved_changes:
-            result = QMessageBox.question(
-                self,
-                "Unsaved Changes",
-                "You have unsaved changes. Save before closing?",
-                QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel,
-                QMessageBox.Save,
-            )
-
-            if result == QMessageBox.Save:
-                save_result = self.save_config()
-                if not save_result:
-                    return # something went wrong while saving
-            elif result == QMessageBox.Discard:
-                pass # ignore, continue loading
-            elif result == QMessageBox.Cancel:
-                return # user cancelled load
-            
-        try:
-            midi_data = pretty_midi.PrettyMIDI(midi_path)
-        except Exception as e:
-            QMessageBox.critical(self, "Project Creation Failed", f'Unable to create new {Const.APP_NAME} project from provided midi file.\n\n{e}')
-            return
-            
-        # import into local working model
-        self.vis_config = VisConfig.create_from_midi_data(Path(midi_path).stem, midi_data)
-        self.vis_config.init()
-        self._load_config_resources()
-
-        # update active project entry
-        user_settings.active_project_path = None
-        user_settings.save()
-
-        # clear working state
-        self.has_unsaved_changes = True # to prompt user to save this project
-        self.refresh_window_title()
-        self.refresh_file_menu()
-
-        # re-init UI
-        self.init_vis_config_editor_view()
-
     def on_update_project_action(self):
         midi_path, _ = QFileDialog.getOpenFileName(
             self,

@@ -5,6 +5,7 @@ class Const:
     # app props
     ORG_NAME = "Grant Bridges"
     APP_NAME = "Illustri MIDI Studio"
+    APP_NAME_SHORT = "Illustri"
     APP_ALT_NAME = "illustri"
 
     PROJECT_EXT = "ipr" # illustri project

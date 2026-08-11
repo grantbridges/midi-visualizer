@@ -18,3 +18,10 @@ class Color(tuple, Enum):
     BLUE = (0, 0, 255)
     KAYLA_1 = (50, 131, 168)
     KAYLA_2 = (179, 139, 46)
+
+    # branding colors
+    ILLUSTRI_TEXT = (156, 226, 255)
+    SPLASH_BG_BLUE = (2, 0, 40)
+    SPLASH_BG_GRAY = (74, 74, 74)
+    ICON_LIGHT = (105, 157, 224)
+    ICON_DARK = (1, 20, 59)
