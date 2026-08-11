@@ -9,11 +9,18 @@ name: Build and Release Illustri MIDI Studio
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: "Release version/tag (e.g. v1.2.3)"
+      major_version:
         required: true
         type: string
-        default: "v1.0.0-beta"
+        default: "1"
+      minor_version:
+        required: true
+        type: string
+        default: "0"
+      patch_version:
+        required: true
+        type: string
+        default: "0-beta"
       build_windows:
         description: "Build Windows installer"
         type: boolean
@@ -25,7 +32,7 @@ on:
       build_macos_intel:
         description: "Build macOS Intel dmg"
         type: boolean
-        default: false
+        default: true
 
 permissions:
   contents: write # needed to create the GitHub Release
@@ -36,7 +43,10 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       has-entries: ${{ steps.set-matrix.outputs.has-entries }}
+      version: ${{ steps.set-version.outputs.version }}
     steps:
+      # Based on checked build inputs, injects new matrix entries
+      # for each OS build/release type
       - id: set-matrix
         run: |
           ENTRIES='[]'
@@ -72,6 +82,13 @@ jobs:
           else
             echo "has-entries=true" >> "$GITHUB_OUTPUT"
           fi
+
+      # Computes version string for use in rest of script
+      - id: set-version
+        run: |
+          VERSION="v${{ inputs.major_version }}.${{ inputs.minor_version }}.${{ inputs.patch_version }}.${{ github.run_number }}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
   build:
     needs: prepare-matrix
     if: needs.prepare-matrix.outputs.has-entries == 'true'
@@ -99,6 +116,31 @@ jobs:
       - name: Ensure ffmpeg is executable (macOS)
         if: runner.os == 'macOS'
         run: chmod +x third-party/ffmpeg/darwin-*/ffmpeg
+
+      - name: Set build info
+        shell: python
+        env:
+          # Passed via env + os.environ rather than templated directly into
+          # the script body
+          BUILD_VERSION: ${{ needs.prepare-matrix.outputs.version }}
+        run: |
+          import os
+          import re
+          from datetime import datetime
+          from pathlib import Path
+
+          version = os.environ["BUILD_VERSION"]
+          now = datetime.now()
+          build_date = f"{now.strftime('%b')} {now.day}, {now.year}"
+
+          path = Path("build_info.py")
+          text = path.read_text()
+
+          text = re.sub(r'VERSION = ".*"', f'VERSION = "{version}"', text)
+          text = re.sub(r'BUILD_DATE = .*', f'BUILD_DATE = "{build_date}"', text)
+
+          path.write_text(text)
+          print(f"Updated build_info.py -> VERSION={version}, BUILD_DATE={build_date}")
 
       - name: Build with PyInstaller
         run: pyinstaller illustri.spec --clean --noconfirm
@@ -128,8 +170,10 @@ jobs:
       - name: Build installer with Inno Setup (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
+        env:
+          BUILD_VERSION: ${{ needs.prepare-matrix.outputs.version }}
         run: |
-          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\windows.iss /DAppVersion=${{ inputs.version }}
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\windows.iss /DAppVersion=$env:BUILD_VERSION
           Copy-Item "installer_output\IllustriMIDIStudio-Setup.exe" -Destination "${{ matrix.artifact_name }}"
 
       - name: Upload build artifact
@@ -138,6 +182,7 @@ jobs:
           name: ${{ matrix.artifact_name }}
           path: ${{ matrix.artifact_name }}
           if-no-files-found: error
+          retention-days: 1
 
   release:
     needs: [prepare-matrix, build]
@@ -152,8 +197,15 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ inputs.version }}
-          name: ${{ inputs.version }}
+          tag_name: ${{ needs.prepare-matrix.outputs.version }}
+          name: ${{ needs.prepare-matrix.outputs.version }}
           files: |
             artifacts/**/*.dmg
             artifacts/**/*.exe
+
+      # Clean up artifacts at end so github doesn't yell at me about
+      # needing to pay money for more artifact storage
+      - name: Clean Up Artifacts
+        uses: geekyeggo/delete-artifact@v6
+        with:
+          name: "*"
