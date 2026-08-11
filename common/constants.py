@@ -7,7 +7,7 @@ class Const:
     APP_NAME = "Illustri MIDI Studio"
     APP_ALT_NAME = "illustri"
 
-    PROJECT_EXT = "mvp" # #TODO ipr illustri project
+    PROJECT_EXT = "ipr" # illustri project
 
     SCREEN_INITIAL_WIDTH = 1200
     SCREEN_INITIAL_HEIGHT = 900

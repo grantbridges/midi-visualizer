@@ -23,27 +23,8 @@ logger = logging.getLogger("VisConfig")
 '''
 History
   1 - Initial version
-  2 - Playhead props
-  3 - Note playing props
-  4 - Track groups
-  5 - Track group pitch offsets
-  6 - Auto-calc pitch bounds & manual values
-  7 - BG details, play audio flag, & time offsets
-  8 - BG video props
-  9 - Fade In/Out; Playhead thickness and alpha
-  10 - Note glow
-  11 - Note highlight
-  12 - Track group solo; note sparks config
-  13 - Note fadeout enabled; background tint props
-  14 - Orientation
-  15 - Velocity impacting highlight intensity
-  16 - Glow and highlight color
-  17 - Note bounce; note fade in/out updates
-  18 - Track group control of note bounce
-  19 - Waveform config
-  20 - Highlight/glow only played region
 '''
-VIS_CONFIG_SCHEMA_VERSION = 20
+VIS_CONFIG_SCHEMA_VERSION = 1
 
 @dataclass
 class VisConfig:
@@ -328,10 +309,29 @@ class VisConfig:
             config = VisConfig()
 
             config.track_name = data["track_name"]
+            config.orientation = Orientation[data["orientation"]]
 
             config.bg_color = tuple(data["bg_color"])
-            
+            config.bg_mode = BackgroundMode[data["bg_mode"]]
+            config.bg_image_filepath = data["bg_image_filepath"]
+            config.bg_video_filepath = data["bg_video_filepath"]
+
+            config.bg_tint_enabled = data["bg_tint_enabled"]
+            config.bg_tint_color = data["bg_tint_color"]
+            config.bg_tint_alpha = data["bg_tint_alpha"]
+
+            config.bg_video_time_offset = data["bg_video_time_offset"]
+            config.bg_video_loop = data["bg_video_loop"]
+
+            config.play_audio = data["play_audio"]
             config.audio_filepath = data["audio_filepath"]
+
+            config.show_waveform = data["show_waveform"]
+            config.waveform_color = tuple(data["waveform_color"])
+            config.waveform_alpha = data["waveform_alpha"]
+            config.waveform_sec_across_screen = data["waveform_sec_across_screen"]
+            config.waveform_height_ratio = data["waveform_height_ratio"]
+            config.waveform_pos_ratio = data["waveform_pos_ratio"]
 
             config.export_dir = data["export_dir"]
             config.export_filename = data["export_filename"]
@@ -339,116 +339,71 @@ class VisConfig:
             config.export_resolution = Resolution[data["export_resolution"]]
             config.export_fps = data["export_fps"]
 
+            config.show_playhead = data["show_playhead"]
+            config.playhead_pos_ratio = data["playhead_pos_ratio"]
+            config.playhead_color = data["playhead_color"]
+            config.playhead_alpha = data["playhead_alpha"]
+            config.playhead_thickness_ratio = data["playhead_thickness_ratio"]
+
             config.vertical_padding_ratio = data["vertical_padding_ratio"]
             config.vertical_offset_ratio = data["vertical_offset_ratio"]
-            config.playhead_pos_ratio = data["playhead_pos_ratio"]
 
+            config.note_fadein_enabled = data["note_fadein_enabled"]
+            config.note_fadein_start_ratio = data["note_fadein_start_ratio"]
+            config.note_fadein_end_ratio = data["note_fadein_end_ratio"]
+            config.note_fadeout_enabled = data["note_fadeout_enabled"]
+            config.note_fadeout_start_ratio = data["note_fadeout_start_ratio"]
+            config.note_fadeout_end_ratio = data["note_fadeout_end_ratio"]
+
+            config.note_sparks_enabled = data["note_sparks_enabled"]
+            config.note_sparks_start_dist_ratio = data["note_sparks_start_dist_ratio"]
+            config.note_sparks_start_length_ratio = data["note_sparks_start_length_ratio"]
+            config.note_sparks_speed_ratio = data["note_sparks_speed_ratio"]
+            config.note_sparks_speed_var_ratio = data["note_sparks_speed_var_ratio"]
+            config.note_sparks_alpha_ratio = data["note_sparks_alpha_ratio"]
+            config.note_sparks_count = data["note_sparks_count"]
+            config.note_sparks_max_angle_deg = data["note_sparks_max_angle_deg"]
+            config.note_sparks_time_to_fade_sec = data["note_sparks_time_to_fade_sec"]
+
+            config.note_glow_enabled = data["note_glow_enabled"]
+            config.note_glow_played_region = data["note_glow_played_region"]
+            config.note_glow_color = tuple(data["note_glow_color"])
+            config.note_glow_size = data["note_glow_size"]
+            config.note_glow_intensity = data["note_glow_intensity"]
+            config.note_highlight_enabled = data["note_highlight_enabled"]
+            config.note_highlight_played_region = data["note_highlight_played_region"]
+            config.note_highlight_use_velocity = data["note_highlight_use_velocity"]
+            config.note_highlight_color = tuple(data["note_highlight_color"])
+            config.note_highlight_intensity = data["note_highlight_intensity"]
+            config.note_highlight_min_intensity = data["note_highlight_min_intensity"]
+            config.note_highlight_max_intensity = data["note_highlight_max_intensity"]
+
+            config.note_bounce_enabled = data["note_bounce_enabled"]
+            config.note_bounce_height_ratio = data["note_bounce_height_ratio"]
+
+            config.fade_in_enabled = data["fade_in_enabled"]
+            config.fade_in_color = tuple(data["fade_in_color"])
+            config.fade_in_time = data["fade_in_time"]
+            config.fade_out_enabled = data["fade_out_enabled"]
+            config.fade_out_color = tuple(data["fade_out_color"])
+            config.fade_out_time = data["fade_out_time"]       
+
+            config.auto_calc_pitch_bounds = data["auto_calc_pitch_bounds"]
+            config.manual_pitch_min = data["manual_pitch_min"]
+            config.manual_pitch_max = data["manual_pitch_max"]
+            config.apply_time_offsets = data["apply_time_offsets"]
+            config.start_time_offset = data["start_time_offset"]
+            config.end_time_offset = data["end_time_offset"]
+            
+            config.track_groups = [
+                TrackGroup.load(track_data, schema_version)
+                for track_data in data["track_groups"]
+            ]
+            
             config.tracks = [
                 Track.load(track_data, schema_version)
                 for track_data in data["tracks"]
-            ]
-
-            if schema_version >= 2:
-                config.show_playhead = data["show_playhead"]
-                config.playhead_color = data["playhead_color"]
-
-            if schema_version >= 3 and schema_version < 17:
-                config.note_fadeout_end_ratio = data["note_fadeout_ratio"]
-
-            if schema_version >= 4:
-                config.track_groups = [
-                    TrackGroup.load(track_data, schema_version)
-                    for track_data in data["track_groups"]
-                ]
-
-            if schema_version >= 6:
-                config.auto_calc_pitch_bounds = data["auto_calc_pitch_bounds"]
-                config.manual_pitch_min = data["manual_pitch_min"]
-                config.manual_pitch_max = data["manual_pitch_max"]
-
-            if schema_version >= 7:
-                config.bg_mode = BackgroundMode[data["bg_mode"]]
-                config.bg_image_filepath = data["bg_image_filepath"]
-                config.bg_video_filepath = data["bg_video_filepath"]
-
-                config.play_audio = data["play_audio"]
-
-                config.apply_time_offsets = data["apply_time_offsets"]
-                config.start_time_offset = data["start_time_offset"]
-                config.end_time_offset = data["end_time_offset"]
-
-            if schema_version >= 8:
-                config.bg_video_time_offset = data["bg_video_time_offset"]
-                config.bg_video_loop = data["bg_video_loop"]
-
-            if schema_version >= 9:
-                config.playhead_alpha = data["playhead_alpha"]
-                config.playhead_thickness_ratio = data["playhead_thickness_ratio"]
-                config.fade_in_enabled = data["fade_in_enabled"]
-                config.fade_in_color = tuple(data["fade_in_color"])
-                config.fade_in_time = data["fade_in_time"]
-                config.fade_out_enabled = data["fade_out_enabled"]
-                config.fade_out_color = tuple(data["fade_out_color"])
-                config.fade_out_time = data["fade_out_time"]
-
-            if schema_version >= 10:
-                config.note_glow_enabled = data["note_glow_enabled"]
-                config.note_glow_size = data["note_glow_size"]
-                config.note_glow_intensity = data["note_glow_intensity"]
-
-            if schema_version >= 11:
-                config.note_highlight_enabled = data["note_highlight_enabled"]
-                config.note_highlight_intensity = data["note_highlight_intensity"]
-
-            if schema_version >= 12:
-                config.note_sparks_enabled = data["note_sparks_enabled"]
-                config.note_sparks_start_dist_ratio = data["note_sparks_start_dist_ratio"]
-                config.note_sparks_start_length_ratio = data["note_sparks_start_length_ratio"]
-                config.note_sparks_speed_ratio = data["note_sparks_speed_ratio"]
-                config.note_sparks_speed_var_ratio = data["note_sparks_speed_var_ratio"]
-                config.note_sparks_alpha_ratio = data["note_sparks_alpha_ratio"]
-                config.note_sparks_count = data["note_sparks_count"]
-                config.note_sparks_max_angle_deg = data["note_sparks_max_angle_deg"]
-                config.note_sparks_time_to_fade_sec = data["note_sparks_time_to_fade_sec"]
-
-            if schema_version >= 13:
-                config.bg_tint_enabled = data["bg_tint_enabled"]
-                config.bg_tint_color = data["bg_tint_color"]
-                config.bg_tint_alpha = data["bg_tint_alpha"]
-                config.note_fadeout_enabled = data["note_fadeout_enabled"]
-
-            if schema_version >= 14:
-                config.orientation = Orientation[data["orientation"]]
-
-            if schema_version >= 15:
-                config.note_highlight_use_velocity = data["note_highlight_use_velocity"]
-                config.note_highlight_min_intensity = data["note_highlight_min_intensity"]
-                config.note_highlight_max_intensity = data["note_highlight_max_intensity"]
-
-            if schema_version >= 16:
-                config.note_glow_color = tuple(data["note_glow_color"])
-                config.note_highlight_color = tuple(data["note_highlight_color"])
-
-            if schema_version >= 17:
-                config.note_fadein_enabled = data["note_fadein_enabled"]
-                config.note_fadein_start_ratio = data["note_fadein_start_ratio"]
-                config.note_fadein_end_ratio = data["note_fadein_end_ratio"]
-                config.note_fadeout_start_ratio = data["note_fadeout_start_ratio"]
-                config.note_fadeout_end_ratio = data["note_fadeout_end_ratio"]
-                config.note_bounce_enabled = data["note_bounce_enabled"]
-                config.note_bounce_height_ratio = data["note_bounce_height_ratio"]
-
-            if schema_version >= 19:
-                config.show_waveform = data["show_waveform"]
-                config.waveform_color = tuple(data["waveform_color"])
-                config.waveform_alpha = data["waveform_alpha"]
-                config.waveform_sec_across_screen = data["waveform_sec_across_screen"]
-                config.waveform_height_ratio = data["waveform_height_ratio"]
-                config.waveform_pos_ratio = data["waveform_pos_ratio"]
-
-            if schema_version >= 20:
-                config.note_glow_played_region = data["note_glow_played_region"]
-                config.note_highlight_played_region = data["note_highlight_played_region"]
+            ]   
 
             size_bytes = asizeof.asizeof(config)
             logger.info(f"Load | Loaded config ({size_bytes / 1024 / 1024:.3f} MB)")

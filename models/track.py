@@ -17,6 +17,7 @@ class Track:
     It contains MIDI note data.
     '''
     # midi data
+    # track name is considered a unique, primary identifier
     name: str = 'Track'
     notes: List[Note] = field(default_factory=list)
     
@@ -68,6 +69,8 @@ class Track:
         track = Track()
 
         track.name = data["name"]
+        group_id = data["group_id"]
+        track.group_id = UUID(group_id) if group_id else None
 
         # deserialize comma separated string data into Note objects
         notes_data = data["notes"]
@@ -91,10 +94,6 @@ class Track:
                 strict=True,
             )
         ]
-
-        if schema_version >= 4:
-            group_id = data["group_id"]
-            track.group_id = UUID(group_id) if group_id else None
 
         return track
     

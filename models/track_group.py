@@ -47,23 +47,15 @@ class TrackGroup:
         track_group.group_id = UUID(data["id"])
         track_group.name = data["name"]
         track_group.visible = data["visible"]
+        track_group.solo = data["solo"]
         track_group.color = tuple(data["color"])
         track_group.alpha = data["alpha"]
         track_group.bar_height_ratio = data["bar_height_ratio"]
         track_group.bar_sec_across_screen = data["bar_sec_across_screen"]
-
-        if schema_version >= 5:
-            track_group.pitch_offset = data["pitch_offset"]
-
-        if schema_version >= 12:
-            track_group.solo = data["solo"]
-            track_group.note_sparks_enabled = data["note_sparks_enabled"]
-
-        if schema_version >= 15:
-            track_group.note_velocity_fx_enabled = data["note_velocity_fx_enabled"]
-
-        if schema_version >= 18:
-            track_group.note_bounce_enabled = data["note_bounce_enabled"]
+        track_group.pitch_offset = data["pitch_offset"]
+        track_group.note_sparks_enabled = data["note_sparks_enabled"]
+        track_group.note_bounce_enabled = data["note_bounce_enabled"]
+        track_group.note_velocity_fx_enabled = data["note_velocity_fx_enabled"]
 
         return track_group
     
