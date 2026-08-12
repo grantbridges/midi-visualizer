@@ -17,7 +17,7 @@ class ProgressCalc:
         self.window_ms: int = 15_000
         # min time/percent elapsed to wait until we start reporting time remaining
         self.min_elapsed_ms: int = 5_000
-        self.min_percent_delta: float = 5
+        self.min_percent: float = 5
         # frequency of reporting back updated remaining
         self.display_update_ms: int = 1_000
         # lower ratio == steadier updates of remaining time
@@ -52,14 +52,14 @@ class ProgressCalc:
         last = self.records[-1]
 
         elapsed_ms = last.time_ms - first.time_ms
-        percent_delta = last.percent - first.percent
 
-        if elapsed_ms < self.min_elapsed_ms or percent_delta < self.min_percent_delta:
+        if elapsed_ms < self.min_elapsed_ms or last.percent < self.min_percent:
             return None
 
         if percent >= 100:
             return 0
 
+        percent_delta = last.percent - first.percent
         percent_per_ms = percent_delta / elapsed_ms
         raw_remaining_ms = (100.0 - percent) / percent_per_ms
 

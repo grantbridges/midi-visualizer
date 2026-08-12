@@ -45,7 +45,7 @@ class ExportProgressDialog(QDialog):
         self.progress_bar.setValue(0)
         self.progress_bar.setTextVisible(True)
 
-        self.time_remaining_label = WidgetUtil.hint_label("Est. time remaining: Calculating...")
+        self.time_remaining_label = WidgetUtil.hint_label("Estimated time remaining: Calculating...")
 
         self.open_file_checkbox = QCheckBox("Open file when complete")
         self.open_file_checkbox.setChecked(True)
@@ -81,12 +81,12 @@ class ExportProgressDialog(QDialog):
 
             remaining_ms = self.progress_calc.update(percent)
             if remaining_ms is not None:
-                self.time_remaining_label.setText(f"Est. time remaining: {Util.format_ms(remaining_ms)}")
+                self.time_remaining_label.setText(f"Estimated time remaining: {Util.format_ms(remaining_ms)}")
 
         else:
             # show indeterminate
             self.progress_bar.setRange(0, 0)
-            self.time_remaining_label.setText("Est. time remaining: Calculating...")
+            self.time_remaining_label.setText("Estimated time remaining: Calculating...")
 
         self.status_label.setText(message)
 
