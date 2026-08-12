@@ -100,9 +100,11 @@ class MidiRenderUtil:
         pen.setWidth(1)
         painter.setPen(pen)
 
+        audio_time = current_time - vis_config.audio_time_offset
+
         # draw waveform over current visible rect, position adjusted for current time
         for x in range(rect.left(), rect.right() + 1):
-            time_at_x = current_time + ((x - playhead_x) * sec_per_px)
+            time_at_x = audio_time + ((x - playhead_x) * sec_per_px)
 
             sample = vis_config.waveform.get_sample_at_time(time_at_x)
             if sample is None:

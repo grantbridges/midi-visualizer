@@ -44,6 +44,8 @@ class AudioTab(QWidget):
         self.audio_file_clear_btn = QPushButton()
         self.audio_file_clear_btn.setIcon(Icons.trash_can())
         self.audio_file_clear_btn.clicked.connect(self._clear_audio_file)
+        self.audio_offset_input = QDoubleSpinBox(decimals=2, minimum=-5.0, maximum=5.0, singleStep=0.01, suffix=" sec")
+        self.audio_offset_input.valueChanged.connect(self._on_changes)
 
         self.show_waveform_checkbox = QCheckBox()
         self.show_waveform_checkbox.toggled.connect(self._on_changes)
@@ -85,6 +87,7 @@ class AudioTab(QWidget):
         LayoutUtil.section(column, "Audio")
         LayoutUtil.checkbox(column, "Use Audio", self.use_audio_checkbox)
         LayoutUtil.file_picker(column, "Audio File", self.audio_file_input, self.audio_file_browse_btn, self.audio_file_clear_btn)
+        LayoutUtil.spinbox(column, "Audio Time Delay", self.audio_offset_input)
 
         LayoutUtil.section(column, "Waveform")
         LayoutUtil.checkbox(column, "Show Waveform", self.show_waveform_checkbox)
@@ -119,6 +122,8 @@ class AudioTab(QWidget):
         self.audio_file_input.setEnabled(self.vis_config.play_audio)
         self.audio_file_browse_btn.setEnabled(self.vis_config.play_audio)
         self.audio_file_clear_btn.setEnabled(self.vis_config.play_audio and bool(self.vis_config.audio_filepath))
+        self.audio_offset_input.setValue(self.vis_config.audio_time_offset)
+        self.audio_offset_input.setEnabled(self.vis_config.play_audio)
 
         self.show_waveform_checkbox.setChecked(self.vis_config.show_waveform)
         self.show_waveform_checkbox.setEnabled(self.vis_config.has_audio())
@@ -139,6 +144,7 @@ class AudioTab(QWidget):
         # pull UI values out of controls and set on model
         self.vis_config.play_audio = self.use_audio_checkbox.isChecked()
         self.vis_config.audio_filepath = self.audio_file_input.text()
+        self.vis_config.audio_time_offset = self.audio_offset_input.value()
 
         self.vis_config.show_waveform = self.show_waveform_checkbox.isChecked()
         self.vis_config.waveform_color = self.waveform_color_button.getColor()

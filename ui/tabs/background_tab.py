@@ -115,7 +115,7 @@ class BackgroundTab(QWidget):
         self.bg_image_row = LayoutUtil.file_picker(column, "Background Image File", self.bg_image_file_input, self.bg_image_file_browse_btn, self.bg_image_file_clear_btn)
         self.bg_video_row = LayoutUtil.file_picker(column, "Background Video File", self.bg_video_file_input, self.bg_video_file_browse_btn, self.bg_video_file_clear_btn)
 
-        self.bg_video_time_offset_row = LayoutUtil.spinbox(column, "Background Video Time Offset", self.bg_video_time_offset_input)
+        self.bg_video_time_offset_row = LayoutUtil.spinbox(column, "Background Video Time Delay", self.bg_video_time_offset_input)
         self.bg_video_loop_row = LayoutUtil.checkbox(column, "Background Video Loop", self.bg_video_loop_checkbox)
 
         LayoutUtil.section(column, "Background Tint")

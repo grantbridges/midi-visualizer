@@ -40,6 +40,9 @@ class PreviewWidget(QWidget):
 
         self.audio_sync_tolerance_sec: float = 0.25
 
+        # track entered audio time offset so when it changes, we can immediately resync audio
+        self.previous_audio_offset: float = vis_config.audio_time_offset
+
         self.play_timer = QElapsedTimer()
         self.play_start_visual_time = 0.0
 
@@ -195,16 +198,19 @@ class PreviewWidget(QWidget):
                         self._stop()
                 
                 if self.vis_config.has_audio():
-                    if self.current_time >= 0.0:
+                    if self._audio_time() >= 0.0:
                         if not audio_provider.is_playing():
-                            audio_provider.play_at(self.current_time)
+                            audio_provider.play_at(self._audio_time())
                         else:
-                            # check if audio has fallen out of sync with timing and re-sync
-                            if self.current_time <= audio_provider.get_duration_seconds():
-                                audio_out_of_sync_sec = abs(audio_provider.get_position_seconds() - self.current_time)
-                                if audio_out_of_sync_sec >= self.audio_sync_tolerance_sec:
-                                    # logger.debug(f"Audio out of sync by {audio_out_of_sync_sec:.2f} sec - resyncing")
-                                    audio_provider.seek_seconds(self.current_time)
+                            # check if audio has fallen out of sync with timing and re-sync, either
+                            # from detected lag or entered audio offset value has changed
+                            if self._audio_time() <= audio_provider.get_duration_seconds():
+                                audio_out_of_sync_sec = abs(audio_provider.get_position_seconds() - self._audio_time())
+                                changed_audio_offset = self.previous_audio_offset != self.vis_config.audio_time_offset
+
+                                if audio_out_of_sync_sec >= self.audio_sync_tolerance_sec or changed_audio_offset:
+                                    #logger.debug(f"Audio out of sync by {audio_out_of_sync_sec:.2f} sec - resyncing")
+                                    audio_provider.seek_seconds(self._audio_time())
                     else:
                         if audio_provider.is_playing():
                             audio_provider.stop()
@@ -212,6 +218,7 @@ class PreviewWidget(QWidget):
                     if audio_provider.is_playing():
                         audio_provider.stop()
 
+            self.previous_audio_offset = self.vis_config.audio_time_offset
             self._refresh_canvas()
 
 
@@ -318,3 +325,9 @@ class PreviewWidget(QWidget):
         # reset when this "play" context started from
         self.play_start_visual_time = self.current_time
         self.play_timer.restart()
+
+    def _audio_time(self):
+        '''
+        Returns current time adjusted by vis config audio time delay for syncing playback audio
+        '''
+        return self.current_time - self.vis_config.audio_time_offset

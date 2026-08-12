@@ -50,8 +50,9 @@ class VisConfig:
     bg_video_loop: bool = False
 
     # -- Audio --
-    play_audio: bool = True
+    play_audio: bool = False
     audio_filepath: str = ""
+    audio_time_offset: float = 2.0
 
     # -- Waveform --
     show_waveform: bool = False
@@ -212,6 +213,7 @@ class VisConfig:
 
             "play_audio": self.play_audio,
             "audio_filepath": self.audio_filepath,
+            "audio_time_offset": self.audio_time_offset,
 
             "show_waveform": self.show_waveform,
             "waveform_color": list(self.waveform_color),
@@ -325,6 +327,7 @@ class VisConfig:
 
             config.play_audio = data["play_audio"]
             config.audio_filepath = data["audio_filepath"]
+            config.audio_time_offset = data["audio_time_offset"]
 
             config.show_waveform = data["show_waveform"]
             config.waveform_color = tuple(data["waveform_color"])
