@@ -5,6 +5,7 @@ import platform
 
 datas = [
     ("assets", "assets"),
+    ("NOTICES.txt", ".")
 ]
 
 binaries = []
