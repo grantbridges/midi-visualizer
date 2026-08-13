@@ -282,6 +282,7 @@ class RenderWorker(QObject):
 
         loop_video = vis_config.bg_video_loop
         bg_video_start_delay_sec = (midi_delay_ms / 1000 + vis_config.bg_video_time_offset)
+        audio_delay_ms = midi_delay_ms + vis_config.audio_time_offset * 1000
 
         has_audio = vis_config.has_audio()
 
@@ -397,11 +398,21 @@ class RenderWorker(QObject):
             )
 
         if has_audio:
-            filter_parts.append(
-                f"[{audio_input_index}:a]"
-                f"adelay={midi_delay_ms}:all=1"
-                f"[a]"
-            )
+            if audio_delay_ms >= 0:
+                filter_parts.append(
+                    f"[{audio_input_index}:a]"
+                    f"adelay={audio_delay_ms}:all=1"
+                    f"[a]"
+                )
+            else:
+                # handle "negative delay" by adjusting audio start time
+                audio_start_offset_sec = -audio_delay_ms / 1000
+                filter_parts.append(
+                    f"[{audio_input_index}:a]"
+                    f"atrim=start={audio_start_offset_sec},"
+                    f"asetpts=PTS-STARTPTS"
+                    f"[a]"
+                )
 
         if filter_parts:
             cmd += [
@@ -416,6 +427,10 @@ class RenderWorker(QObject):
 
             if has_audio:
                 cmd += ["-map", "[a]"]
+
+        # allows audio to cut off if it runs past end of video
+        if has_audio and audio_delay_ms >= 0:
+            cmd += ["-shortest"]
 
         match vis_config.export_format:
             case RenderFormat.MP4:
