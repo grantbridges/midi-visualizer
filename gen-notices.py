@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 """
-gen-notices.py
-
 Full pipeline:
   1. Parse PyInstaller's xref-<name>.html to find every module actually
      bundled into the frozen app.
@@ -21,7 +19,6 @@ USAGE:
     4. python gen-notices.py
 
 OUTPUT:
-    - bundled_licenses.json
     - NOTICES.txt
 """
 
