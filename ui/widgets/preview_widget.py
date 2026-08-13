@@ -164,15 +164,22 @@ class PreviewWidget(QWidget):
         self.refresh_ui()
 
     def refresh_ui(self):
+        self.reset_btn.setToolTip("Reset to start")
+
         self.play_btn.setIcon(Icons.play() if not self.playing else Icons.pause())
+        self.play_btn.setToolTip("Play" if not self.playing else "Pause")
 
         self.step_back_btn.setDisabled(self.playing)
+        self.step_back_btn.setToolTip("Step backward")
         self.step_fwd_btn.setDisabled(self.playing)
+        self.step_fwd_btn.setToolTip("Step forward")
         self.step_input.setDisabled(self.playing)
 
         self.loop_btn.setIcon(Icons.arrow_right_thin() if not user_settings.loop_preview else Icons.loop())
+        self.loop_btn.setToolTip("Loop playback" if not user_settings.loop_preview else "Disable looped playback")
 
         self.mute_btn.setIcon(Icons.audio() if not user_settings.mute_audio else Icons.muted())
+        self.mute_btn.setToolTip("Mute" if not user_settings.mute_audio else "Unmute")
         self.mute_btn.setEnabled(self.vis_config.has_audio())
 
 
