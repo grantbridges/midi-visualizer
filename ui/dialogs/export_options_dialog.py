@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
     QComboBox
 )
 from pathlib import Path
-from models import VisConfig, RenderFormat, Resolution
+from models import VisConfig, RenderFormat, Resolution, Orientation
 from ui.common import LayoutUtil, Icons
 
 @dataclass
@@ -61,19 +61,23 @@ class ExportOptionsDialog(QDialog):
 
         # resolution combo
         self.resolution_combo = QComboBox()
-        self.resolution_combo.addItem("Low (360p)", Resolution.Low)
-        self.resolution_combo.addItem("SD (480p)", Resolution.SD)
-        self.resolution_combo.addItem("HD (720p)", Resolution.HD)
-        self.resolution_combo.addItem("Full HD (1080p)", Resolution.FullHD)
-        self.resolution_combo.addItem("Quad HD (1440p)", Resolution.QuadHD)
-        self.resolution_combo.addItem("4K (2160p)", Resolution.UltraHD)
-        self.resolution_combo.insertSeparator(self.resolution_combo.count())
-        self.resolution_combo.addItem("Vertical", Resolution.VerticalHD)
-        self.resolution_combo.addItem("Square", Resolution.SquareHD)
-        self.resolution_combo.addItem("Portrait Feed", Resolution.PortraitFeed)
 
+        if vis_config.orientation == Orientation.Landscape:
+            self.resolution_combo.addItem("Low (360p)", Resolution.Low)
+            self.resolution_combo.addItem("SD (480p)", Resolution.SD)
+            self.resolution_combo.addItem("HD (720p)", Resolution.HD)
+            self.resolution_combo.addItem("Full HD (1080p)", Resolution.FullHD)
+            self.resolution_combo.addItem("Quad HD (1440p)", Resolution.QuadHD)
+            self.resolution_combo.addItem("4K (2160p)", Resolution.UltraHD)
+        elif vis_config.orientation == Orientation.Vertical:
+            self.resolution_combo.addItem("Vertical HD", Resolution.VerticalHD)
+        elif vis_config.orientation == Orientation.Square:
+            self.resolution_combo.addItem("Square HD", Resolution.SquareHD)
+        elif vis_config.orientation == Orientation.Portrait:
+            self.resolution_combo.addItem("Portrait Feed", Resolution.PortraitFeed)
+        
         # initialize resolution dropdown
-        index = self.resolution_combo.findData(vis_config.export_resolution)
+        index = max(self.resolution_combo.findData(vis_config.export_resolution), 0)
         self.resolution_combo.setCurrentIndex(index)
 
         # fps

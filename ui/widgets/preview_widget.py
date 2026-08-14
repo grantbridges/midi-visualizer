@@ -164,7 +164,7 @@ class PreviewWidget(QWidget):
         self.refresh_ui()
 
     def refresh_ui(self):
-        self.reset_btn.setToolTip("Reset to start")
+        self.reset_btn.setToolTip("Rewind to start")
 
         self.play_btn.setIcon(Icons.play() if not self.playing else Icons.pause())
         self.play_btn.setToolTip("Play" if not self.playing else "Pause")
