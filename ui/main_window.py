@@ -18,9 +18,9 @@ from PySide6.QtWidgets import (
     QDialog,
     QFileDialog
 )
-from PySide6.QtGui import QAction, QKeySequence, QResizeEvent, QShortcut
+from PySide6.QtGui import QAction, QKeySequence, QShortcut
 from common import Const
-from models import VisConfig, Track, Resolution, user_settings, BackgroundMode
+from models import VisConfig, Track, user_settings
 from render import RenderWorker
 from media import video_provider, audio_provider, image_provider
 from ui.tabs import ConfigTab, BackgroundTab, AudioTab, TrackGroupsTab, TracksTab, NotesTab

@@ -1,6 +1,5 @@
 from enum import Enum
 
-from common.types import RGB
 
 class Color(tuple, Enum):
     WHITE = (255, 255, 255)

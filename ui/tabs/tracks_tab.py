@@ -1,14 +1,11 @@
-from dataclasses import dataclass
 from typing import List
 from uuid import UUID
-from PySide6.QtCore import QPoint, Qt, QPointList
-from PySide6.QtGui import QColor, QBrush
+from PySide6.QtCore import QPoint, Qt
 from PySide6.QtWidgets import (
     QDialog,
     QHBoxLayout,
     QPushButton,
     QSizePolicy,
-    QStyle,
     QWidget,
     QVBoxLayout,
     QTableWidget,
@@ -18,9 +15,9 @@ from PySide6.QtWidgets import (
     QMenu,
     QAbstractItemView
 )
-from models import VisConfig, Track, TrackGroup
+from models import VisConfig, Track
 from ui.common import LayoutUtil, Icons
-from utility import MidiUtil, Util, QUtil
+from utility import MidiUtil, Util
 from ui.dialogs import GroupTracksDialog
 
 import logging

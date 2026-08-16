@@ -1,7 +1,6 @@
-from typing import List, Tuple
+from typing import List
 from dataclasses import dataclass, field
 import pretty_midi
-from common import Color, RGB
 from models.note import Note
 from uuid import UUID
 

@@ -4,7 +4,6 @@ from uuid import UUID
 from PySide6.QtWidgets import (
     QDialog,
     QVBoxLayout,
-    QLabel,
     QLineEdit,
     QDialogButtonBox,
     QCheckBox,

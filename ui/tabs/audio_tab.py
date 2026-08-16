@@ -6,10 +6,8 @@ from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
-    QLabel,
     QLineEdit,
     QPushButton,
-    QComboBox,
     QFileDialog
 )
 
@@ -22,7 +20,6 @@ from ui.common import (
     ScaledSliderSpinbox, 
     ScaledSliderDoubleSpinbox
 )
-from utility import Util
 
 class AudioTab(QWidget):
     def __init__(self, 

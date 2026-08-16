@@ -1,7 +1,6 @@
 from PySide6.QtWidgets import (
     QDialog,
     QLabel,
-    QMessageBox,
     QProgressBar,
     QVBoxLayout,
     QDialogButtonBox

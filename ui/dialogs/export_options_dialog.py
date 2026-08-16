@@ -6,9 +6,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QSpinBox,
     QVBoxLayout,
-    QHBoxLayout,
-    QHBoxLayout,
-    QLineEdit, 
+    QLineEdit,
     QFileDialog,
     QComboBox
 )

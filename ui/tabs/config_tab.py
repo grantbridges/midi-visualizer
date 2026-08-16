@@ -16,7 +16,6 @@ from ui.common import (
     LayoutUtil, 
     SliderDoubleSpinbox, 
     ScaledSliderSpinbox, 
-    SliderSpinbox, 
     ScaledSliderDoubleSpinbox
 )
 

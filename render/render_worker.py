@@ -185,7 +185,6 @@ class RenderWorker(QObject):
                     ffmpeg.stdin.close()
                 except Exception as e:
                     logger.warning(f"Unable to close ffmpeg stdin - ignoring: {str(e)}")
-                    pass
 
                 stderr = ffmpeg.stderr.read().decode("utf-8", errors="replace") if ffmpeg.stderr else ""
 

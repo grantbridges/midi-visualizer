@@ -1,14 +1,12 @@
-import math
 from uuid import UUID
 
-from PySide6.QtWidgets import QMessageBox, QWidget
+from PySide6.QtWidgets import QWidget
 from PySide6.QtGui import QFont, QPainter, QPen
-from PySide6.QtCore import QRect, QRectF, Qt
+from PySide6.QtCore import QRect, Qt
 from common import Const, Color
 from models import VisConfig, user_settings
 from render import MidiRenderUtil
 from utility import QUtil, Util
-from media.audio_provider import audio_provider
 
 PREVIEW_MIN_HEIGHT = 100
 

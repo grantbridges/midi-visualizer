@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -9,15 +8,13 @@ from PySide6.QtWidgets import (
     QTableWidget,
     QTableWidgetItem,
     QPushButton,
-    QLabel,
     QHeaderView,
-    QStyle,
     QSizePolicy,
     QAbstractItemView
 )
-from common import RGB, Color
-from models import VisConfig, TrackGroup
-from utility import Util, QUtil
+from common import RGB
+from models import VisConfig
+from utility import Util
 from ui.common import (
     ColorButton, 
     TableCheckbox, 

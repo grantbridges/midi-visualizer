@@ -4,7 +4,7 @@ import random
 from typing import List
 from PySide6.QtGui import QBrush, QLinearGradient, QPainter, QPen
 from PySide6.QtCore import QRect, QRectF, Qt
-from common import Const, Color, RGB
+from common import Color, RGB
 from models import VisConfig, BackgroundMode, Note, Orientation
 from media import video_provider, image_provider
 from utility import QUtil

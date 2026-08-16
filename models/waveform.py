@@ -4,7 +4,6 @@ from pathlib import Path
 import subprocess
 import numpy as np
 from utility import FileUtil
-from typing import List
 
 import logging
 

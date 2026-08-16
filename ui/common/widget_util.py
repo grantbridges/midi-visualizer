@@ -1,5 +1,5 @@
-from PySide6.QtGui import QPalette, Qt
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QWidget
+from PySide6.QtGui import QPalette
+from PySide6.QtWidgets import QLabel
 
 class WidgetUtil:
     '''
