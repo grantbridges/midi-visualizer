@@ -52,7 +52,7 @@ class VisConfig:
     # -- Audio --
     play_audio: bool = False
     audio_filepath: str = ""
-    audio_time_offset: float = 2.0
+    audio_time_offset: float = 0.0
 
     # -- Waveform --
     show_waveform: bool = False

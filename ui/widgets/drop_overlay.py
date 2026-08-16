@@ -16,19 +16,20 @@ class DropOverlay(QWidget):
         self.setAttribute(Qt.WA_NoSystemBackground)
         self.setAttribute(Qt.WA_TranslucentBackground)
 
-        self.label = QLabel("Drop file to load", self)
-        self.label.setAlignment(Qt.AlignCenter)
+        self.label = QLabel("", self)
+        #self.label.setAlignment(Qt.AlignCenter)
         r, g, b = Color.ILLUSTRI_TEXT
         self.label.setStyleSheet(f"color: rgb({r}, {g}, {b}); font-size: 18px; font-weight: bold;")
 
         layout = QVBoxLayout(self)
-        layout.addWidget(self.label)
+        #layout.addWidget(self.label)
 
         # hide until parent decides to show
         self.hide()
 
     def set_text(self, text: str):
-        self.label.setText(text)
+        #self.label.setText(text)
+        pass
 
     def paintEvent(self, event):
         painter = QPainter(self)

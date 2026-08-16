@@ -5,7 +5,7 @@ import sys
 from typing import List
 import pretty_midi
 from uuid import UUID
-from PySide6.QtCore import QEvent, QThread, Qt
+from PySide6.QtCore import QEvent, QPointF, QThread, Qt
 from PySide6.QtWidgets import (
     QApplication,
     QLabel,
@@ -18,8 +18,8 @@ from PySide6.QtWidgets import (
     QDialog,
     QFileDialog
 )
-from PySide6.QtGui import QAction, QKeySequence, QShortcut
-from common import Const
+from PySide6.QtGui import QAction, QColor, QKeySequence, QLinearGradient, QPalette, QShortcut
+from common import Const, Color
 from models import VisConfig, Track, user_settings
 from render import RenderWorker
 from media import video_provider, audio_provider, image_provider
@@ -34,6 +34,8 @@ from ui.dialogs import (
 from utility import LogUtil
 
 import logging
+
+from utility.q_util import QUtil
 logger = logging.getLogger("MainWindow")
 
 # ----
@@ -163,22 +165,32 @@ class MainWindow(QMainWindow):
         central = QWidget()
         self.setCentralWidget(central)
 
+        self.refresh_background_color()
+
         layout = QVBoxLayout(central)
         layout.setAlignment(Qt.AlignCenter)
+
+        title = QLabel(Const.APP_NAME)
+        title.setAlignment(Qt.AlignCenter)
+        r, g, b = Color.ILLUSTRI_TEXT
+        title.setStyleSheet(f"color: rgb({r}, {g}, {b});")
+        font = title.font()
+        font.setFamily(Const.PRIMARY_FONT)
+        font.setPointSize(28)
+        title.setFont(font)
+        layout.addWidget(title)
 
         new_shortcut = self.new_project_action.shortcut().toString(QKeySequence.NativeText)
         open_shortcut = self.open_action.shortcut().toString(QKeySequence.NativeText)
 
         help_tips = [
-            f"{new_shortcut} to create a new project from a .midi file",
-            f"{open_shortcut} to open an existing project"
+            f"Drop a .midi file or an existing {Const.APP_NAME_SHORT} project here to get started"
         ]
 
         for text in help_tips:
-            label = QLabel()
-            label.setText(text)
+            label = QLabel(text)
             label.setAlignment(Qt.AlignCenter)
-            label.setStyleSheet("color: #888888;")
+            label.setStyleSheet("color: #999999;")
             font = label.font()
             font.setFamily(Const.PRIMARY_FONT)
             font.setPointSize(14)
@@ -256,10 +268,23 @@ class MainWindow(QMainWindow):
 
         self.initialized_editor_view = True
 
+    def refresh_background_color(self):
+        gradient = QLinearGradient(QPointF(0, 0), QPointF(0, 1))
+        gradient.setCoordinateMode(QLinearGradient.ObjectMode)
+        gradient.setColorAt(0.0, QUtil.rgb_to_qcolor(Color.DARKER_GRAY)) # top
+        gradient.setColorAt(1.0, QUtil.rgb_to_qcolor(Color.DARK_GRAY)) # bottom
+
+        widget = self.centralWidget()
+        palette = widget.palette()
+        palette.setBrush(QPalette.Window, gradient)
+        widget.setPalette(palette)
+        widget.setAutoFillBackground(True)
+
     def layout_editor_controls(self):
         # create controls
         central = QWidget()
         self.setCentralWidget(central)
+        self.refresh_background_color()
 
         # Layout
         root = QVBoxLayout(central)
