@@ -108,10 +108,6 @@ class TracksTab(QWidget):
 
             # name
             name_item = QTableWidgetItem(track.name)
-            if group is not None:
-                # color by group color
-                name_item.setBackground(QBrush(QUtil.rgb_to_qcolor(group.color)))
-                name_item.setForeground(QBrush(QUtil.rgb_to_qcolor(Util.contrast_color(group.color))))
             name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
             self.table.setItem(row, col, name_item)
             col += 1
@@ -119,13 +115,25 @@ class TracksTab(QWidget):
             # groups dropdown
             combo = QComboBox()
             combo.addItem("None", None)
-            for group in self.vis_config.track_groups:
-                combo.addItem(group.name, str(group.group_id))
+            for tg in self.vis_config.track_groups:
+                combo.addItem(tg.name, str(tg.group_id))
 
             if track.group_id is not None:
                 index = combo.findData(str(track.group_id)) 
                 if index >= 0:
                     combo.setCurrentIndex(index)
+
+                    r, g, b = group.color
+                    text_r, text_g, text_b = Util.contrast_color((r, g, b))
+
+                    # color bg + text by color
+                    combo.setStyleSheet(f"""
+                        QComboBox {{
+                            background-color: rgb({r}, {g}, {b});
+                            color: rgb({text_r}, {text_g}, {text_b});
+                        }}
+                    """)
+
             combo.currentIndexChanged.connect(lambda index, row=row: self._on_group_changed(row, index))
             self.table.setCellWidget(row, col, combo)
             col += 1
