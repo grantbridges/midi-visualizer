@@ -19,7 +19,7 @@ from ui.common import (
     ScaledSliderDoubleSpinbox
 )
 
-class ConfigTab(QWidget):
+class GeneralTab(QWidget):
     def __init__(self, 
         vis_config: VisConfig, 
         on_changes_callback: object,

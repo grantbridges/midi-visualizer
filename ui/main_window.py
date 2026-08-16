@@ -23,7 +23,7 @@ from common import Const
 from models import VisConfig, Track, user_settings
 from render import RenderWorker
 from media import video_provider, audio_provider, image_provider
-from ui.tabs import ConfigTab, BackgroundTab, AudioTab, TrackGroupsTab, TracksTab, NotesTab
+from ui.tabs import GeneralTab, BackgroundTab, AudioTab, TrackGroupsTab, TracksTab, NotesTab
 from ui.common import Icons
 from ui.widgets import PreviewWidget, DropOverlay
 from ui.dialogs import (
@@ -50,12 +50,12 @@ class MainWindow(QMainWindow):
         self.drop_overlay = DropOverlay(self)
 
         # child widgets
-        self.config_tab: ConfigTab = None
-        self.background_tab: BackgroundTab = None
-        self.audio_tab: AudioTab = None
+        self.general_tab: GeneralTab = None
         self.track_groups_tab: TrackGroupsTab = None
         self.tracks_tab: TracksTab = None
         self.notes_tab: NotesTab = None
+        self.background_tab: BackgroundTab = None
+        self.audio_tab: AudioTab = None
         self.preview_widget: PreviewWidget = None
 
         # dialogs
@@ -188,18 +188,18 @@ class MainWindow(QMainWindow):
     def init_vis_config_editor_view(self):
         # clean up children if already initialized
         if self.initialized_editor_view:
-            self.config_tab.shutdown()
-            self.config_tab.deleteLater()
-            self.background_tab.shutdown()
-            self.background_tab.deleteLater()
-            self.audio_tab.shutdown()
-            self.audio_tab.deleteLater()
+            self.general_tab.shutdown()
+            self.general_tab.deleteLater()
             self.track_groups_tab.shutdown()
             self.track_groups_tab.deleteLater()
             self.tracks_tab.shutdown()
             self.tracks_tab.deleteLater()
             self.notes_tab.shutdown()
             self.notes_tab.deleteLater()
+            self.background_tab.shutdown()
+            self.background_tab.deleteLater()
+            self.audio_tab.shutdown()
+            self.audio_tab.deleteLater()
             self.preview_widget.shutdown()
             self.preview_widget.deleteLater()
 
@@ -207,20 +207,9 @@ class MainWindow(QMainWindow):
 
         # tabs
         self.tabs = QTabWidget()
-        self.config_tab = ConfigTab(
+        self.general_tab = GeneralTab(
             self.vis_config, 
             self.on_config_changed
-        )
-        self.background_tab = BackgroundTab(
-            self.vis_config, 
-            self.on_config_changed, 
-            self.on_bg_video_changed, 
-            self.on_bg_image_changed
-        )
-        self.audio_tab = AudioTab(
-            self.vis_config, 
-            self.on_config_changed, 
-            self.on_audio_changed
         )
         self.tracks_tab = TracksTab(
             self.vis_config, 
@@ -235,8 +224,19 @@ class MainWindow(QMainWindow):
             self.vis_config, 
             self.on_config_changed
         )
+        self.background_tab = BackgroundTab(
+            self.vis_config, 
+            self.on_config_changed, 
+            self.on_bg_video_changed, 
+            self.on_bg_image_changed
+        )
+        self.audio_tab = AudioTab(
+            self.vis_config, 
+            self.on_config_changed, 
+            self.on_audio_changed
+        )
 
-        self.tabs.addTab(self.config_tab, "General")
+        self.tabs.addTab(self.general_tab, "General")
         self.tabs.addTab(self.tracks_tab, Icons.music(), "Tracks")
         self.tabs.addTab(self.track_groups_tab, Icons.group(), "Track Groups")
         self.tabs.addTab(self.notes_tab, Icons.magic(), "Note Effects")
@@ -284,27 +284,27 @@ class MainWindow(QMainWindow):
         
         root.addWidget(splitter)
 
-        self.config_tab.layout_controls()
-        self.background_tab.layout_controls()
-        self.audio_tab.layout_controls()
+        self.general_tab.layout_controls()
         self.track_groups_tab.layout_controls()
         self.tracks_tab.layout_controls()
         self.notes_tab.layout_controls()
+        self.background_tab.layout_controls()
+        self.audio_tab.layout_controls()
         self.preview_widget.layout_controls()
 
     def refresh_ui(self, refresh_all: bool = False):
         if refresh_all:
-            self.config_tab.refresh_ui()
-            self.background_tab.refresh_ui()
-            self.audio_tab.refresh_ui()
+            self.general_tab.refresh_ui()
             self.track_groups_tab.refresh_ui()
             self.tracks_tab.refresh_ui()
             self.notes_tab.refresh_ui()
+            self.background_tab.refresh_ui()
+            self.audio_tab.refresh_ui()
         else:
             # just refresh currently visibile tab
             match self.tabs.currentIndex():
                 case 0:
-                    self.config_tab.refresh_ui()
+                    self.general_tab.refresh_ui()
                 case 1:
                     self.tracks_tab.refresh_ui()
                 case 2:
@@ -362,12 +362,12 @@ class MainWindow(QMainWindow):
 
     def update_model(self):
         # ask individual tabs to copy their local UI models into the data model
-        self.config_tab.update_model()
-        self.background_tab.update_model()
-        self.audio_tab.update_model()
+        self.general_tab.update_model()
         self.track_groups_tab.update_model()
         self.tracks_tab.update_model()
         self.notes_tab.update_model()
+        self.background_tab.update_model()
+        self.audio_tab.update_model()
 
     def save_config(self, force_select_save_location: bool = False) -> bool:
         '''
