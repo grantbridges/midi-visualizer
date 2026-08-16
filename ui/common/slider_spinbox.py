@@ -29,6 +29,7 @@ class SliderSpinbox(QWidget):
 
         # configure slider
         self._slider = QSlider(Qt.Horizontal, self)
+        self._slider.setCursor(Qt.PointingHandCursor)
         self._slider.setMinimum(minimum)
         self._slider.setMaximum(maximum)
 

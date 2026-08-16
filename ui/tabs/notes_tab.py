@@ -1,16 +1,19 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QScrollArea,
-    QSpinBox,
-    QDoubleSpinBox,
     QCheckBox,
+    QDoubleSpinBox,
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
 )
-
 from models import VisConfig
-from ui.common import LayoutUtil, ColorButton
+from ui.common import (
+    LayoutUtil, 
+    ColorButton,
+    SliderSpinbox,
+    SliderDoubleSpinbox
+)
 
 class NotesTab(QWidget):
     def __init__(self, 
@@ -45,9 +48,9 @@ class NotesTab(QWidget):
         self.glow_played_region_checkbox.toggled.connect(self._on_changes)
         self.glow_color = ColorButton()
         self.glow_color.valueChanged.connect(self._on_changes)
-        self.glow_size_input = QDoubleSpinBox(decimals=2, minimum=0.00, maximum=2.0, singleStep=0.01)
+        self.glow_size_input = SliderDoubleSpinbox(decimals=2, minimum=0.00, maximum=2.0, singleStep=0.01)
         self.glow_size_input.valueChanged.connect(self._on_changes)
-        self.glow_intensity_input = QDoubleSpinBox(decimals=2, minimum=0.00, maximum=1.00, singleStep=0.01)
+        self.glow_intensity_input = SliderDoubleSpinbox(decimals=2, minimum=0.00, maximum=1.00, singleStep=0.01)
         self.glow_intensity_input.valueChanged.connect(self._on_changes)
 
         self.highlight_checkbox = QCheckBox()
@@ -67,26 +70,26 @@ class NotesTab(QWidget):
 
         self.sparks_checkbox = QCheckBox()
         self.sparks_checkbox.toggled.connect(self._on_changes)
-        self.sparks_start_dist_input = QDoubleSpinBox(decimals=1, minimum=0.0, maximum=10.0, singleStep=0.1)
+        self.sparks_start_dist_input = SliderDoubleSpinbox(decimals=1, minimum=0.0, maximum=10.0, singleStep=0.1)
         self.sparks_start_dist_input.valueChanged.connect(self._on_changes)
-        self.sparks_start_length_input = QDoubleSpinBox(decimals=2, minimum=0.25, maximum=10.0, singleStep=0.01)
+        self.sparks_start_length_input = SliderDoubleSpinbox(decimals=2, minimum=0.25, maximum=10.0, singleStep=0.01)
         self.sparks_start_length_input.valueChanged.connect(self._on_changes)
-        self.sparks_speed_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=5.0, singleStep=0.01)
+        self.sparks_speed_input = SliderDoubleSpinbox(decimals=2, minimum=0.01, maximum=5.0, singleStep=0.01)
         self.sparks_speed_input.valueChanged.connect(self._on_changes)
-        self.sparks_speed_var_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=5.0, singleStep=0.01)
+        self.sparks_speed_var_input = SliderDoubleSpinbox(decimals=2, minimum=0.01, maximum=5.0, singleStep=0.01)
         self.sparks_speed_var_input.valueChanged.connect(self._on_changes)
-        self.sparks_opacity_ratio_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.0, singleStep=0.01)
+        self.sparks_opacity_ratio_input = SliderDoubleSpinbox(decimals=2, minimum=0.01, maximum=1.0, singleStep=0.01)
         self.sparks_opacity_ratio_input.valueChanged.connect(self._on_changes)
-        self.sparks_count_input = QSpinBox(minimum=1, maximum=50)
+        self.sparks_count_input = SliderSpinbox(minimum=1, maximum=50)
         self.sparks_count_input.valueChanged.connect(self._on_changes)
-        self.sparks_angle_input = QSpinBox(minimum=0, maximum=180, suffix="°")
+        self.sparks_angle_input = SliderSpinbox(minimum=0, maximum=180, suffix="°")
         self.sparks_angle_input.valueChanged.connect(self._on_changes)
-        self.sparks_fade_time_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=5.0, singleStep=0.01, suffix=" sec")
+        self.sparks_fade_time_input = SliderDoubleSpinbox(decimals=2, minimum=0.01, maximum=5.0, singleStep=0.01, suffix=" sec")
         self.sparks_fade_time_input.valueChanged.connect(self._on_changes)
 
         self.bounce_checkbox = QCheckBox()
         self.bounce_checkbox.toggled.connect(self._on_changes)
-        self.bounce_height_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=5.0, singleStep=0.01)
+        self.bounce_height_input = SliderDoubleSpinbox(decimals=2, minimum=0.01, maximum=5.0, singleStep=0.01)
         self.bounce_height_input.valueChanged.connect(self._on_changes)
 
     def shutdown(self):

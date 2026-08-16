@@ -36,6 +36,7 @@ class SliderDoubleSpinbox(QWidget):
 
         # configure slider
         self._slider = QSlider(Qt.Horizontal, self)
+        self._slider.setCursor(Qt.PointingHandCursor)
         self._slider.setMinimum(round(minimum * self._scale))
         self._slider.setMaximum(round(maximum * self._scale))
 

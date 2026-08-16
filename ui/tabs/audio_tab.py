@@ -2,8 +2,6 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QMessageBox,
     QScrollArea,
-    QSpinBox,
-    QDoubleSpinBox,
     QCheckBox,
     QWidget,
     QVBoxLayout,
@@ -16,7 +14,14 @@ from PySide6.QtWidgets import (
 )
 
 from models import VisConfig
-from ui.common import ColorButton, LayoutUtil, Icons, ScaledSpinbox, ScaledDoubleSpinbox
+from ui.common import (
+    ColorButton, 
+    LayoutUtil, 
+    Icons, 
+    SliderDoubleSpinbox,
+    ScaledSliderSpinbox, 
+    ScaledSliderDoubleSpinbox
+)
 from utility import Util
 
 class AudioTab(QWidget):
@@ -44,20 +49,20 @@ class AudioTab(QWidget):
         self.audio_file_clear_btn = QPushButton()
         self.audio_file_clear_btn.setIcon(Icons.trash_can())
         self.audio_file_clear_btn.clicked.connect(self._clear_audio_file)
-        self.audio_offset_input = QDoubleSpinBox(decimals=2, minimum=-5.0, maximum=5.0, singleStep=0.01, suffix=" sec")
+        self.audio_offset_input = SliderDoubleSpinbox(decimals=2, minimum=-5.0, maximum=5.0, singleStep=0.01, suffix=" sec")
         self.audio_offset_input.valueChanged.connect(self._on_changes)
 
         self.show_waveform_checkbox = QCheckBox()
         self.show_waveform_checkbox.toggled.connect(self._on_changes)
         self.waveform_color_button = ColorButton()
         self.waveform_color_button.valueChanged.connect(self._on_changes)
-        self.waveform_opacity_input = ScaledSpinbox(display_min=0, display_max=100, internal_min=0, internal_max=255)
+        self.waveform_opacity_input = ScaledSliderSpinbox(display_min=0, display_max=100, internal_min=0, internal_max=255)
         self.waveform_opacity_input.valueChanged.connect(self._on_changes)
-        self.waveform_speed_input = ScaledDoubleSpinbox(decimals=2, singleStep=0.01, display_min=0.1, display_max=10.0, internal_min=20.0, internal_max=0.1)
+        self.waveform_speed_input = ScaledSliderDoubleSpinbox(decimals=2, singleStep=0.01, display_min=0.1, display_max=10.0, internal_min=20.0, internal_max=0.1)
         self.waveform_speed_input.valueChanged.connect(self._on_changes)
-        self.waveform_height_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.0, singleStep=0.01)
+        self.waveform_height_input = SliderDoubleSpinbox(decimals=2, minimum=0.01, maximum=1.0, singleStep=0.01)
         self.waveform_height_input.valueChanged.connect(self._on_changes)
-        self.waveform_pos_input = QDoubleSpinBox(decimals=2, minimum=0.00, maximum=1.0, singleStep=0.01)
+        self.waveform_pos_input = SliderDoubleSpinbox(decimals=2, minimum=0.00, maximum=1.0, singleStep=0.01)
         self.waveform_pos_input.valueChanged.connect(self._on_changes)
 
     def shutdown(self):
