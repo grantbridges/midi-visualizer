@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
 )
 
 from models import VisConfig, Orientation
-from ui.common import ColorButton, LayoutUtil, Icons, ScaledSpinbox
+from ui.common import ColorButton, LayoutUtil, Icons, ScaledSpinbox, SliderDoubleSpinbox
 
 class ConfigTab(QWidget):
     def __init__(self, 
@@ -51,9 +51,9 @@ class ConfigTab(QWidget):
         self.playhead_pos_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.00, singleStep=0.01)
         self.playhead_pos_input.valueChanged.connect(self._on_changes)
 
-        self.vertical_padding_input = QDoubleSpinBox(decimals=2, minimum=0.00, maximum=1.00, singleStep=0.01)
+        self.vertical_padding_input = SliderDoubleSpinbox(decimals=2, minimum=0.00, maximum=1.00, singleStep=0.01)
         self.vertical_padding_input.valueChanged.connect(self._on_changes)
-        self.vertical_offset_input = QDoubleSpinBox(decimals=2, minimum=-1.00, maximum=1.00, singleStep=0.01)
+        self.vertical_offset_input = SliderDoubleSpinbox(decimals=2, minimum=-1.00, maximum=1.00, singleStep=0.01)
         self.vertical_offset_input.valueChanged.connect(self._on_changes)
 
         self.auto_calc_pitch_bounds_checkbox = QCheckBox()

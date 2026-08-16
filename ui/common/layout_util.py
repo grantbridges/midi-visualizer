@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QPushButton,
+    QSizePolicy,
     QWidget,
 )
 from PySide6.QtCore import Qt
@@ -53,9 +54,8 @@ class LayoutUtil:
         row = QWidget()
         h_layout = QHBoxLayout(row)
         h_layout.setContentsMargins(0, 0, 0, 0)
-        h_layout.addWidget(QLabel(label))
-        h_layout.addStretch()
-        h_layout.addWidget(edit)
+        h_layout.addWidget(QLabel(label), 1)
+        h_layout.addWidget(edit, 1)
         parent_layout.addWidget(row)
         return row
     
@@ -64,10 +64,16 @@ class LayoutUtil:
         row = QWidget()
         h_layout = QHBoxLayout(row)
         h_layout.setContentsMargins(0, 0, 0, 0)
-        h_layout.addWidget(QLabel(label))
-        h_layout.addStretch()
-        h_layout.addWidget(edit)
-        h_layout.addWidget(suffix)
+        h_layout.addWidget(QLabel(label), 1)
+
+        right_side = QWidget()
+        right_layout = QHBoxLayout(right_side)
+        right_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.setSpacing(4)
+        right_layout.addWidget(edit)
+        right_layout.addWidget(suffix)
+        h_layout.addWidget(right_side, 1)
+        
         parent_layout.addWidget(row)
         return row
 
@@ -76,8 +82,8 @@ class LayoutUtil:
         row = QWidget()
         h_layout = QHBoxLayout(row)
         h_layout.setContentsMargins(0, 0, 0, 0)
-        h_layout.addWidget(QLabel(label))
-        h_layout.addWidget(spinbox)
+        h_layout.addWidget(QLabel(label), 1)
+        h_layout.addWidget(spinbox, 1)
         parent_layout.addWidget(row)
         return row
     
@@ -86,8 +92,8 @@ class LayoutUtil:
         row = QWidget()
         h_layout = QHBoxLayout(row)
         h_layout.setContentsMargins(0, 0, 0, 0)
-        h_layout.addWidget(QLabel(label))
-        h_layout.addWidget(combobox)
+        h_layout.addWidget(QLabel(label), 1)
+        h_layout.addWidget(combobox, 1)
         parent_layout.addWidget(row)
         return row
     
@@ -96,8 +102,8 @@ class LayoutUtil:
         row = QWidget()
         h_layout = QHBoxLayout(row)
         h_layout.setContentsMargins(0, 0, 0, 0)
-        h_layout.addWidget(QLabel(label))
-        h_layout.addWidget(button)
+        h_layout.addWidget(QLabel(label), 1)
+        h_layout.addWidget(button, 1)
         parent_layout.addWidget(row)
         return row
     
@@ -129,12 +135,18 @@ class LayoutUtil:
         row = QWidget()
         h_layout = QHBoxLayout(row)
         h_layout.setContentsMargins(0, 0, 0, 0)
-        h_layout.addWidget(QLabel(label))
-        h_layout.addStretch()
-        h_layout.addWidget(file_input)
-        h_layout.addWidget(browse_btn)
+        h_layout.addWidget(QLabel(label), 1)
+
+        right_side = QWidget()
+        right_layout = QHBoxLayout(right_side)
+        right_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.setSpacing(4)
+        right_layout.addWidget(file_input)
+        right_layout.addWidget(browse_btn)
         if clear_btn is not None:
-            h_layout.addWidget(clear_btn)
+            right_layout.addWidget(clear_btn)
+
+        h_layout.addWidget(right_side, 1)
         parent_layout.addWidget(row)
         return row
     

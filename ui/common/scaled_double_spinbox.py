@@ -7,7 +7,10 @@ class ScaledDoubleSpinbox(QDoubleSpinBox):
     Note: It's okay to have internal_max < internal_min if you want an inverse 
     relationship with the display values.
     '''
-    def __init__(self, 
+
+    # TODO: ValueChanged emit needs to be intercepted and return internal value
+    def __init__(
+        self, 
         display_min: float,
         display_max: float,
         internal_min: float,
@@ -29,11 +32,11 @@ class ScaledDoubleSpinbox(QDoubleSpinBox):
             raise ValueError("internal_max cannot equal internal_min")
 
         # store internals
-        self.display_min = display_min
-        self.display_max = display_max
-        self.internal_min = internal_min
-        self.internal_max = internal_max
-        self.disable_mouse_wheel = disable_mouse_wheel
+        self._display_min = display_min
+        self._display_max = display_max
+        self._internal_min = internal_min
+        self._internal_max = internal_max
+        self._disable_mouse_wheel = disable_mouse_wheel
 
         if decimals is not None:
             self.setDecimals(decimals)
@@ -46,7 +49,7 @@ class ScaledDoubleSpinbox(QDoubleSpinBox):
         self.setInternalValue(internal_value)
 
     def wheelEvent(self, event):
-        if self.disable_mouse_wheel:
+        if self._disable_mouse_wheel:
             event.ignore()
             return
 
@@ -67,14 +70,14 @@ class ScaledDoubleSpinbox(QDoubleSpinBox):
         if internal_value is None:
             return None
 
-        t = (internal_value - self.internal_min) / (self.internal_max - self.internal_min)
-        display_value = self.display_min + t * (self.display_max - self.display_min)
+        t = (internal_value - self._internal_min) / (self._internal_max - self._internal_min)
+        display_value = self._display_min + t * (self._display_max - self._display_min)
         return display_value
 
     def _display_to_internal(self, display_value: float) -> float:
         if display_value is None:
             return None
 
-        t = (display_value - self.display_min) / (self.display_max - self.display_min)
-        internal_value = self.internal_min + t * (self.internal_max - self.internal_min)
+        t = (display_value - self._display_min) / (self._display_max - self._display_min)
+        internal_value = self._internal_min + t * (self._internal_max - self._internal_min)
         return internal_value
