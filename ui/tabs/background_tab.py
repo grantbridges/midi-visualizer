@@ -75,19 +75,6 @@ class BackgroundTab(QWidget):
         self.bg_tint_opacity_input = ScaledSliderSpinbox(display_min=0, display_max=100, internal_min=0, internal_max=255)
         self.bg_tint_opacity_input.valueChanged.connect(self._on_changes)
 
-        self.fade_in_checkbox = QCheckBox()
-        self.fade_in_checkbox.toggled.connect(self._on_changes)
-        self.fade_in_color = ColorButton()
-        self.fade_in_color.valueChanged.connect(self._on_changes)
-        self.fade_in_time = SliderDoubleSpinbox(decimals=2, minimum=0.1, maximum=10.00, singleStep=0.1, suffix=" sec")
-        self.fade_in_time.valueChanged.connect(self._on_changes)
-        self.fade_out_checkbox = QCheckBox()
-        self.fade_out_checkbox.toggled.connect(self._on_changes)
-        self.fade_out_color = ColorButton()
-        self.fade_out_color.valueChanged.connect(self._on_changes)
-        self.fade_out_time = SliderDoubleSpinbox(decimals=2, minimum=0.1, maximum=10.00, singleStep=0.1, suffix=" sec")
-        self.fade_out_time.valueChanged.connect(self._on_changes)
-
     def shutdown(self):
         pass
 
@@ -131,13 +118,7 @@ class BackgroundTab(QWidget):
         # --- Right Column ---
         column = v_right_layout
 
-        LayoutUtil.section(column, "Fade In/Out")
-        LayoutUtil.checkbox(column, "Fade In", self.fade_in_checkbox)
-        LayoutUtil.button(column, "Fade In Color", self.fade_in_color)
-        LayoutUtil.spinbox(column, "Fade In Time", self.fade_in_time)
-        LayoutUtil.checkbox(column, "Fade Out", self.fade_out_checkbox)
-        LayoutUtil.button(column, "Fade Out Color", self.fade_out_color)
-        LayoutUtil.spinbox(column, "Fade Out Time", self.fade_out_time)
+        # contents here...
         
         column.addStretch()
 
@@ -177,18 +158,6 @@ class BackgroundTab(QWidget):
         self.bg_tint_opacity_input.setInternalValue(self.vis_config.bg_tint_alpha)
         self.bg_tint_opacity_input.setEnabled(self.vis_config.bg_tint_enabled)
 
-        self.fade_in_checkbox.setChecked(self.vis_config.fade_in_enabled)
-        self.fade_in_color.setColor(self.vis_config.fade_in_color)
-        self.fade_in_color.setEnabled(self.vis_config.fade_in_enabled)
-        self.fade_in_time.setValue(self.vis_config.fade_in_time)
-        self.fade_in_time.setEnabled(self.vis_config.fade_in_enabled)
-
-        self.fade_out_checkbox.setChecked(self.vis_config.fade_out_enabled)
-        self.fade_out_color.setColor(self.vis_config.fade_out_color)
-        self.fade_out_color.setEnabled(self.vis_config.fade_out_enabled)
-        self.fade_out_time.setValue(self.vis_config.fade_out_time)
-        self.fade_out_time.setEnabled(self.vis_config.fade_out_enabled)
-
         self.block_changes_callback = False
 
     def update_model(self):
@@ -205,13 +174,6 @@ class BackgroundTab(QWidget):
         self.vis_config.bg_tint_enabled = self.bg_tint_checkbox.isChecked()
         self.vis_config.bg_tint_color = self.bg_tint_color_button.getColor()
         self.vis_config.bg_tint_alpha = self.bg_tint_opacity_input.getInternalValue()
-
-        self.vis_config.fade_in_enabled = self.fade_in_checkbox.isChecked()
-        self.vis_config.fade_in_color = self.fade_in_color.getColor()
-        self.vis_config.fade_in_time = self.fade_in_time.value()
-        self.vis_config.fade_out_enabled = self.fade_out_checkbox.isChecked()
-        self.vis_config.fade_out_color = self.fade_out_color.getColor()
-        self.vis_config.fade_out_time = self.fade_out_time.value()
 
     # callbacks
 

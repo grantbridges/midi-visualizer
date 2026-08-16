@@ -104,6 +104,8 @@ class AudioTab(QWidget):
         # --- Right Column ---
         column = v_right_layout
 
+        # contents here...
+
         column.addStretch()
 
         root_h_layout.addLayout(v_left_layout, 1)

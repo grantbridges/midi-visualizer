@@ -237,11 +237,11 @@ class MainWindow(QMainWindow):
         )
 
         self.tabs.addTab(self.config_tab, "General")
-        self.tabs.addTab(self.background_tab, Icons.image_outline(), "Background")
-        self.tabs.addTab(self.audio_tab, Icons.audio(), "Audio")
         self.tabs.addTab(self.tracks_tab, Icons.music(), "Tracks")
         self.tabs.addTab(self.track_groups_tab, Icons.group(), "Track Groups")
         self.tabs.addTab(self.notes_tab, Icons.magic(), "Note Effects")
+        self.tabs.addTab(self.background_tab, Icons.image_outline(), "Background")
+        self.tabs.addTab(self.audio_tab, Icons.audio(), "Audio")
         self.tabs.currentChanged.connect(self.on_tab_changed)
         
         # preview area
@@ -306,15 +306,15 @@ class MainWindow(QMainWindow):
                 case 0:
                     self.config_tab.refresh_ui()
                 case 1:
-                    self.background_tab.refresh_ui()
-                case 2:
-                    self.audio_tab.refresh_ui()
-                case 3:
                     self.tracks_tab.refresh_ui()
-                case 4:
+                case 2:
                     self.track_groups_tab.refresh_ui()
-                case 5:
+                case 3:
                     self.notes_tab.refresh_ui()
+                case 4:
+                    self.background_tab.refresh_ui()
+                case 5:
+                    self.audio_tab.refresh_ui()
 
         self.preview_widget.refresh_ui()
 
