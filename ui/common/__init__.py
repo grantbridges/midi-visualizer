@@ -8,5 +8,7 @@ from ui.common.icons import Icons
 from ui.common.splashscreen import SplashScreen
 from ui.common.scaled_spinbox import ScaledSpinbox
 from ui.common.scaled_double_spinbox import ScaledDoubleSpinbox
+from ui.common.scaled_slider_spinbox import ScaledSliderSpinbox
 from ui.common.scaled_slider_double_spinbox import ScaledSliderDoubleSpinbox
+from ui.common.slider_spinbox import SliderSpinbox
 from ui.common.slider_double_spinbox import SliderDoubleSpinbox
