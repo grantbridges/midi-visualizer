@@ -1,5 +1,5 @@
 from uuid import UUID
-from PySide6.QtCore import Qt, QTimer, QElapsedTimer
+from PySide6.QtCore import QTimer, QElapsedTimer
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
     QMenu,
@@ -7,8 +7,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QHBoxLayout,
     QPushButton,
-    QCheckBox,
-    QSlider,
     QDoubleSpinBox
 )
 from models import VisConfig, user_settings

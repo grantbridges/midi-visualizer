@@ -12,3 +12,4 @@ from ui.common.scaled_slider_spinbox import ScaledSliderSpinbox
 from ui.common.scaled_slider_double_spinbox import ScaledSliderDoubleSpinbox
 from ui.common.slider_spinbox import SliderSpinbox
 from ui.common.slider_double_spinbox import SliderDoubleSpinbox
+from ui.common.illustri_slider import IllustriSlider

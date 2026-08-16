@@ -1,5 +1,6 @@
 from PySide6.QtCore import QEvent, Qt, Signal
-from PySide6.QtWidgets import QSpinBox, QWidget, QHBoxLayout, QSlider
+from PySide6.QtWidgets import QSpinBox, QWidget, QHBoxLayout
+from ui.common.illustri_slider import IllustriSlider
 
 class ScaledSliderSpinbox(QWidget):
     valueChanged = Signal(int)
@@ -41,8 +42,7 @@ class ScaledSliderSpinbox(QWidget):
         self._spinbox.setMaximum(self._display_max)
 
         # configure slider
-        self._slider = QSlider(Qt.Horizontal, self)
-        self._slider.setCursor(Qt.PointingHandCursor)
+        self._slider = IllustriSlider(Qt.Horizontal, self)
         self._slider.setMinimum(self._display_min)
         self._slider.setMaximum(self._display_max)
 
