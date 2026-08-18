@@ -29,7 +29,8 @@ from ui.widgets import PreviewWidget, DropOverlay
 from ui.dialogs import (
     ExportProgressDialog, 
     ExportOptionsDialog, 
-    ProgressDialog
+    ProgressDialog,
+    AboutDialog
 )
 from utility import LogUtil
 
@@ -156,9 +157,13 @@ class MainWindow(QMainWindow):
         # Help menu
         help_menu = menu_bar.addMenu("Help")
 
+        self.about_action = QAction(f"About {Const.APP_NAME}")
+        self.about_action.triggered.connect(self.on_about_action)
         self.export_logs_action = QAction("Export Logs...", self)
         self.export_logs_action.triggered.connect(self.on_export_logs_action)
 
+        help_menu.addAction(self.about_action)
+        help_menu.addSeparator()
         help_menu.addAction(self.export_logs_action)
 
     def init_default_view(self):
@@ -895,6 +900,10 @@ class MainWindow(QMainWindow):
             self.render_worker.cancelled.connect(self.render_thread.quit)
 
             self.render_thread.start()
+
+    def on_about_action(self):
+        about_dialog = AboutDialog(parent=self)
+        about_dialog.exec()
 
     def on_export_logs_action(self):
         folder = QFileDialog.getExistingDirectory(self, "Choose Output Folder", str(Path.home() / "Desktop"))

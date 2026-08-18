@@ -3,3 +3,4 @@ from ui.dialogs.export_options_dialog import ExportOptionsDialog
 from ui.dialogs.export_options_dialog import ExportOptions
 from ui.dialogs.group_tracks_dialog import GroupTracksDialog
 from ui.dialogs.progress_dialog import ProgressDialog
+from ui.dialogs.about_dialog import AboutDialog
