@@ -38,6 +38,14 @@ LICENSES_DIR = Path("licenses")
 GPLV3_TEXT_PATH = LICENSES_DIR / "COPYING.GPLv3.txt"
 LGPLV3_TEXT_PATH = LICENSES_DIR / "COPYING.LGPLv3.txt"
 
+OFL_TEXT_PATH = LICENSES_DIR / "OFL.txt"
+
+# Fonts bundled as static assets (not part of the PyInstaller module graph,
+# so they need to be declared here manually)
+BUNDLED_FONTS = [
+    {"name": "Roboto", "license": "SIL Open Font License 1.1", "url": "https://fonts.google.com/specimen/Roboto"},
+]
+
 FFMPEG_VERSION = "8.1.2"
 FFMPEG_SOURCE_COMMIT = "FFmpeg/FFmpeg@38b88335f9"
 FFMPEG_SOURCE_URL = "https://github.com/FFmpeg/FFmpeg/commit/38b88335f9"
@@ -129,6 +137,19 @@ def build_qt_section(packages: list[dict]) -> str:
         f"{lgpl_text}\n"
     )
 
+def build_fonts_section() -> str:
+    ofl_text = read_static_text(OFL_TEXT_PATH, "OFL")
+    names = ", ".join(f["name"] for f in BUNDLED_FONTS)
+    return (
+        "================================================================\n"
+        "Fonts\n"
+        "================================================================\n"
+        f"This software bundles the following font(s) ({names}), licensed\n"
+        "under the SIL Open Font License, Version 1.1.\n\n"
+        + "\n".join(f"  {f['name']}: {f['url']}" for f in BUNDLED_FONTS) + "\n\n"
+        "Full license text:\n\n"
+        f"{ofl_text}\n"
+    )
 
 def build_package_section(pkg: dict) -> str:
     name = pkg["Name"]
@@ -182,6 +203,7 @@ def main():
     sections.append(build_ffmpeg_section())
     if qt_packages:
         sections.append(build_qt_section(qt_packages))
+    sections.append(build_fonts_section())
     for pkg in sorted(other_packages, key=lambda p: p["Name"].lower()):
         sections.append(build_package_section(pkg))
 

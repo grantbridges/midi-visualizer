@@ -1,9 +1,11 @@
-from PySide6.QtGui import QColor, QPalette, Qt
-from PySide6.QtWidgets import (
-    QApplication,
-    QPushButton
-)
+import sys
+from PySide6.QtGui import QColor, QFontDatabase, QPalette, Qt
+from PySide6.QtWidgets import QApplication
 from common import RGB
+from utility.file_util import FileUtil
+
+import logging
+logger = logging.getLogger("QUtil")
 
 class QUtil:
     def __new__(cls):
@@ -46,7 +48,21 @@ class QUtil:
         palette.setColor(QPalette.Disabled, QPalette.HighlightedText, QColor(130, 130, 130))
 
         app.setPalette(palette)
-    
+
+    @staticmethod
+    def load_fonts():
+        loaded_fonts: list[str] = []
+        for font_path in FileUtil.get_fonts_dir().glob("*.ttf"):
+            font_id = QFontDatabase.addApplicationFont(str(font_path))
+            if font_id == -1:
+                logger.warning(f"Failed to load font {font_path}")
+                continue
+
+            family_list = QFontDatabase.applicationFontFamilies(font_id)
+            if family_list:
+                loaded_fonts.append(family_list[0])
+
+        logger.info(f"Load Fonts | Loaded {len(loaded_fonts)} font(s): {", ".join(loaded_fonts)}")
 
     # -- Color helpers --
     @staticmethod
@@ -56,16 +72,11 @@ class QUtil:
     @staticmethod
     def qcolor_to_rgb(color: QColor) -> RGB:
         return (color.red(), color.green(), color.blue())
-    
-    # -- Widget helpers --
+
     @staticmethod
-    def color_button(button: QPushButton, bg_color: RGB):
-        r, g, b = bg_color
-        button.setStyleSheet(f"""
-            QPushButton {{
-                background-color: rgb({r}, {g}, {b});
-                color: {'black' if (r*0.299 + g*0.587 + b*0.114) > 160 else 'white'};
-            }}
-            """
-        )
+    def scale_font_size(base_pt: float) -> float:
+        if sys.platform == "darwin":
+            return base_pt
+
+        return base_pt * (72 / 96) # ~0.75x on Windows
 

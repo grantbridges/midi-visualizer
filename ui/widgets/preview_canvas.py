@@ -191,13 +191,13 @@ class PreviewCanvas(QWidget):
                     text_padding = 5
                     text_top = pitch_max_y + pen_width
 
-                    font = QFont(Const.PRIMARY_FONT, track_group_font_size, 200)
+                    font = QFont(Const.PRIMARY_FONT, QUtil.scale_font_size(track_group_font_size), 200)
                     painter.setFont(font)
                     painter.drawText(QRect(rect.left() + text_padding, text_top, 200, track_group_font_size), f'{track_group.name}')
                     text_top += track_group_font_size + 3
 
                     for track in self.vis_config.get_tracks_by_group_id(track_group.group_id):
-                        font = QFont(Const.PRIMARY_FONT, track_font_size, 100)
+                        font = QFont(Const.PRIMARY_FONT, QUtil.scale_font_size(track_font_size), 100)
                         painter.setFont(font)
                         painter.drawText(QRect(rect.left() + text_padding, text_top, 200, track_font_size), f'{track.name}')
                         text_top += track_font_size + 3
@@ -208,7 +208,8 @@ class PreviewCanvas(QWidget):
             # draw text time display
             time_display_font_size = 10
             color = QUtil.rgb_to_qcolor(Color.WHITE, 200)
-            font = QFont(Const.PRIMARY_FONT, time_display_font_size)
+
+            font = QFont(Const.PRIMARY_FONT, QUtil.scale_font_size(time_display_font_size))
             painter.setPen(color)
             painter.setFont(font)
             sign = "-" if self.current_time < 0 else ""
@@ -224,7 +225,7 @@ class PreviewCanvas(QWidget):
         text_padding = 3
         error_display_font_size = 8
         color = QUtil.rgb_to_qcolor(Color.PREVIEW_ERROR)
-        font = QFont(Const.PRIMARY_FONT, error_display_font_size)
+        font = QFont(Const.PRIMARY_FONT, QUtil.scale_font_size(error_display_font_size))
         painter.setPen(color)
         painter.setFont(font)
         painter.drawText(QRect(

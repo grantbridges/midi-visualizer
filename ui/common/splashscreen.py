@@ -2,7 +2,6 @@ from PySide6.QtWidgets import QApplication, QSplashScreen
 from PySide6.QtWidgets import QSplashScreen
 from PySide6.QtGui import QFont, QPainter, QPixmap
 from PySide6.QtCore import QSize, Qt
-
 from common import Color, Const
 import build_info
 from utility import QUtil, FileUtil
@@ -34,7 +33,7 @@ class SplashScreen(QSplashScreen):
         painter.drawPixmap(0, 0, img_width, img_height, img)
 
         painter.setPen(QUtil.rgb_to_qcolor(Color.SPLASH_SCREEN_TEXT))
-        painter.setFont(QFont("Arial", 12))
+        painter.setFont(QFont(Const.PRIMARY_FONT, QUtil.scale_font_size(12)))
 
         rect = pixmap.rect()
         rect.setSize(QSize(img_width, img_height))

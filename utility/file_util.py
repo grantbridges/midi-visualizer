@@ -30,6 +30,10 @@ class FileUtil:
     @staticmethod
     def get_assets_dir() -> Path:
         return FileUtil.get_root_app_dir() / "assets" 
+
+    @staticmethod
+    def get_fonts_dir() -> Path:
+        return FileUtil.get_assets_dir() / "fonts"
     
     @staticmethod
     def get_logs_dir() -> Path:

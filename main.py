@@ -17,11 +17,13 @@ SPLASH_SCREEN_SHOW_TIME_SEC = 2
 # create main window and start
 def main():
     app = QApplication(sys.argv)
-    QUtil.apply_dark_theme(app)
     app.setApplicationName(Const.APP_NAME)
 
     LogUtil.configure_logging()
     logger.info("%s started - version %s, built %s", Const.APP_NAME, build_info.VERSION, build_info.BUILD_DATE)
+
+    QUtil.apply_dark_theme(app)
+    QUtil.load_fonts()
 
     # show splash screen
     splash = SplashScreen.create()

@@ -16,4 +16,4 @@ class Const:
     SCREEN_MIN_HEIGHT = 600
 
     # visual
-    PRIMARY_FONT = 'Arial'
+    PRIMARY_FONT = 'Roboto'
