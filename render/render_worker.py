@@ -1,4 +1,5 @@
 import math
+import sys
 import threading
 
 from PySide6.QtCore import QObject, QRect, Qt, Signal, Slot
@@ -466,12 +467,16 @@ class RenderWorker(QObject):
 
         cmd.append(str(output_file))
 
-        return subprocess.Popen(
-            cmd,
+        kwargs = dict(
             stdin=subprocess.PIPE,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE,
         )
+
+        if sys.platform == "win32":
+            kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+
+        return subprocess.Popen(cmd, **kwargs)
     
     # -- helpers --
     @staticmethod

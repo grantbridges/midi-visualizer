@@ -944,8 +944,6 @@ class MainWindow(QMainWindow):
                 subprocess.run(["open", output_filepath])
             elif sys.platform == "win32":
                 os.startfile(output_filepath)
-            else:  # linux
-                subprocess.run(["xdg-open", output_filepath])
         else:
             QMessageBox.information(self, "Success", f"Exported video to {output_filepath}")
                 

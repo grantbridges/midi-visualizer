@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 import math
 from pathlib import Path
 import subprocess
+import sys
 import numpy as np
 from utility import FileUtil
 
@@ -55,12 +56,16 @@ class Waveform():
             "-",
         ]
 
-        result = subprocess.run(
-            cmd,
+        kwargs = dict(
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
             check=True,
         )
+
+        if sys.platform == "win32":
+            kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+
+        result = subprocess.run(cmd, **kwargs)
 
         raw_samples = np.frombuffer(result.stdout, dtype=np.float32)
 
