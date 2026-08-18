@@ -13,7 +13,7 @@ class AboutDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle(f"About {Const.APP_NAME}")
         self.setModal(True)
-        self.setFixedSize(360, 100)
+        self.setFixedSize(380, 120)
 
         icon_label = QLabel()
         icon_path = FileUtil.get_assets_dir() / "illustri-icon.png"
@@ -35,6 +35,7 @@ class AboutDialog(QDialog):
 
         content_layout = QHBoxLayout()
         content_layout.addWidget(icon_label)
+        content_layout.addSpacing(10)
         content_layout.addLayout(text_layout, 1)
 
         button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
