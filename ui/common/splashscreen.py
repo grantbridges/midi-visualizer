@@ -24,13 +24,19 @@ class SplashScreen(QSplashScreen):
         img_height = 405
 
         # scale pixmap for screen
+        source_dpr = img.width() / img_width
+        img.setDevicePixelRatio(source_dpr)
+
         pixmap = QPixmap(int(img_width * dpr), int(img_height * dpr))
         pixmap.setDevicePixelRatio(dpr)
         pixmap.fill(Qt.GlobalColor.transparent)
 
         painter = QPainter(pixmap)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setRenderHint(QPainter.RenderHint.TextAntialiasing)
-        painter.drawPixmap(0, 0, img_width, img_height, img)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+
+        painter.drawPixmap(0, 0, img)
 
         painter.setPen(QUtil.rgb_to_qcolor(Color.SPLASH_SCREEN_TEXT))
         painter.setFont(QFont(Const.PRIMARY_FONT, QUtil.scale_font_size(12)))
