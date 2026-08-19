@@ -4,11 +4,11 @@ Bring your compositions to the next level with **Illustri MIDI Studio**, a free 
 
 **Open Beta Release** - _bugs and incomplete features may be present. Please report issues encountered so they can be addressed._
 
-<img width="640" height="360" alt="Puppet Master Trim" src="https://github.com/user-attachments/assets/fad47508-c1e8-43dc-82d8-5dc8567c8b03" />
+<img width="640" height="360" alt="Puppet Master Trim" src="https://github.com/user-attachments/assets/271f2ef1-59c9-4034-b499-703dca03bf5a" />
 
 ### Installing Illustri
 
-Download the correct installer for your operating system:
+Download the correct installer for your operating system below:
 
 - MAC (Silicon): `illustri-macos-arm64.dmg`
 - MAC (Intel): `illustri-macos-x86_64.dmg`
@@ -47,7 +47,7 @@ Set effects for note playback, such as sparks, fade in/out, and highlight/glow. 
 Set background mode for track - color, image, or video. For video, a downscaled version is loaded in for preview, but full resolution will be rendered on export.
 
 **Audio**
-Optionally add an audio file to sync with midi playback and a visual waveform, if desired.
+Optionally add an audio file to sync with midi playback and a visual waveform.
 
 ### Export
 
