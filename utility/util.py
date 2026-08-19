@@ -64,3 +64,9 @@ class Util:
         seconds = total_seconds % 60
 
         return f"{minutes:02}:{seconds:02}"
+
+    def format_elapsed_time(elapsed_sec: float) -> str:
+        # Format as MM:SS.milliseconds
+        minutes, seconds = divmod(elapsed_sec, 60)
+        milliseconds = int((seconds % 1) * 1000)
+        return f"{int(minutes):02d}:{int(seconds):02d}.{milliseconds:03d}"

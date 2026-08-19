@@ -58,13 +58,15 @@ def generate_icns(master: Image.Image, output_path: Path) -> None:
     print(f"Created {output_path}")
 
 def main() -> None:
-    master_file = Path("assets/illustri-icon.png")
+    mac_file = Path("assets/illustri-icon.png")
+    win_file = Path("assets/illustri-win-icon.png")
     output_dir = Path("assets/icons")
 
-    master = Image.open(master_file).convert("RGBA")
+    mac = Image.open(mac_file).convert("RGBA")
+    win = Image.open(win_file).convert("RGBA")
 
-    generate_ico(master, output_dir / f"illustri.ico")
-    generate_icns(master, output_dir / f"illustri.icns")
+    generate_icns(mac, output_dir / f"illustri.icns")
+    generate_ico(win, output_dir / f"illustri.ico")
 
 if __name__ == "__main__":
     main()

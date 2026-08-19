@@ -1,7 +1,7 @@
 import math
 import sys
 import threading
-
+import time
 from PySide6.QtCore import QObject, QRect, Qt, Signal, Slot
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from models import VisConfig, RenderFormat, BackgroundMode
@@ -9,7 +9,7 @@ from pathlib import Path
 from PySide6.QtGui import QImage, QPainter
 from render.midi_render_util import MidiRenderUtil
 from dataclasses import dataclass
-from utility import FileUtil
+from utility import FileUtil, Util
 import uuid
 import tempfile
 import subprocess
@@ -58,6 +58,8 @@ class RenderWorker(QObject):
     def run(self):
         try:
             success = False
+
+            processing_start = time.perf_counter() 
 
             logger.info(
                 f"Beginning output render of {self.vis_config.track_name} "
@@ -206,7 +208,9 @@ class RenderWorker(QObject):
             # move temp file to output location and rename
             Path(temp_output_file).replace(output_file)
 
-            logger.info(f"Finished output render to \"{self.vis_config.get_exported_filepath()}")
+            elapsed = time.perf_counter() - processing_start
+
+            logger.info(f"Finished output render to \"{self.vis_config.get_exported_filepath()} (elapsed: {Util.format_elapsed_time(elapsed)})")
 
             success = True
             self.finished.emit()

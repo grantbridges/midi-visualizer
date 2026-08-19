@@ -21,15 +21,9 @@ class AboutDialog(QDialog):
 
         # use a label to draw the illustri icon
         icon_label = QLabel()
-        icon_path = FileUtil.get_assets_dir() / "illustri-icon.png"
+        icon_path = FileUtil.get_assets_dir() / "illustri-icon-40px.png"
         pixmap = QPixmap(str(icon_path))
         if not pixmap.isNull():
-            pixmap = pixmap.scaled(
-                40, 
-                40, 
-                Qt.AspectRatioMode.KeepAspectRatio, 
-                Qt.TransformationMode.SmoothTransformation
-            )
             icon_label.setPixmap(pixmap)
         icon_label.setAlignment(Qt.AlignmentFlag.AlignTop)
 
