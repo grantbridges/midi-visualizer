@@ -48,7 +48,8 @@ class MainWindow(QMainWindow):
         logger.info(f"Starting {Const.APP_NAME} main window")
 
         self.setMinimumSize(Const.SCREEN_MIN_WIDTH, Const.SCREEN_MIN_HEIGHT)
-        self.setWindowIcon(QIcon(str(FileUtil.get_assets_dir() / "icons" / "illustri.ico")))
+        if sys.platform == "win32":
+            self.setWindowIcon(QIcon(str(FileUtil.get_assets_dir() / "icons" / "illustri.ico")))
 
         self.setAcceptDrops(True)
         self.drop_overlay = DropOverlay(self)

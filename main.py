@@ -19,7 +19,9 @@ SPLASH_SCREEN_SHOW_TIME_SEC = 2
 def main():
     app = QApplication(sys.argv)
     app.setApplicationName(Const.APP_NAME)
-    app.setWindowIcon(QIcon(str(FileUtil.get_assets_dir() / "icons" / "illustri.ico")))
+
+    if sys.platform == "win32":
+        app.setWindowIcon(QIcon(str(FileUtil.get_assets_dir() / "icons" / "illustri.ico")))
 
     LogUtil.configure_logging()
     logger.info("%s started - version %s, built %s", Const.APP_NAME, build_info.VERSION, build_info.BUILD_DATE)
