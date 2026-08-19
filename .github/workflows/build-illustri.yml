@@ -20,7 +20,7 @@ on:
       patch_version:
         required: true
         type: string
-        default: "0-beta"
+        default: "0-beta2"
       build_windows:
         description: "Build Windows installer"
         type: boolean
