@@ -2,10 +2,11 @@ import time
 import sys
 import logging
 from PySide6.QtWidgets import QApplication
+from PySide6.QtGui import QIcon
 from common import Const
 from ui import MainWindow
 from ui.common import SplashScreen
-from utility import LogUtil, QUtil
+from utility import LogUtil, QUtil, FileUtil
 from models import user_settings
 from media import audio_provider, video_provider, image_provider
 import build_info
@@ -18,6 +19,7 @@ SPLASH_SCREEN_SHOW_TIME_SEC = 2
 def main():
     app = QApplication(sys.argv)
     app.setApplicationName(Const.APP_NAME)
+    app.setWindowIcon(QIcon(str(FileUtil.get_assets_dir() / "icons" / "illustri.ico")))
 
     LogUtil.configure_logging()
     logger.info("%s started - version %s, built %s", Const.APP_NAME, build_info.VERSION, build_info.BUILD_DATE)

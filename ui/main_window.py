@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
     QDialog,
     QFileDialog
 )
-from PySide6.QtGui import QAction, QColor, QKeySequence, QLinearGradient, QPalette, QShortcut
+from PySide6.QtGui import QAction, QIcon, QKeySequence, QLinearGradient, QPalette, QShortcut
 from common import Const, Color
 from models import VisConfig, Track, user_settings
 from render import RenderWorker
@@ -32,7 +32,7 @@ from ui.dialogs import (
     ProgressDialog,
     AboutDialog
 )
-from utility import LogUtil
+from utility import LogUtil, FileUtil
 
 import logging
 
@@ -48,6 +48,7 @@ class MainWindow(QMainWindow):
         logger.info(f"Starting {Const.APP_NAME} main window")
 
         self.setMinimumSize(Const.SCREEN_MIN_WIDTH, Const.SCREEN_MIN_HEIGHT)
+        self.setWindowIcon(QIcon(str(FileUtil.get_assets_dir() / "icons" / "illustri.ico")))
 
         self.setAcceptDrops(True)
         self.drop_overlay = DropOverlay(self)
