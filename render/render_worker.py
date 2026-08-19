@@ -1,3 +1,4 @@
+import json
 import math
 import sys
 import threading
@@ -14,6 +15,7 @@ import uuid
 import tempfile
 import subprocess
 import os
+import mutagen
 
 import logging
 logger = logging.getLogger("Render")
@@ -79,6 +81,7 @@ class RenderWorker(QObject):
             ffmpeg = RenderWorker.open_ffmpeg_rawvideo_process(
                 vis_config=self.vis_config,
                 midi_delay_ms=midi_delay_ms,
+                duration_sec=(end_time - start_time),
                 output_file=temp_output_file
             )
             logger.debug(f"Starting ffmpeg process (pid: {ffmpeg.pid})")
@@ -228,6 +231,11 @@ class RenderWorker(QObject):
         self._cancel_event.set()
 
     @staticmethod
+    def get_audio_file_duration(filepath: str) -> float:
+        audio = mutagen.File(filepath)
+        return audio.info.length  # seconds, float
+
+    @staticmethod
     def render_frame_job(job: RenderFrameJobInput, cancel_event) -> RenderFrameJobOutput | None:
         if cancel_event.is_set():
             return
@@ -281,7 +289,7 @@ class RenderWorker(QObject):
         )
     
     @staticmethod
-    def open_ffmpeg_rawvideo_process(vis_config: VisConfig, midi_delay_ms: int, output_file: Path) -> subprocess.Popen:
+    def open_ffmpeg_rawvideo_process(vis_config: VisConfig, midi_delay_ms: int, duration_sec: float, output_file: Path) -> subprocess.Popen:
         width, height = vis_config.export_resolution.value
 
         loop_video = vis_config.bg_video_loop
@@ -289,6 +297,12 @@ class RenderWorker(QObject):
         audio_delay_ms = midi_delay_ms + vis_config.audio_time_offset * 1000
 
         has_audio = vis_config.has_audio()
+
+        audio_time_sec = 0.0
+        audio_end_time_sec = 0.0
+        if has_audio:
+            audio_time_sec = RenderWorker.get_audio_file_duration(vis_config.audio_filepath)
+            audio_end_time_sec = audio_time_sec + audio_delay_ms / 1000
 
         has_bg_image = (
             not RENDER_BG_IMAGE_EACH_FRAME
@@ -433,7 +447,7 @@ class RenderWorker(QObject):
                 cmd += ["-map", "[a]"]
 
         # allows audio to cut off if it runs past end of video
-        if has_audio and audio_delay_ms >= 0:
+        if has_audio and audio_end_time_sec > duration_sec:
             cmd += ["-shortest"]
 
         match vis_config.export_format:
