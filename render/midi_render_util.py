@@ -20,6 +20,8 @@ class RenderTrack:
     note_sparks_enabled: bool = False
     note_bounce_enabled: bool = False
     note_velocity_fx_enabled: bool = False
+    pitch_min: int = 1
+    pitch_max: int = 127
     velocity_min: int = 1
     velocity_max: int = 127
     notes: List[Note] = field(default_factory=list)
@@ -153,6 +155,8 @@ class MidiRenderUtil:
                     note_sparks_enabled=vis_config.note_sparks_enabled and tg.note_sparks_enabled,
                     note_bounce_enabled=vis_config.note_bounce_enabled and tg.note_bounce_enabled,
                     note_velocity_fx_enabled=tg.note_velocity_fx_enabled,
+                    pitch_min=t.get_min_pitch(),
+                    pitch_max=t.get_max_pitch(),
                     velocity_min=t.velocity_min,
                     velocity_max=t.velocity_max,
                     notes = t.notes
@@ -172,6 +176,10 @@ class MidiRenderUtil:
             pixels_per_sec = baseline_width / track.bar_sec_across_screen
 
             for note in track.notes:
+                if note.pitch < track.pitch_min or note.pitch > track.pitch_max:
+                    # note is outside visible pitch area - skip rendering
+                    continue
+
                 # x and width calc
                 x_left = int(playhead_x + (note.start - current_time) * pixels_per_sec)
                 w = int(note.duration * pixels_per_sec)

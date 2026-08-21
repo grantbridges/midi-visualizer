@@ -29,8 +29,8 @@ class Track:
     manual_pitch_max: int = 1
 
     # computed props (not saved)
-    pitch_min: int = 0
-    pitch_max: int = 1
+    calculated_pitch_min: int = 0
+    calculated_pitch_max: int = 1
     time_min: float = 0.0
     time_max: float = 1.0
     velocity_min: int = 1
@@ -116,8 +116,8 @@ class Track:
             return
         
         note_pitches = [note.pitch for note in self.notes]
-        self.pitch_min = min(note_pitches)
-        self.pitch_max = max(note_pitches)
+        self.calculated_pitch_min = min(note_pitches)
+        self.calculated_pitch_max = max(note_pitches)
         
         note_starts = [note.start for note in self.notes]
         self.time_min = min(note_starts)
@@ -131,5 +131,12 @@ class Track:
 
         if not self.override_pitch_min_max:
             # initialize overrides to calculated values
-            self.manual_pitch_min = self.pitch_min
-            self.manual_pitch_max = self.pitch_max
+            self.manual_pitch_min = self.calculated_pitch_min
+            self.manual_pitch_max = self.calculated_pitch_max
+
+    # Getters
+    def get_min_pitch(self) -> int:
+        return self.manual_pitch_min if self.override_pitch_min_max else self.calculated_pitch_min
+    
+    def get_max_pitch(self) -> int:
+        return self.manual_pitch_max if self.override_pitch_min_max else self.calculated_pitch_max

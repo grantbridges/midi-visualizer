@@ -156,7 +156,7 @@ class TracksTab(QWidget):
         col += 1
 
         # pitch min
-        pitch_min = track.manual_pitch_min if track.override_pitch_min_max else track.pitch_min
+        pitch_min = track.get_min_pitch()
         pitch_min_input = TableSpinbox(value=pitch_min, suffix=self._pitch_suffix(pitch_min))
         pitch_min_input.setRange(1, track.manual_pitch_max)
         pitch_min_input.setEnabled(track.override_pitch_min_max)
@@ -165,7 +165,7 @@ class TracksTab(QWidget):
         col += 1
 
         # pitch max
-        pitch_max = track.manual_pitch_max if track.override_pitch_min_max else track.pitch_max
+        pitch_max = track.get_max_pitch()
         pitch_max_input = TableSpinbox(value=pitch_max, suffix=self._pitch_suffix(pitch_max))
         pitch_max_input.setRange(track.manual_pitch_min, 127)
         pitch_max_input.setEnabled(track.override_pitch_min_max)
