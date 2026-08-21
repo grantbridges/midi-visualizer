@@ -98,8 +98,10 @@ class VisConfig:
     note_fadeout_start_ratio: float = 1.0
     note_fadeout_end_ratio: float = 0.5 
 
-    # -- Note Enhance Color --
+    # -- Note Style --
     note_enhance_color: bool = True
+    note_round_edges: bool = False
+    note_round_ratio: float = 0.0 # 0 - 1 (1 is maximally rounded)
 
     # -- Note Glow --
     note_glow_enabled: bool = True
@@ -259,6 +261,8 @@ class VisConfig:
             "note_sparks_time_to_fade_sec": self.note_sparks_time_to_fade_sec,
 
             "note_enhance_color": self.note_enhance_color,
+            "note_round_edges": self.note_round_edges,
+            "note_round_ratio": self.note_round_ratio,
 
             "note_glow_enabled": self.note_glow_enabled,
             "note_glow_played_region": self.note_glow_played_region,
@@ -376,6 +380,8 @@ class VisConfig:
 
             if schema_version >= 2:
                 config.note_enhance_color = data["note_enhance_color"]
+                config.note_round_edges = data["note_round_edges"]
+                config.note_round_ratio = data["note_round_ratio"]
 
             config.note_glow_enabled = data["note_glow_enabled"]
             config.note_glow_played_region = data["note_glow_played_region"]

@@ -31,6 +31,10 @@ class NotesTab(QWidget):
         # create controls
         self.enhance_color_checkbox = QCheckBox()
         self.enhance_color_checkbox.toggled.connect(self._on_changes)
+        self.round_edges_checkbox = QCheckBox()
+        self.round_edges_checkbox.toggled.connect(self._on_changes)
+        self.round_edges_input = SliderDoubleSpinbox(decimals=2, minimum=0.00, maximum=1.0, singleStep=0.01)
+        self.round_edges_input.valueChanged.connect(self._on_changes)
 
         self.fadein_checkbox = QCheckBox()
         self.fadein_checkbox.toggled.connect(self._on_changes)
@@ -119,8 +123,10 @@ class NotesTab(QWidget):
         # --- Left Column ---
         column = v_left_layout
 
-        LayoutUtil.section(column, "Color")
+        LayoutUtil.section(column, "Style")
         LayoutUtil.checkbox(column, "Enhance Color", self.enhance_color_checkbox)
+        LayoutUtil.checkbox(column, "Round Edges", self.round_edges_checkbox)
+        LayoutUtil.spinbox(column, "Round Edges Amount", self.round_edges_input)
 
         LayoutUtil.section(column, "Fade")
         LayoutUtil.checkbox(column, "Fade In Enabled", self.fadein_checkbox)
@@ -181,6 +187,9 @@ class NotesTab(QWidget):
         self.block_changes_callback = True # prevent "change" callbacks from triggering while we set values
 
         self.enhance_color_checkbox.setChecked(self.vis_config.note_enhance_color)
+        self.round_edges_checkbox.setChecked(self.vis_config.note_round_edges)
+        self.round_edges_input.setValue(self.vis_config.note_round_ratio)
+        self.round_edges_input.setEnabled(self.vis_config.note_round_edges)
 
         self.fadein_checkbox.setChecked(self.vis_config.note_fadein_enabled)
         self.fadein_start_input.setValue(self.vis_config.note_fadein_start_ratio)
@@ -255,6 +264,8 @@ class NotesTab(QWidget):
         # pull UI values out of controls and set on model
 
         self.vis_config.note_enhance_color = self.enhance_color_checkbox.isChecked()
+        self.vis_config.note_round_edges = self.round_edges_checkbox.isChecked()
+        self.vis_config.note_round_ratio = self.round_edges_input.value()
         
         self.vis_config.note_fadein_enabled = self.fadein_checkbox.isChecked()
         self.vis_config.note_fadein_start_ratio = self.fadein_start_input.value()
