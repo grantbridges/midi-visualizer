@@ -128,3 +128,8 @@ class Track:
         self.velocity_min = min(note_velocities)
         self.velocity_max = max(note_velocities)
         self.velocity_avg = sum(note_velocities) / len(note_velocities)
+
+        if not self.override_pitch_min_max:
+            # initialize overrides to calculated values
+            self.manual_pitch_min = self.pitch_min
+            self.manual_pitch_max = self.pitch_max

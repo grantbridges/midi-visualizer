@@ -6,9 +6,9 @@ class ScaledDoubleSpinbox(QDoubleSpinBox):
     values to display and pulling converted internal value back out.
     Note: It's okay to have internal_max < internal_min if you want an inverse 
     relationship with the display values.
-    '''
 
-    # TODO: ValueChanged emit needs to be intercepted and return internal value
+    Note: Signal emitted value returns display value, not internal.
+    '''
     def __init__(
         self, 
         display_min: float,
