@@ -65,8 +65,15 @@ class Util:
 
         return f"{minutes:02}:{seconds:02}"
 
+    @staticmethod
     def format_elapsed_time(elapsed_sec: float) -> str:
         # Format as MM:SS.milliseconds
         minutes, seconds = divmod(elapsed_sec, 60)
         milliseconds = int((seconds % 1) * 1000)
         return f"{int(minutes):02d}:{int(seconds):02d}.{milliseconds:03d}"
+
+    @staticmethod
+    def truncate(text: str, max_length: int = 100) -> str:
+        if len(text) > max_length:
+            return text[:max_length - 3] + "..."
+        return text

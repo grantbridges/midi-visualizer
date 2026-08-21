@@ -219,8 +219,14 @@ class TracksTab(QWidget):
         group = group_combo.currentData()
         group_id = UUID(group) if group is not None else None
 
-        track = self.vis_config.tracks[row]
-        track.group_id = group_id
+        # get all currently selected rows (including row this group is on)
+        rows = self._get_selected_rows()
+        if row not in rows:
+            rows.append(row)
+
+        for r in rows:
+            track = self.vis_config.tracks[r]
+            track.group_id = group_id
 
         self.refresh_ui()
         self.on_changes_callback()
@@ -298,12 +304,9 @@ class TracksTab(QWidget):
 
         group_id: UUID | None = None
 
-        if dialog.get_create_new_group():
-            track_group = dialog.get_track_group()
-            self.vis_config.add_track_group(track_group)
-            group_id = track_group.group_id
-        else:
-            group_id = dialog.get_selected_group_id()
+        track_group = dialog.get_track_group()
+        self.vis_config.add_track_group(track_group)
+        group_id = track_group.group_id
 
         for track in selected_tracks:
             track.group_id = group_id
