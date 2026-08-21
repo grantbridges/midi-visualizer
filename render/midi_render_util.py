@@ -226,7 +226,7 @@ class MidiRenderUtil:
                     MidiRenderUtil._draw_note_glow(painter, vis_config, playhead_x, x_left, y_top, w, h, color, alpha, bar_height_px)
 
                 # -- note bar --
-                MidiRenderUtil._draw_note(painter, x_left, y_top, w, h, color, alpha)
+                MidiRenderUtil._draw_note(painter, x_left, y_top, w, h, color, alpha, vis_config.note_enhance_color)
 
                 # -- highlight --
                 if vis_config.note_highlight_enabled and x_left <= playhead_x:
@@ -293,15 +293,20 @@ class MidiRenderUtil:
         painter.drawRect(glow_rect)
 
     @staticmethod
-    def _draw_note(painter: QPainter, x: int, y: int, w: int, h: int, color: RGB, alpha: int):
+    def _draw_note(painter: QPainter, x: int, y: int, w: int, h: int, color: RGB, alpha: int, use_gradient: bool):
         qcolor = QUtil.rgb_to_qcolor(color, alpha)
-        color_light = Util.lighten_color(color, 0.4)
-        qcolor_light = QUtil.rgb_to_qcolor(color_light, alpha)
-        gradient = QLinearGradient(x, y, x, y + h)
-        gradient.setColorAt(0.0, qcolor_light)
-        gradient.setColorAt(0.5, qcolor)       
+
         painter.setPen(Qt.NoPen)
-        painter.setBrush(QBrush(gradient))
+        if use_gradient:
+            color_light = Util.lighten_color(color, 0.4)
+            qcolor_light = QUtil.rgb_to_qcolor(color_light, alpha)
+            gradient = QLinearGradient(x, y, x, y + h)
+            gradient.setColorAt(0.0, qcolor_light)
+            gradient.setColorAt(0.5, qcolor)       
+            painter.setBrush(QBrush(gradient))
+        else:
+            painter.setBrush(qcolor)
+        
         painter.drawRect(x, y, w, h)
 
     @staticmethod

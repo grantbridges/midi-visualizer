@@ -23,8 +23,9 @@ logger = logging.getLogger("VisConfig")
 '''
 History
   1 - Initial version
+  2 - Added note enhance color; added track manual pitch min/max
 '''
-VIS_CONFIG_SCHEMA_VERSION = 1
+VIS_CONFIG_SCHEMA_VERSION = 1 # TODO
 
 @dataclass
 class VisConfig:
@@ -96,6 +97,9 @@ class VisConfig:
     note_fadeout_enabled: bool = True
     note_fadeout_start_ratio: float = 1.0
     note_fadeout_end_ratio: float = 0.5 
+
+    # -- Note Enhance Color --
+    note_enhance_color: bool = True
 
     # -- Note Glow --
     note_glow_enabled: bool = True
@@ -254,6 +258,8 @@ class VisConfig:
             "note_sparks_max_angle_deg": self.note_sparks_max_angle_deg,
             "note_sparks_time_to_fade_sec": self.note_sparks_time_to_fade_sec,
 
+            "note_enhance_color": self.note_enhance_color,
+
             "note_glow_enabled": self.note_glow_enabled,
             "note_glow_played_region": self.note_glow_played_region,
             "note_glow_color": list(self.note_glow_color),
@@ -367,6 +373,9 @@ class VisConfig:
             config.note_sparks_count = data["note_sparks_count"]
             config.note_sparks_max_angle_deg = data["note_sparks_max_angle_deg"]
             config.note_sparks_time_to_fade_sec = data["note_sparks_time_to_fade_sec"]
+
+            if schema_version >= 2:
+                config.note_enhance_color = data["note_enhance_color"]
 
             config.note_glow_enabled = data["note_glow_enabled"]
             config.note_glow_played_region = data["note_glow_played_region"]

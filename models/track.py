@@ -23,6 +23,11 @@ class Track:
     # group reference
     group_id: UUID | None = None
 
+    # overrides
+    override_pitch_min_max: bool = False
+    manual_pitch_min: int = 0
+    manual_pitch_max: int = 1
+
     # computed props (not saved)
     pitch_min: int = 0
     pitch_max: int = 1
@@ -54,6 +59,9 @@ class Track:
         return {
             "name": self.name,
             "group_id": str(self.group_id) if self.group_id else None,
+            "override_pitch_min_max": self.override_pitch_min_max,
+            "manual_pitch_min": self.manual_pitch_min,
+            "manual_pitch_max": self.manual_pitch_max,
             "notes": {
                 # break down note data into comma separated strings for tighter storage
                 "pitches": ",".join(str(note.pitch) for note in self.notes),
@@ -70,6 +78,11 @@ class Track:
         track.name = data["name"]
         group_id = data["group_id"]
         track.group_id = UUID(group_id) if group_id else None
+
+        if schema_version >= 2:
+            track.override_pitch_min_max = data["override_pitch_min_max"]
+            track.manual_pitch_min = data["manual_pitch_min"]
+            track.manual_pitch_max = data["manual_pitch_max"]
 
         # deserialize comma separated string data into Note objects
         notes_data = data["notes"]
