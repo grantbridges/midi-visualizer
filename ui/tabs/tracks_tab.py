@@ -87,15 +87,7 @@ class TracksTab(QWidget):
         # resume callbacks
         self.table.blockSignals(False)
 
-    def _clear_row(self, row: int):
-        for col in range(self.table.columnCount()):
-            # remove widgets/items, if either present
-            self.table.removeCellWidget(row, col)
-            self.table.setItem(row, col, None)
-
     def _refresh_row(self, row: int):
-        #self._clear_row(row)
-
         track = self.vis_config.tracks[row]
         group = self.vis_config.get_track_group_by_id(track.group_id)
 
@@ -158,6 +150,7 @@ class TracksTab(QWidget):
         # pitch min
         pitch_min = track.get_min_pitch()
         pitch_min_input = TableSpinbox(value=pitch_min, suffix=self._pitch_suffix(pitch_min))
+        pitch_min_input.setFixedWidth(80)
         pitch_min_input.setRange(1, track.manual_pitch_max)
         pitch_min_input.setEnabled(track.override_pitch_min_max)
         pitch_min_input.valueChanged.connect(lambda val, row=row: self._on_pitch_min_changed(row, val))
@@ -167,6 +160,7 @@ class TracksTab(QWidget):
         # pitch max
         pitch_max = track.get_max_pitch()
         pitch_max_input = TableSpinbox(value=pitch_max, suffix=self._pitch_suffix(pitch_max))
+        pitch_max_input.setFixedWidth(80)
         pitch_max_input.setRange(track.manual_pitch_min, 127)
         pitch_max_input.setEnabled(track.override_pitch_min_max)
         pitch_max_input.valueChanged.connect(lambda val, row=row: self._on_pitch_max_changed(row, val))
