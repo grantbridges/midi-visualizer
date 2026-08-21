@@ -35,15 +35,13 @@ echo using 7z executable at $p7zip_exec
 mkdir -p bin
 
 download () {
-	# todo: use https://gist.github.com/derhuerst/745cf09fe5f3ea2569948dd215bbfe1a ?
 	curl -f -L -# --compressed -A 'https://github.com/eugeneware/ffmpeg-static binaries download script' -o "$2" "$1"
 }
 
-set -x # todo: remove
+set -x
 
 echo 'windows x64'
 echo '  downloading from github.com/GyanD/codexffmpeg'
-# todo: 404
 download 'https://github.com/GyanD/codexffmpeg/releases/download/8.1.2/ffmpeg-8.1.2-essentials_build.7z' win32-x64.7z
 echo '  extracting'
 tmpdir=$(mktemp -d)
