@@ -25,7 +25,7 @@ History
   1 - Initial version
   2 - Added note enhance color; added track manual pitch min/max
 '''
-VIS_CONFIG_SCHEMA_VERSION = 1 # TODO
+VIS_CONFIG_SCHEMA_VERSION = 2
 
 @dataclass
 class VisConfig:

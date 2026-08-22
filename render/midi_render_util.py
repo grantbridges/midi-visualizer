@@ -226,20 +226,20 @@ class MidiRenderUtil:
                 # -- note sparks --
                 if vis_config.note_sparks_enabled and track.note_sparks_enabled:
                     MidiRenderUtil._draw_note_sparks(
-                        painter, vis_config, playhead_x, note.pitch, note.start, y_center, bar_height_px, pixels_per_sec,
+                        painter, vis_config, playhead_x, note.pitch, note.start, y_center, h, pixels_per_sec,
                         current_time, color, alpha
                     )
 
                 # -- under glow --
                 if vis_config.note_glow_enabled and x_left <= playhead_x:
-                    MidiRenderUtil._draw_note_glow(painter, vis_config, playhead_x, x_left, y_top, w, h, color, alpha, bar_height_px)
+                    MidiRenderUtil._draw_note_glow(painter, vis_config, playhead_x, x_left, y_top, w, h, color, alpha, vis_config.note_round_edges, vis_config.note_round_ratio)
 
                 # -- note bar --
                 MidiRenderUtil._draw_note(painter, x_left, y_top, w, h, color, alpha, vis_config.note_enhance_color, vis_config.note_round_edges, radius)
 
                 # -- highlight --
                 if vis_config.note_highlight_enabled and x_left <= playhead_x:
-                    MidiRenderUtil._draw_note_highlight(painter, vis_config, track, note, playhead_x, x_left, y_top, w, h, color, alpha)
+                    MidiRenderUtil._draw_note_highlight(painter, vis_config, track, note, playhead_x, x_left, y_top, w, h, color, alpha, vis_config.note_round_edges, radius)
 
 
     @staticmethod
@@ -273,14 +273,16 @@ class MidiRenderUtil:
     def _draw_note_glow(
         painter: QPainter, vis_config: VisConfig, playhead_x: int, 
         x: int, y: int, w: int, h: int, color: RGB, alpha: int, 
-        bar_height: int
+        round_edges: bool, round_radius_ratio: float
     ):
         x_right = x + w
         glow_w = min(playhead_x, x_right) - x if vis_config.note_glow_played_region else w
         color_glow = Util.mix_colors(color, vis_config.note_glow_color, 0.75)
 
         # padding for how far glow extends vertically
-        pad_y: float = bar_height * vis_config.note_glow_size
+        pad_y: float = h * vis_config.note_glow_size
+        round_radius: int = h * round_radius_ratio * vis_config.note_glow_size
+        print(f"Height: {h}, Radius: {round_radius}")
 
         # draw rect for glow area and define linear gradient over it
         glow_rect = QRectF(x, y - pad_y, glow_w, h + pad_y * 2)
@@ -299,7 +301,10 @@ class MidiRenderUtil:
         # draw glow
         painter.setPen(Qt.NoPen)
         painter.setBrush(QBrush(gradient))
-        painter.drawRect(glow_rect)
+        MidiRenderUtil._draw_rect(
+            painter, glow_rect.left(), glow_rect.top(), glow_rect.width(), glow_rect.height(), 
+            round_edges, round_edges and (x + w - round_radius) < playhead_x, round_radius
+        )
 
     @staticmethod
     def _draw_note(painter: QPainter, 
@@ -321,57 +326,7 @@ class MidiRenderUtil:
             painter.setBrush(qcolor)
 
         MidiRenderUtil._draw_rect(painter, x, y, w, h, round_edges, round_edges, round_radius)
-
-    @staticmethod
-    def _draw_rect(painter: QPainter, x: int, y: int, w: int, h: int, round_left: bool, round_right: bool, radius: int):
-        '''
-        Draws rect, rounded rect, or semi-rounded rect, based on inputs
-        '''
-        if radius <= 0 or (not round_left and not round_right):
-            painter.drawRect(x, y, w, h)
-        elif round_left and round_right:
-            painter.drawRoundedRect(x, y, w, h, radius, radius)
-        else:
-            # draw partially rounded rect
-            path = QPainterPath()
-
-            # shorthand left, top, right, bottom vals for drawing path
-            l, t, r, b = x, y, x + w, y + h
-            rad = min(radius, w / 2, h / 2)
-
-            start_x = l + rad if round_left else l
-            path.moveTo(start_x, y)
-
-            if round_right:
-                # arc around right edge
-                path.lineTo(r - rad, t)
-                path.arcTo(r - 2 * rad, t, 2 * rad, 2 * rad, 90, -90) # top-right rounded
-                path.lineTo(r, b - rad) # right edge
-                path.arcTo(r - 2 * rad, b - 2 * rad, 2 * rad, 2 * rad, 0, -90) # bottom-right rounded
-            else:
-                # flat right edge
-                path.lineTo(r, t)
-                path.lineTo(r, b)
-
-            # bottom edge
-            end_x = l + rad if round_left else l
-            path.lineTo(end_x, b)
-
-            if round_left:
-                # arc around left edge
-                path.arcTo(l, b - 2 * rad, 2 * rad, 2 * rad, 270, -90)  # bottom-left rounded
-                path.lineTo(l, t + rad)  # left edge
-                path.arcTo(l, t, 2 * rad, 2 * rad, 180, -90)  # top-left rounded
-            else:
-                # flat left edge
-                path.lineTo(l, t)
-
-            path.closeSubpath()
-            painter.drawPath(path)
-            
-
-            
-
+    
     @staticmethod
     def _draw_note_sparks(
         painter: QPainter, 
@@ -434,10 +389,13 @@ class MidiRenderUtil:
     def _draw_note_highlight(
         painter: QPainter, vis_config: VisConfig, 
         track: RenderTrack, note: Note,
-        playhead_x: int, x: int, y: int, w: int, h: int, 
-        color: RGB, alpha: int
+        playhead_x: int, x: int, y: int, w: int, h: int,
+        color: RGB, alpha: int,
+        round_edges: bool, round_radius: int
     ):
-        # draw transparent overlay over played note area to brighten
+        '''
+        Draws transparent overlay over played note area to brighten
+        '''
         x_right = x + w
         highlight_w = min(playhead_x, x_right) - x if vis_config.note_highlight_played_region else w
 
@@ -456,4 +414,55 @@ class MidiRenderUtil:
         color_highlight = Util.mix_colors(color, vis_config.note_highlight_color, highlight_factor)
         painter.setPen(Qt.NoPen)
         painter.setBrush(QUtil.rgb_to_qcolor(color_highlight, alpha * .8))
-        painter.drawRect(x, y, highlight_w, h)
+        #painter.drawRect(x, y, highlight_w, h)
+        MidiRenderUtil._draw_rect(
+            painter, x, y, highlight_w, h, 
+            round_edges, round_edges and (x + w - round_radius) < playhead_x, round_radius
+        )
+
+    @staticmethod
+    def _draw_rect(painter: QPainter, x: int, y: int, w: int, h: int, round_left: bool, round_right: bool, radius: int):
+        '''
+        Draws rect, rounded rect, or semi-rounded rect
+        '''
+        if radius <= 0 or (not round_left and not round_right):
+            painter.drawRect(x, y, w, h)
+        elif round_left and round_right:
+            painter.drawRoundedRect(x, y, w, h, radius, radius)
+        else:
+            # draw partially rounded rect
+            path = QPainterPath()
+
+            # shorthand left, top, right, bottom vals for drawing path
+            l, t, r, b = x, y, x + w, y + h
+            rad = min(radius, w / 2, h / 2)
+
+            start_x = l + rad if round_left else l
+            path.moveTo(start_x, y)
+
+            if round_right:
+                # arc around right edge
+                path.lineTo(r - rad, t)
+                path.arcTo(r - 2 * rad, t, 2 * rad, 2 * rad, 90, -90) # top-right rounded
+                path.lineTo(r, b - rad) # right edge
+                path.arcTo(r - 2 * rad, b - 2 * rad, 2 * rad, 2 * rad, 0, -90) # bottom-right rounded
+            else:
+                # flat right edge
+                path.lineTo(r, t)
+                path.lineTo(r, b)
+
+            # bottom edge
+            end_x = l + rad if round_left else l
+            path.lineTo(end_x, b)
+
+            if round_left:
+                # arc around left edge
+                path.arcTo(l, b - 2 * rad, 2 * rad, 2 * rad, 270, -90)  # bottom-left rounded
+                path.lineTo(l, t + rad)  # left edge
+                path.arcTo(l, t, 2 * rad, 2 * rad, 180, -90)  # top-left rounded
+            else:
+                # flat left edge
+                path.lineTo(l, t)
+
+            path.closeSubpath()
+            painter.drawPath(path)
