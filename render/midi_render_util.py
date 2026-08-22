@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 import math
 import random
 from typing import List
-from PySide6.QtGui import QBrush, QLinearGradient, QPainter, QPen
+from PySide6.QtGui import QBrush, QLinearGradient, QPainter, QPainterPath, QPen
 from PySide6.QtCore import QRect, QRectF, Qt
 from common import Color, RGB
 from models import VisConfig, BackgroundMode, Note, Orientation
@@ -211,6 +211,7 @@ class MidiRenderUtil:
 
                 color = track.color
                 alpha = track.alpha
+                radius = 1 if not vis_config.note_round_edges else int(round(vis_config.note_round_ratio * (h / 2)))
 
                 # start fading in when note is within range of playhead
                 if vis_config.note_fadein_enabled and x_left >= playhead_x:
@@ -234,7 +235,7 @@ class MidiRenderUtil:
                     MidiRenderUtil._draw_note_glow(painter, vis_config, playhead_x, x_left, y_top, w, h, color, alpha, bar_height_px)
 
                 # -- note bar --
-                MidiRenderUtil._draw_note(painter, x_left, y_top, w, h, color, alpha, vis_config.note_enhance_color)
+                MidiRenderUtil._draw_note(painter, x_left, y_top, w, h, color, alpha, vis_config.note_enhance_color, vis_config.note_round_edges, radius)
 
                 # -- highlight --
                 if vis_config.note_highlight_enabled and x_left <= playhead_x:
@@ -301,7 +302,11 @@ class MidiRenderUtil:
         painter.drawRect(glow_rect)
 
     @staticmethod
-    def _draw_note(painter: QPainter, x: int, y: int, w: int, h: int, color: RGB, alpha: int, use_gradient: bool):
+    def _draw_note(painter: QPainter, 
+        x: int, y: int, w: int, h: int, 
+        color: RGB, alpha: int, use_gradient: bool,
+        round_edges: bool, round_radius: int
+    ):
         qcolor = QUtil.rgb_to_qcolor(color, alpha)
 
         painter.setPen(Qt.NoPen)
@@ -310,12 +315,62 @@ class MidiRenderUtil:
             qcolor_light = QUtil.rgb_to_qcolor(color_light, alpha)
             gradient = QLinearGradient(x, y, x, y + h)
             gradient.setColorAt(0.0, qcolor_light)
-            gradient.setColorAt(0.5, qcolor)       
+            gradient.setColorAt(0.5, qcolor)
             painter.setBrush(QBrush(gradient))
         else:
             painter.setBrush(qcolor)
-        
-        painter.drawRect(x, y, w, h)
+
+        MidiRenderUtil._draw_rect(painter, x, y, w, h, round_edges, round_edges, round_radius)
+
+    @staticmethod
+    def _draw_rect(painter: QPainter, x: int, y: int, w: int, h: int, round_left: bool, round_right: bool, radius: int):
+        '''
+        Draws rect, rounded rect, or semi-rounded rect, based on inputs
+        '''
+        if radius <= 0 or (not round_left and not round_right):
+            painter.drawRect(x, y, w, h)
+        elif round_left and round_right:
+            painter.drawRoundedRect(x, y, w, h, radius, radius)
+        else:
+            # draw partially rounded rect
+            path = QPainterPath()
+
+            # shorthand left, top, right, bottom vals for drawing path
+            l, t, r, b = x, y, x + w, y + h
+            rad = min(radius, w / 2, h / 2)
+
+            start_x = l + rad if round_left else l
+            path.moveTo(start_x, y)
+
+            if round_right:
+                # arc around right edge
+                path.lineTo(r - rad, t)
+                path.arcTo(r - 2 * rad, t, 2 * rad, 2 * rad, 90, -90) # top-right rounded
+                path.lineTo(r, b - rad) # right edge
+                path.arcTo(r - 2 * rad, b - 2 * rad, 2 * rad, 2 * rad, 0, -90) # bottom-right rounded
+            else:
+                # flat right edge
+                path.lineTo(r, t)
+                path.lineTo(r, b)
+
+            # bottom edge
+            end_x = l + rad if round_left else l
+            path.lineTo(end_x, b)
+
+            if round_left:
+                # arc around left edge
+                path.arcTo(l, b - 2 * rad, 2 * rad, 2 * rad, 270, -90)  # bottom-left rounded
+                path.lineTo(l, t + rad)  # left edge
+                path.arcTo(l, t, 2 * rad, 2 * rad, 180, -90)  # top-left rounded
+            else:
+                # flat left edge
+                path.lineTo(l, t)
+
+            path.closeSubpath()
+            painter.drawPath(path)
+            
+
+            
 
     @staticmethod
     def _draw_note_sparks(
