@@ -79,141 +79,144 @@ class TrackGroupsTab(QWidget):
     def refresh_ui(self):
         self._refresh_buttons()
 
-        # prevent callbacks while populating table
+        self.table.setRowCount(len(self.vis_config.track_groups))
+        for row in range(len(self.vis_config.track_groups)):
+            self._refresh_row(row)
+
+    def _refresh_row(self, row: int):
+        # prevent callbacks while populating table row
         self.table.blockSignals(True)
 
-        self.table.setRowCount(len(self.vis_config.track_groups))
-        style = self.style()
+        track_group = self.vis_config.track_groups[row]
 
-        for row, track_group in enumerate(self.vis_config.track_groups):
-            col = 0
+        col = 0
 
-            # move up button
-            up_btn = QPushButton()
-            up_btn.setIcon(Icons.arrow_up_bold())
-            up_btn.setDisabled(row == 0)
-            up_btn.clicked.connect(lambda _, row=row: self._on_move_group_up(row))
-            self.table.setCellWidget(row, col, LayoutUtil.center(up_btn))
-            col += 1
+        # move up button
+        up_btn = QPushButton()
+        up_btn.setIcon(Icons.arrow_up_bold())
+        up_btn.setDisabled(row == 0)
+        up_btn.clicked.connect(lambda _, row=row: self._on_move_group_up(row))
+        self.table.setCellWidget(row, col, LayoutUtil.center(up_btn))
+        col += 1
 
-            # move down button
-            down_btn = QPushButton()
-            down_btn.setIcon(Icons.arrow_down_bold())
-            down_btn.setDisabled(row == len(self.vis_config.track_groups) - 1)
-            down_btn.clicked.connect(lambda _, row=row: self._on_move_group_down(row))
-            self.table.setCellWidget(row, col, LayoutUtil.center(down_btn))
-            col += 1
+        # move down button
+        down_btn = QPushButton()
+        down_btn.setIcon(Icons.arrow_down_bold())
+        down_btn.setDisabled(row == len(self.vis_config.track_groups) - 1)
+        down_btn.clicked.connect(lambda _, row=row: self._on_move_group_down(row))
+        self.table.setCellWidget(row, col, LayoutUtil.center(down_btn))
+        col += 1
 
-            # name
-            name_cell = QTableWidgetItem(track_group.name)
-            self.table.setItem(row, col, name_cell)
-            col += 1
+        # name
+        name_cell = QTableWidgetItem(track_group.name)
+        self.table.setItem(row, col, name_cell)
+        col += 1
 
-            # tracks count
-            tracks_count = len(self.vis_config.get_tracks_by_group_id(track_group.group_id))
-            tracks_count_cell = QTableWidgetItem(f"{tracks_count}")
-            tracks_count_cell.setFlags(tracks_count_cell.flags() & ~Qt.ItemIsEditable)
-            tracks_count_cell.setTextAlignment(Qt.AlignCenter)
-            self.table.setItem(row, col, tracks_count_cell)
-            col += 1
+        # tracks count
+        tracks_count = len(self.vis_config.get_tracks_by_group_id(track_group.group_id))
+        tracks_count_cell = QTableWidgetItem(f"{tracks_count}")
+        tracks_count_cell.setFlags(tracks_count_cell.flags() & ~Qt.ItemIsEditable)
+        tracks_count_cell.setTextAlignment(Qt.AlignCenter)
+        self.table.setItem(row, col, tracks_count_cell)
+        col += 1
 
-            # solo
-            checkbox = TableCheckbox(track_group.solo)
-            checkbox.valueChanged.connect(lambda checked, row=row: self._on_solo_changed(row, checked))
-            self.table.setCellWidget(row, col, checkbox)
-            col += 1
+        # solo
+        checkbox = TableCheckbox(track_group.solo)
+        checkbox.valueChanged.connect(lambda checked, row=row: self._on_solo_changed(row, checked))
+        self.table.setCellWidget(row, col, checkbox)
+        col += 1
 
-            # visible
-            checkbox = TableCheckbox(track_group.visible)
-            checkbox.valueChanged.connect(lambda checked, row=row: self._on_visible_changed(row, checked))
-            self.table.setCellWidget(row, col, checkbox)
-            col += 1
+        # visible
+        checkbox = TableCheckbox(track_group.visible)
+        checkbox.valueChanged.connect(lambda checked, row=row: self._on_visible_changed(row, checked))
+        self.table.setCellWidget(row, col, checkbox)
+        col += 1
 
-            # color button
-            color_btn = ColorButton(color=track_group.color)
-            color_btn.valueChanged.connect(lambda color, row=row: self._on_color_changed(row, color))
-            self.table.setCellWidget(row, col, color_btn)
-            col += 1
+        # color button
+        color_btn = ColorButton(color=track_group.color)
+        color_btn.valueChanged.connect(lambda color, row=row: self._on_color_changed(row, color))
+        self.table.setCellWidget(row, col, color_btn)
+        col += 1
 
-            # opacity
-            opacity = ScaledSpinbox(
-                internal_value=track_group.alpha, 
-                display_min=0, 
-                display_max=100, 
-                internal_min=0, 
-                internal_max=255,
-                disable_mouse_wheel=True
-            )
-            opacity.valueChanged.connect(lambda _, row=row, widget=opacity: self._on_opacity_changed(row, widget.getInternalValue()))
-            self.table.setCellWidget(row, col, opacity)
-            col += 1
+        # opacity
+        opacity = ScaledSpinbox(
+            internal_value=track_group.alpha, 
+            display_min=0, 
+            display_max=100, 
+            internal_min=0, 
+            internal_max=255,
+            disable_mouse_wheel=True
+        )
+        opacity.valueChanged.connect(lambda _, row=row, widget=opacity: self._on_opacity_changed(row, widget.getInternalValue()))
+        self.table.setCellWidget(row, col, opacity)
+        col += 1
 
-            # sparks
-            checkbox = TableCheckbox(track_group.note_sparks_enabled)
-            checkbox.valueChanged.connect(lambda checked, row=row: self._on_sparks_changed(row, checked))
-            self.table.setCellWidget(row, col, checkbox)
-            col += 1
+        # sparks
+        checkbox = TableCheckbox(track_group.note_sparks_enabled)
+        checkbox.valueChanged.connect(lambda checked, row=row: self._on_sparks_changed(row, checked))
+        self.table.setCellWidget(row, col, checkbox)
+        col += 1
 
-            # bounce
-            checkbox = TableCheckbox(track_group.note_bounce_enabled)
-            checkbox.valueChanged.connect(lambda checked, row=row: self._on_bounce_changed(row, checked))
-            self.table.setCellWidget(row, col, checkbox)
-            col += 1
+        # bounce
+        checkbox = TableCheckbox(track_group.note_bounce_enabled)
+        checkbox.valueChanged.connect(lambda checked, row=row: self._on_bounce_changed(row, checked))
+        self.table.setCellWidget(row, col, checkbox)
+        col += 1
 
-            # velocity fx
-            checkbox = TableCheckbox(track_group.note_velocity_fx_enabled)
-            checkbox.valueChanged.connect(lambda checked, row=row: self._on_velocity_fx_changed(row, checked))
-            self.table.setCellWidget(row, col, checkbox)
-            col += 1
+        # velocity fx
+        checkbox = TableCheckbox(track_group.note_velocity_fx_enabled)
+        checkbox.valueChanged.connect(lambda checked, row=row: self._on_velocity_fx_changed(row, checked))
+        self.table.setCellWidget(row, col, checkbox)
+        col += 1
 
-            # bar height ratio
-            bar_height = ScaledDoubleSpinbox(
-                decimals=2, 
-                singleStep=0.01, 
-                display_min=1.0, 
-                display_max=10.0, 
-                internal_min=0.001, 
-                internal_max=1.000, 
-                internal_value=track_group.bar_height_ratio,
-                disable_mouse_wheel=True
-            )
-            bar_height.valueChanged.connect(lambda _, row=row, widget=bar_height: self._on_bar_height_changed(row, widget.getInternalValue()))
-            self.table.setCellWidget(row, col, bar_height)
-            col += 1
+        # bar height ratio
+        bar_height = ScaledDoubleSpinbox(
+            decimals=2, 
+            singleStep=0.01, 
+            display_min=1.0, 
+            display_max=10.0, 
+            internal_min=0.001, 
+            internal_max=1.000, 
+            internal_value=track_group.bar_height_ratio,
+            disable_mouse_wheel=True
+        )
+        bar_height.valueChanged.connect(lambda _, row=row, widget=bar_height: self._on_bar_height_changed(row, widget.getInternalValue()))
+        self.table.setCellWidget(row, col, bar_height)
+        col += 1
 
-            # pixels/sec
-            sec_across_screen = ScaledDoubleSpinbox(
-                decimals=1,
-                singleStep=0.1,
-                display_min=0.1,
-                display_max=10.0,
-                internal_min=10.0,
-                internal_max=0.1,
-                internal_value=track_group.bar_sec_across_screen,
-                disable_mouse_wheel=True
-            )
-            sec_across_screen.valueChanged.connect(lambda _, row=row, widget=sec_across_screen: self._on_bar_speed_changed(row, widget.getInternalValue()))
-            self.table.setCellWidget(row, col, sec_across_screen)
-            col += 1
+        # pixels/sec
+        sec_across_screen = ScaledDoubleSpinbox(
+            decimals=1,
+            singleStep=0.1,
+            display_min=0.1,
+            display_max=10.0,
+            internal_min=10.0,
+            internal_max=0.1,
+            internal_value=track_group.bar_sec_across_screen,
+            disable_mouse_wheel=True
+        )
+        sec_across_screen.valueChanged.connect(lambda _, row=row, widget=sec_across_screen: self._on_bar_speed_changed(row, widget.getInternalValue()))
+        self.table.setCellWidget(row, col, sec_across_screen)
+        col += 1
 
-            # pitch offset
-            group_pitch_min = self.vis_config.get_min_pitch_for_track_group(track_group.group_id, True)
-            group_pitch_max = self.vis_config.get_max_pitch_for_track_group(track_group.group_id, True)
-            pitch_offset = TableSpinbox()
-            spinner_min = 0 - group_pitch_min
-            spinner_max = 127 - group_pitch_max
-            pitch_offset.setRange(spinner_min, spinner_max)
-            pitch_offset.setValue(track_group.pitch_offset)
-            pitch_offset.valueChanged.connect(lambda pad, row=row: self._on_pitch_offset_changed(row, pad))
-            self.table.setCellWidget(row, col, pitch_offset)
-            col += 1
+        # pitch offset
+        group_pitch_min = self.vis_config.get_min_pitch_for_track_group(track_group.group_id, True)
+        group_pitch_max = self.vis_config.get_max_pitch_for_track_group(track_group.group_id, True)
+        pitch_offset = TableSpinbox()
+        spinner_min = 0 - group_pitch_min
+        spinner_max = 127 - group_pitch_max
+        pitch_offset.setRange(spinner_min, spinner_max)
+        pitch_offset.setValue(track_group.pitch_offset)
+        pitch_offset.valueChanged.connect(lambda pad, row=row: self._on_pitch_offset_changed(row, pad))
+        self.table.setCellWidget(row, col, pitch_offset)
+        col += 1
 
-            # delete button
-            delete_btn = QPushButton()
-            delete_btn.setIcon(Icons.trash_can())
-            delete_btn.clicked.connect(lambda _, row=row: self._on_remove_group(row))
-            self.table.setCellWidget(row, col, LayoutUtil.center(delete_btn))
-            col += 1
+        # delete button
+        delete_btn = QPushButton()
+        delete_btn.setIcon(Icons.trash_can())
+        delete_btn.clicked.connect(lambda _, row=row: self._on_remove_group(row))
+        self.table.setCellWidget(row, col, LayoutUtil.center(delete_btn))
+        col += 1
 
         # resume callbacks
         self.table.blockSignals(False)
@@ -307,10 +310,7 @@ class TrackGroupsTab(QWidget):
 
         if col == self.track_columns.index("Name"):
             track_group.name = item.text()
-        else:
-            logger.warning(f"OnItemChanged for unhandled column: {self.track_columns[col]} (index: {col})")
-
-        self.on_changes_callback()
+            self.on_changes_callback()
 
     def _on_cell_changed(self, row: int, col: int, prev_row: int, prev_col: int):
         if row >= 0 and row < len(self.vis_config.track_groups):
@@ -324,20 +324,35 @@ class TrackGroupsTab(QWidget):
     def _on_solo_changed(self, row: int, checked: bool):
         if self.table.signalsBlocked():
             return
-        
-        track_group = self.vis_config.track_groups[row]
-        track_group.solo = checked
+
+        for r in self._get_rows_for_bulk_edit(row):
+            track_group = self.vis_config.track_groups[r]
+            track_group.solo = checked
+
+            if track_group.solo:
+                # require visible if solo
+                track_group.visible = True
+
+            self._refresh_row(r)
 
         self._refresh_buttons()
-
         self.on_changes_callback()
         
     def _on_visible_changed(self, row: int, checked: bool):
         if self.table.signalsBlocked():
             return
-        
-        track_group = self.vis_config.track_groups[row]
-        track_group.visible = checked
+
+        for r in self._get_rows_for_bulk_edit(row):
+            track_group = self.vis_config.track_groups[r]
+            track_group.visible = checked
+
+            if not track_group.visible:
+                # can't be solo if not visible
+                track_group.solo = False
+
+            self._refresh_row(r)
+
+        self._refresh_buttons()
         self.on_changes_callback()
 
     def _on_color_changed(self, row: int, color: RGB):
@@ -359,25 +374,37 @@ class TrackGroupsTab(QWidget):
     def _on_sparks_changed(self, row: int, checked: bool):
         if self.table.signalsBlocked():
             return
+
+        for r in self._get_rows_for_bulk_edit(row):
+            track_group = self.vis_config.track_groups[r]
+            track_group.note_sparks_enabled = checked
+
+            self._refresh_row(r)
         
-        track_group = self.vis_config.track_groups[row]
-        track_group.note_sparks_enabled = checked
         self.on_changes_callback()
     
     def _on_bounce_changed(self, row: int, checked: bool):
         if self.table.signalsBlocked():
             return
+
+        for r in self._get_rows_for_bulk_edit(row):
+            track_group = self.vis_config.track_groups[r]
+            track_group.note_bounce_enabled = checked
+
+            self._refresh_row(r)
         
-        track_group = self.vis_config.track_groups[row]
-        track_group.note_bounce_enabled = checked
         self.on_changes_callback()
     
     def _on_velocity_fx_changed(self, row: int, checked: bool):
         if self.table.signalsBlocked():
             return
+
+        for r in self._get_rows_for_bulk_edit(row):
+            track_group = self.vis_config.track_groups[r]
+            track_group.note_velocity_fx_enabled = checked
+
+            self._refresh_row(r)
         
-        track_group = self.vis_config.track_groups[row]
-        track_group.note_velocity_fx_enabled = checked
         self.on_changes_callback()
 
     def _on_bar_height_changed(self, row: int, value: float):
@@ -413,3 +440,15 @@ class TrackGroupsTab(QWidget):
                 selected_rows.add(row)
 
         return sorted(selected_rows)
+
+    def _get_rows_for_bulk_edit(self, changed_row: int):
+        # get all currently selected rows (including changed row)
+        rows = self._get_selected_rows()
+        if len(rows) == 1:
+            # if only one other row is selected, exclude it - it 
+            # feels a bit jarring otherwise
+            rows = []
+
+        if changed_row not in rows:
+            rows.append(changed_row)
+        return rows

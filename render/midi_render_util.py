@@ -142,10 +142,13 @@ class MidiRenderUtil:
 
         # iterate backwards so first groups are drawn on top
         track_groups = vis_config.get_visible_track_groups()[::-1] 
+        any_tracks_solo = vis_config.any_tracks_solo()
 
         for tg in track_groups:
-            group_tracks = vis_config.get_tracks_by_group_id(tg.group_id)
-            for t in group_tracks:
+            tracks_for_group = vis_config.get_tracks_by_group_id(tg.group_id)
+            for t in tracks_for_group:
+                if any_tracks_solo and not t.solo:
+                    continue
                 tracks.append(RenderTrack(
                     color = tg.color,
                     alpha = tg.alpha,

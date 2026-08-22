@@ -603,6 +603,8 @@ class MainWindow(QMainWindow):
     def on_config_changed(self):
         self.update_model()
 
+        #logger.debug(f"OnConfigChanged")
+
         self.has_unsaved_changes = True
         self.refresh_window_title()
 

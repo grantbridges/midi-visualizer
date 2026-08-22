@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
 )
 
 from models import VisConfig, Orientation
+from utility import MidiUtil
 from ui.common import (
     ColorButton, 
     LayoutUtil, 
@@ -182,10 +183,14 @@ class GeneralTab(QWidget):
         self.auto_calc_pitch_bounds_checkbox.setChecked(self.vis_config.auto_calc_pitch_bounds)
         self.pitch_min_input.setDisabled(self.vis_config.auto_calc_pitch_bounds)
         self.pitch_min_input.setRange(0, self.vis_config.manual_pitch_max)
-        self.pitch_min_input.setValue(self.vis_config.get_min_pitch() if self.vis_config.auto_calc_pitch_bounds else self.vis_config.manual_pitch_min)
+        min_pitch = self.vis_config.get_min_pitch() if self.vis_config.auto_calc_pitch_bounds else self.vis_config.manual_pitch_min
+        self.pitch_min_input.setValue(min_pitch)
+        self.pitch_min_input.setSuffix(f" ({MidiUtil.midi_pitch_to_note(min_pitch)})")
         self.pitch_max_input.setDisabled(self.vis_config.auto_calc_pitch_bounds)
         self.pitch_max_input.setRange(self.vis_config.manual_pitch_min, 127)
-        self.pitch_max_input.setValue(self.vis_config.get_max_pitch() if self.vis_config.auto_calc_pitch_bounds else self.vis_config.manual_pitch_max)  
+        max_pitch = self.vis_config.get_max_pitch() if self.vis_config.auto_calc_pitch_bounds else self.vis_config.manual_pitch_max
+        self.pitch_max_input.setValue(max_pitch)  
+        self.pitch_max_input.setSuffix(f" ({MidiUtil.midi_pitch_to_note(max_pitch)})")
 
         self.apply_time_offsets_checkbox.setChecked(self.vis_config.apply_time_offsets)
         self.start_time_input.setEnabled(self.vis_config.apply_time_offsets)

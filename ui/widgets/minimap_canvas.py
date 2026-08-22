@@ -129,6 +129,7 @@ class MinimapCanvas(QWidget):
         
         # iterate backwards so first groups are drawn on top
         track_groups = self.vis_config.get_visible_track_groups()[::-1]
+        any_tracks_solo = self.vis_config.any_tracks_solo()
 
         for tg in track_groups:
             tracks = self.vis_config.get_tracks_by_group_id(tg.group_id)
@@ -137,6 +138,8 @@ class MinimapCanvas(QWidget):
             
             # draw notes for each track in group
             for t in tracks:
+                if any_tracks_solo and not t.solo:
+                    continue
                 for n in t.notes:
                     x1 = self._get_x_pos_from_time(n.start)
                     x2 = self._get_x_pos_from_time(n.end)

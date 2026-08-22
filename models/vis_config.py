@@ -497,24 +497,41 @@ class VisConfig:
 
     def get_track_by_name(self, name: str) -> Track:
         return next((track for track in self.tracks if track.name == name), None)
+
+    def any_tracks_solo(self) -> bool:
+        return any(t.solo for t in self.tracks)
     
     def get_visible_tracks(self) -> List[Track]:
-        tracks = []
+        # gather all groups that are either soloed or include a 
+        # track that is soloed
+        solo_group_ids = (
+            {t.group_id for t in self.tracks if t.solo}
+            | {tg.group_id for tg in self.track_groups if tg.solo}
+        )
 
-        for tg in self.get_visible_track_groups():
-            tracks.extend(self.get_tracks_by_group_id(tg.group_id))
+        # if any solo groups exist, return all tracks that are soloed
+        # or in group that is soloed
+        if solo_group_ids:
+            return [t for t in self.tracks if t.solo or t.group_id in solo_group_ids]
 
-        return tracks
+        # otherwise, return all tracks in visible groups
+        visible_group_ids = {tg.group_id for tg in self.track_groups if tg.visible}
+        return [t for t in self.tracks if t.group_id in visible_group_ids]
     
     def get_visible_track_groups(self) -> List[TrackGroup]:
-        track_groups = []
+        # gather all groups that are either soloed or include a 
+        # track that is soloed
+        solo_group_ids = (
+            {t.group_id for t in self.tracks if t.solo}
+            | {tg.group_id for tg in self.track_groups if tg.solo}
+        )
 
-        has_solo = sum(tg.solo for tg in self.track_groups) > 0
-        for tg in self.track_groups:
-            if (has_solo and tg.solo) or (not has_solo and tg.visible):
-                track_groups.append(tg)
+        # if no solos, just return all visible groups
+        if not solo_group_ids:
+            return [tg for tg in self.track_groups if tg.visible]
 
-        return track_groups
+        # otherwise, return whatever groups show up in solo list    
+        return [tg for tg in self.track_groups if tg.group_id in solo_group_ids]
     
     def get_min_pitch(self) -> int:
         if not self.auto_calc_pitch_bounds:
@@ -525,8 +542,12 @@ class VisConfig:
     def get_calculated_min_pitch(self) -> int:
         values = []
 
+        any_tracks_solo = self.any_tracks_solo()
         for group in self.get_visible_track_groups():
             for track in self.get_tracks_by_group_id(group.group_id):
+                if any_tracks_solo and not track.solo:
+                    continue
+                
                 values.append(track.get_min_pitch() + group.pitch_offset)
 
         return min(values) if values else 0
@@ -548,8 +569,12 @@ class VisConfig:
     def get_calculated_max_pitch(self) -> int:
         values = []
 
+        any_tracks_solo = self.any_tracks_solo()
         for group in self.get_visible_track_groups():
             for track in self.get_tracks_by_group_id(group.group_id):
+                if any_tracks_solo and not track.solo:
+                    continue
+
                 values.append(track.get_max_pitch() + group.pitch_offset)
 
         return max(values) if values else 0

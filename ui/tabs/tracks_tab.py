@@ -81,18 +81,14 @@ class TracksTab(QWidget):
     def refresh_ui(self):
         self._refresh_buttons()
 
-        # prevent callbacks while populating table
-        self.table.blockSignals(True)
-
         self.table.setRowCount(len(self.vis_config.tracks))
-
         for row in range(len(self.vis_config.tracks)):
             self._refresh_row(row)
-
-        # resume callbacks
-        self.table.blockSignals(False)
-
+    
     def _refresh_row(self, row: int):
+        # prevent callbacks while populating table row
+        self.table.blockSignals(True)
+
         track = self.vis_config.tracks[row]
         group = self.vis_config.get_track_group_by_id(track.group_id)
 
@@ -213,6 +209,9 @@ class TracksTab(QWidget):
         self.table.setItem(row, col, velocity_max_item)
         col += 1
 
+        # resume callbacks
+        self.table.blockSignals(False)
+
     def _refresh_buttons(self):
         count = len(self._get_selected_rows())
 
@@ -245,12 +244,7 @@ class TracksTab(QWidget):
         group = group_combo.currentData()
         group_id = UUID(group) if group is not None else None
 
-        # get all currently selected rows (including row this group is on)
-        rows = self._get_selected_rows()
-        if row not in rows:
-            rows.append(row)
-
-        for r in rows:
+        for r in self._get_rows_for_bulk_edit(row):
             track = self.vis_config.tracks[r]
             track.group_id = group_id
 
@@ -295,12 +289,7 @@ class TracksTab(QWidget):
         if self.table.signalsBlocked():
             return
 
-        # get all currently selected rows (including row this group is on)
-        rows = self._get_selected_rows()
-        if row not in rows:
-            rows.append(row)
-
-        for r in rows:
+        for r in self._get_rows_for_bulk_edit(row):
             track = self.vis_config.tracks[r]
             track.solo = checked
 
@@ -311,12 +300,7 @@ class TracksTab(QWidget):
         if self.table.signalsBlocked():
             return
 
-        # get all currently selected rows (including row this group is on)
-        rows = self._get_selected_rows()
-        if row not in rows:
-            rows.append(row)
-
-        for r in rows:
+        for r in self._get_rows_for_bulk_edit(row):
             track = self.vis_config.tracks[r]
             track.override_pitch_min_max = checked
 
@@ -418,6 +402,18 @@ class TracksTab(QWidget):
             if row >= 0 and row < len(self.vis_config.tracks):
                 tracks.append(self.vis_config.tracks[row])
         return tracks
+
+    def _get_rows_for_bulk_edit(self, changed_row: int):
+        # get all currently selected rows (including changed row)
+        rows = self._get_selected_rows()
+        if len(rows) == 1:
+            # if only one other row is selected, exclude it - it 
+            # feels a bit jarring otherwise
+            rows = []
+
+        if changed_row not in rows:
+            rows.append(changed_row)
+        return rows
     
     def _pitch_suffix(self, pitch: int) -> str:
         return f" ({MidiUtil.midi_pitch_to_note(pitch)})"

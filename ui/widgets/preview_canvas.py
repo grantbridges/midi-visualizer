@@ -163,11 +163,14 @@ class PreviewCanvas(QWidget):
 
             # draw pitch guide lines for each track group
             if user_settings.show_track_groups:
-                for track_group in sorted(
+                track_groups = sorted(
                     self.vis_config.get_visible_track_groups(),
                     # sort selected track (if available) to the end so it's drawn on top of the bunch
                     key=lambda tg: tg.group_id == self.selected_group_id,
-                ):
+                )
+                any_tracks_solo = self.vis_config.any_tracks_solo()
+
+                for track_group in track_groups:
                     is_selected = self.selected_group_id == track_group.group_id
                     color = QUtil.rgb_to_qcolor(track_group.color, 255 if is_selected else 70)
                     pen_width = 3 if is_selected else 1
@@ -197,6 +200,9 @@ class PreviewCanvas(QWidget):
                     text_top += track_group_font_size + 3
 
                     for track in self.vis_config.get_tracks_by_group_id(track_group.group_id):
+                        if any_tracks_solo and not track.solo:
+                            continue
+
                         font = QFont(Const.PRIMARY_FONT, QUtil.scale_font_size(track_font_size), 100)
                         painter.setFont(font)
                         painter.drawText(QRect(rect.left() + text_padding, text_top, 200, track_font_size), f'{track.name}')
