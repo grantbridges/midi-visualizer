@@ -23,6 +23,8 @@ class Track:
     # group reference
     group_id: UUID | None = None
 
+    solo: bool = False
+
     # overrides
     override_pitch_min_max: bool = False
     manual_pitch_min: int = 0
@@ -59,6 +61,7 @@ class Track:
         return {
             "name": self.name,
             "group_id": str(self.group_id) if self.group_id else None,
+            "solo": self.solo,
             "override_pitch_min_max": self.override_pitch_min_max,
             "manual_pitch_min": self.manual_pitch_min,
             "manual_pitch_max": self.manual_pitch_max,
@@ -80,6 +83,7 @@ class Track:
         track.group_id = UUID(group_id) if group_id else None
 
         if schema_version >= 2:
+            track.solo = data["solo"]
             track.override_pitch_min_max = data["override_pitch_min_max"]
             track.manual_pitch_min = data["manual_pitch_min"]
             track.manual_pitch_max = data["manual_pitch_max"]

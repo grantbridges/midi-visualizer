@@ -31,19 +31,23 @@ class TracksTab(QWidget):
         self.vis_config = vis_config
 
         # create controls
-        self.sort_by_group_btn = QPushButton("Sort by Group")
-        self.sort_by_group_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
-        self.sort_by_group_btn.clicked.connect(self._on_sort_by_group)
-
         self.group_tracks_btn = QPushButton("") # set text in refresh_buttons()
         self.group_tracks_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         self.group_tracks_btn.clicked.connect(self._on_group_tracks)
+
+        self.sort_by_group_btn = QPushButton("Sort by Group")
+        self.sort_by_group_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+        self.sort_by_group_btn.clicked.connect(self._on_sort_by_group)
 
         self.clear_selection_btn = QPushButton("Clear Selection")
         self.clear_selection_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         self.clear_selection_btn.clicked.connect(self._on_clear_selection)
 
-        self.track_columns = ["", "", "Name", "Group", "Override\nPitch Range", "Pitch Min", "Pitch Max", "Notes", "Start (sec)", "End (sec)", "Vel. Min", "Vel. Max"]
+        self.clear_solo_btn = QPushButton("Clear Solo")
+        self.clear_solo_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+        self.clear_solo_btn.clicked.connect(self._on_clear_solo)
+
+        self.track_columns = ["", "", "Name", "Group", "Solo", "Override\nPitches", "Pitch Min", "Pitch Max", "Notes", "Start (sec)", "End (sec)", "Vel. Min", "Vel. Max"]
         self.table = QTableWidget(0, len(self.track_columns))
         self.table.setHorizontalHeaderLabels(self.track_columns)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
@@ -69,6 +73,7 @@ class TracksTab(QWidget):
         btns_layout.addWidget(self.group_tracks_btn)
         btns_layout.addWidget(self.clear_selection_btn)
         btns_layout.addWidget(self.sort_by_group_btn)
+        btns_layout.addWidget(self.clear_solo_btn)
         btns_layout.addStretch()
         v_layout.addLayout(btns_layout)
         v_layout.addWidget(self.table)
@@ -139,6 +144,12 @@ class TracksTab(QWidget):
 
         combo.currentIndexChanged.connect(lambda index, row=row: self._on_group_changed(row, index))
         self.table.setCellWidget(row, col, combo)
+        col += 1
+
+        # solo
+        solo_checkbox = TableCheckbox(track.solo)
+        solo_checkbox.valueChanged.connect(lambda checked, row=row: self._on_solo_changed(row, checked))
+        self.table.setCellWidget(row, col, solo_checkbox)
         col += 1
 
         # override pitch range
@@ -273,15 +284,43 @@ class TracksTab(QWidget):
 
         self._refresh_buttons()
 
+    def _on_clear_solo(self):
+        for t in self.vis_config.tracks:
+            t.solo = False
+        
+        self.refresh_ui()
+        self.on_changes_callback()
+
+    def _on_solo_changed(self, row: int, checked: bool):
+        if self.table.signalsBlocked():
+            return
+
+        # get all currently selected rows (including row this group is on)
+        rows = self._get_selected_rows()
+        if row not in rows:
+            rows.append(row)
+
+        for r in rows:
+            track = self.vis_config.tracks[r]
+            track.solo = checked
+
+        self.refresh_ui()
+        self.on_changes_callback()
+
     def _on_override_pitch_changed(self, row: int, checked: bool):
         if self.table.signalsBlocked():
             return
-        
-        track = self.vis_config.tracks[row]
-        track.override_pitch_min_max = checked
 
-        self._refresh_row(row)
+        # get all currently selected rows (including row this group is on)
+        rows = self._get_selected_rows()
+        if row not in rows:
+            rows.append(row)
 
+        for r in rows:
+            track = self.vis_config.tracks[r]
+            track.override_pitch_min_max = checked
+
+        self.refresh_ui()
         self.on_changes_callback()
 
     def _on_pitch_min_changed(self, row: int, value: int):
