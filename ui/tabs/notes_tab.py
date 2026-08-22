@@ -123,11 +123,6 @@ class NotesTab(QWidget):
         # --- Left Column ---
         column = v_left_layout
 
-        LayoutUtil.section(column, "Style")
-        LayoutUtil.checkbox(column, "Enhance Color", self.enhance_color_checkbox)
-        LayoutUtil.checkbox(column, "Round Edges", self.round_edges_checkbox)
-        LayoutUtil.spinbox(column, "Round Edges Amount", self.round_edges_input)
-
         LayoutUtil.section(column, "Fade")
         LayoutUtil.checkbox(column, "Fade In Enabled", self.fadein_checkbox)
         LayoutUtil.spinbox(column, "Fade In Start", self.fadein_start_input)
@@ -155,6 +150,11 @@ class NotesTab(QWidget):
 
         # --- Right Column ---
         column = v_right_layout
+
+        LayoutUtil.section(column, "Style")
+        LayoutUtil.checkbox(column, "Enhance Color", self.enhance_color_checkbox)
+        LayoutUtil.checkbox(column, "Round Edges", self.round_edges_checkbox)
+        LayoutUtil.spinbox(column, "Round Edges Amount", self.round_edges_input)
 
         LayoutUtil.section(column, "Sparks")
         LayoutUtil.checkbox(column, "Sparks Enabled", self.sparks_checkbox)

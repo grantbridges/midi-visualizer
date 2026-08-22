@@ -211,7 +211,8 @@ class MidiRenderUtil:
 
                 color = track.color
                 alpha = track.alpha
-                radius = 1 if not vis_config.note_round_edges else int(round(vis_config.note_round_ratio * (h / 2)))
+                radius_ratio = 1.0 if not vis_config.note_round_edges else vis_config.note_round_ratio
+                radius = int(round(radius_ratio * (h / 2)))
 
                 # start fading in when note is within range of playhead
                 if vis_config.note_fadein_enabled and x_left >= playhead_x:
@@ -227,19 +228,19 @@ class MidiRenderUtil:
                 if vis_config.note_sparks_enabled and track.note_sparks_enabled:
                     MidiRenderUtil._draw_note_sparks(
                         painter, vis_config, playhead_x, note.pitch, note.start, y_center, h, pixels_per_sec,
-                        current_time, color, alpha
+                        current_time, color, alpha, radius_ratio
                     )
 
                 # -- under glow --
                 if vis_config.note_glow_enabled and x_left <= playhead_x:
-                    MidiRenderUtil._draw_note_glow(painter, vis_config, playhead_x, x_left, y_top, w, h, color, alpha, vis_config.note_round_edges, vis_config.note_round_ratio)
+                    MidiRenderUtil._draw_note_glow(painter, vis_config, playhead_x, x_left, y_top, w, h, color, alpha, radius_ratio)
 
                 # -- note bar --
-                MidiRenderUtil._draw_note(painter, x_left, y_top, w, h, color, alpha, vis_config.note_enhance_color, vis_config.note_round_edges, radius)
+                MidiRenderUtil._draw_note(painter, x_left, y_top, w, h, color, alpha, vis_config.note_enhance_color, radius)
 
                 # -- highlight --
                 if vis_config.note_highlight_enabled and x_left <= playhead_x:
-                    MidiRenderUtil._draw_note_highlight(painter, vis_config, track, note, playhead_x, x_left, y_top, w, h, color, alpha, vis_config.note_round_edges, radius)
+                    MidiRenderUtil._draw_note_highlight(painter, vis_config, track, note, playhead_x, x_left, y_top, w, h, color, alpha, radius)
 
 
     @staticmethod
@@ -273,25 +274,24 @@ class MidiRenderUtil:
     def _draw_note_glow(
         painter: QPainter, vis_config: VisConfig, playhead_x: int, 
         x: int, y: int, w: int, h: int, color: RGB, alpha: int, 
-        round_edges: bool, round_radius_ratio: float
+        radius_ratio: float
     ):
-        x_right = x + w
-        glow_w = min(playhead_x, x_right) - x if vis_config.note_glow_played_region else w
         color_glow = Util.mix_colors(color, vis_config.note_glow_color, 0.75)
 
         # padding for how far glow extends vertically
         pad_y: float = h * vis_config.note_glow_size
-        round_radius: int = h * round_radius_ratio * vis_config.note_glow_size
-        print(f"Height: {h}, Radius: {round_radius}")
-
+    
         # draw rect for glow area and define linear gradient over it
-        glow_rect = QRectF(x, y - pad_y, glow_w, h + pad_y * 2)
+        glow_rect = QRectF(x, y - pad_y, w, h + pad_y * 2)
         gradient = QLinearGradient(
             glow_rect.left(),
             glow_rect.top(),
             glow_rect.left(),
             glow_rect.bottom(),
         )
+
+        # compute radius from radius ratio for the glow rect's height
+        radius = int(round(radius_ratio * (glow_rect.height() / 2)))
 
         # set linear gradient from top to bottom
         gradient.setColorAt(0.0, QUtil.rgb_to_qcolor(color_glow, 0))
@@ -301,16 +301,22 @@ class MidiRenderUtil:
         # draw glow
         painter.setPen(Qt.NoPen)
         painter.setBrush(QBrush(gradient))
-        MidiRenderUtil._draw_rect(
-            painter, glow_rect.left(), glow_rect.top(), glow_rect.width(), glow_rect.height(), 
-            round_edges, round_edges and (x + w - round_radius) < playhead_x, round_radius
-        )
+
+        if vis_config.note_glow_played_region:
+            painter.save()
+            clip_rect = QRectF(glow_rect.left(), glow_rect.top(), playhead_x - glow_rect.left(), glow_rect.height())
+            painter.setClipRect(clip_rect, Qt.ClipOperation.IntersectClip)
+
+        painter.drawRoundedRect(glow_rect, radius, radius)
+
+        if vis_config.note_glow_played_region:
+            painter.restore()
 
     @staticmethod
     def _draw_note(painter: QPainter, 
         x: int, y: int, w: int, h: int, 
         color: RGB, alpha: int, use_gradient: bool,
-        round_edges: bool, round_radius: int
+        radius: int
     ):
         qcolor = QUtil.rgb_to_qcolor(color, alpha)
 
@@ -325,7 +331,7 @@ class MidiRenderUtil:
         else:
             painter.setBrush(qcolor)
 
-        MidiRenderUtil._draw_rect(painter, x, y, w, h, round_edges, round_edges, round_radius)
+        painter.drawRoundedRect(x, y, w, h, radius, radius)
     
     @staticmethod
     def _draw_note_sparks(
@@ -339,7 +345,8 @@ class MidiRenderUtil:
         bar_px_per_sec: float,
         current_time: float,
         color: RGB, 
-        alpha: int
+        alpha: int,
+        radius_ratio: float
     ):
         # how long has it been since note has been played?
         anim_time = current_time - note_start_time
@@ -369,12 +376,14 @@ class MidiRenderUtil:
             x = playhead_x - (start_dist_px + speed_px_per_sec * anim_time) * math.cos(angle)
             y = note_center_y - (start_dist_px + speed_px_per_sec * anim_time) * math.sin(angle)
 
+            radius = int(round(radius_ratio * length_px / 2))
+
             # draw (matching highlight lightening)
             color_highlight = Util.mix_colors(color, vis_config.note_highlight_color, vis_config.note_highlight_intensity)
             qcolor = QUtil.rgb_to_qcolor(color_highlight, int(alpha * vis_config.note_sparks_alpha_ratio))
             painter.setPen(Qt.NoPen)
             painter.setBrush(qcolor)
-            painter.drawRect(x - length_px / 2, y - length_px / 2, length_px, length_px)
+            painter.drawRoundedRect(x - length_px / 2, y - length_px / 2, length_px, length_px, radius, radius)
 
             # old code for drawing as line - boxes look cleaner but 
             # leaving this here in case I ever want to try it out again
@@ -390,15 +399,11 @@ class MidiRenderUtil:
         painter: QPainter, vis_config: VisConfig, 
         track: RenderTrack, note: Note,
         playhead_x: int, x: int, y: int, w: int, h: int,
-        color: RGB, alpha: int,
-        round_edges: bool, round_radius: int
+        color: RGB, alpha: int, radius: int
     ):
         '''
         Draws transparent overlay over played note area to brighten
         '''
-        x_right = x + w
-        highlight_w = min(playhead_x, x_right) - x if vis_config.note_highlight_played_region else w
-
         highlight_factor = vis_config.note_highlight_intensity
 
         if vis_config.note_highlight_use_velocity and track.note_velocity_fx_enabled:
@@ -414,55 +419,13 @@ class MidiRenderUtil:
         color_highlight = Util.mix_colors(color, vis_config.note_highlight_color, highlight_factor)
         painter.setPen(Qt.NoPen)
         painter.setBrush(QUtil.rgb_to_qcolor(color_highlight, alpha * .8))
-        #painter.drawRect(x, y, highlight_w, h)
-        MidiRenderUtil._draw_rect(
-            painter, x, y, highlight_w, h, 
-            round_edges, round_edges and (x + w - round_radius) < playhead_x, round_radius
-        )
 
-    @staticmethod
-    def _draw_rect(painter: QPainter, x: int, y: int, w: int, h: int, round_left: bool, round_right: bool, radius: int):
-        '''
-        Draws rect, rounded rect, or semi-rounded rect
-        '''
-        if radius <= 0 or (not round_left and not round_right):
-            painter.drawRect(x, y, w, h)
-        elif round_left and round_right:
-            painter.drawRoundedRect(x, y, w, h, radius, radius)
-        else:
-            # draw partially rounded rect
-            path = QPainterPath()
+        if vis_config.note_highlight_played_region:
+            painter.save()
+            clip_rect = QRectF(x, y, playhead_x - x, h)
+            painter.setClipRect(clip_rect, Qt.ClipOperation.IntersectClip)
 
-            # shorthand left, top, right, bottom vals for drawing path
-            l, t, r, b = x, y, x + w, y + h
-            rad = min(radius, w / 2, h / 2)
+        painter.drawRoundedRect(x, y, w, h, radius, radius)
 
-            start_x = l + rad if round_left else l
-            path.moveTo(start_x, y)
-
-            if round_right:
-                # arc around right edge
-                path.lineTo(r - rad, t)
-                path.arcTo(r - 2 * rad, t, 2 * rad, 2 * rad, 90, -90) # top-right rounded
-                path.lineTo(r, b - rad) # right edge
-                path.arcTo(r - 2 * rad, b - 2 * rad, 2 * rad, 2 * rad, 0, -90) # bottom-right rounded
-            else:
-                # flat right edge
-                path.lineTo(r, t)
-                path.lineTo(r, b)
-
-            # bottom edge
-            end_x = l + rad if round_left else l
-            path.lineTo(end_x, b)
-
-            if round_left:
-                # arc around left edge
-                path.arcTo(l, b - 2 * rad, 2 * rad, 2 * rad, 270, -90)  # bottom-left rounded
-                path.lineTo(l, t + rad)  # left edge
-                path.arcTo(l, t, 2 * rad, 2 * rad, 180, -90)  # top-left rounded
-            else:
-                # flat left edge
-                path.lineTo(l, t)
-
-            path.closeSubpath()
-            painter.drawPath(path)
+        if vis_config.note_highlight_played_region:
+            painter.restore()
