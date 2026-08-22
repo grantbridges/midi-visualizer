@@ -31,7 +31,7 @@ class QUtil:
         palette.setColor(QPalette.Button, QColor(45, 45, 45))
         palette.setColor(QPalette.ButtonText, Qt.white)
         palette.setColor(QPalette.Highlight, QUtil.rgb_to_qcolor(Color.ILLUSTRI_TEXT_DARKER))
-        palette.setColor(QPalette.HighlightedText, Qt.white)
+        palette.setColor(QPalette.HighlightedText, QUtil.rgb_to_qcolor(Color.DARKER_GRAY))
         palette.setColor(QPalette.PlaceholderText, QColor(160, 160, 160))
 
         # Disabled colors
