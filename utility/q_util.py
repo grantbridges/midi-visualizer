@@ -1,7 +1,7 @@
 import sys
 from PySide6.QtGui import QColor, QFontDatabase, QPalette, Qt
 from PySide6.QtWidgets import QApplication
-from common import RGB
+from common import RGB, Color
 from utility.file_util import FileUtil
 
 import logging
@@ -30,7 +30,7 @@ class QUtil:
         palette.setColor(QPalette.Text, Qt.white)
         palette.setColor(QPalette.Button, QColor(45, 45, 45))
         palette.setColor(QPalette.ButtonText, Qt.white)
-        palette.setColor(QPalette.Highlight, QColor(90, 120, 180))
+        palette.setColor(QPalette.Highlight, QUtil.rgb_to_qcolor(Color.ILLUSTRI_TEXT_DARKER))
         palette.setColor(QPalette.HighlightedText, Qt.white)
         palette.setColor(QPalette.PlaceholderText, QColor(160, 160, 160))
 

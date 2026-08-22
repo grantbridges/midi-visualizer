@@ -97,6 +97,14 @@ class Icons:
         return Icons._get_icon("mdi6.menu")
     
     @staticmethod
+    def copy():
+        return Icons._get_icon("mdi6.content-copy")
+    
+    @staticmethod
+    def paste():
+        return Icons._get_icon("mdi6.content-paste")
+    
+    @staticmethod
     def _get_icon(name: str):
         return qta.icon(
             name,

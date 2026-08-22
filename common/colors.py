@@ -20,6 +20,7 @@ class Color(tuple, Enum):
 
     # branding colors
     ILLUSTRI_TEXT = (156, 226, 255)
+    ILLUSTRI_TEXT_DARKER = (60, 193, 250)
     SPLASH_BG_BLUE = (2, 0, 40)
     SPLASH_BG_GRAY = (74, 74, 74)
     ICON_LIGHT = (105, 157, 224)

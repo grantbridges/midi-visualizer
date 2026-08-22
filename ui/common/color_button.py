@@ -1,5 +1,6 @@
 from common import RGB
 from common import Color
+from ui.common.icons import Icons
 from utility import QUtil, Util
 
 from PySide6.QtCore import Signal
@@ -62,7 +63,7 @@ class ColorButton(QPushButton):
     def contextMenuEvent(self, event):
         menu = QMenu(self)
 
-        copy_action = QAction("Copy", self)
+        copy_action = QAction("Copy", icon=Icons.copy(), parent=self)
         copy_action.triggered.connect(self._copy_color)
         menu.addAction(copy_action)
 
@@ -70,7 +71,7 @@ class ColorButton(QPushButton):
         pasted_color = self._parse_clipboard_color(clipboard_text)
 
         # only enable paste button if current clipboard contents are a valid color
-        paste_action = QAction("Paste", self)
+        paste_action = QAction("Paste", icon=Icons.paste(), parent=self)
         paste_action.setEnabled(pasted_color is not None)
         paste_action.triggered.connect(self._paste_color)
         menu.addAction(paste_action)
