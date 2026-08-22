@@ -2,6 +2,7 @@ from typing import List
 from uuid import UUID
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtWidgets import (
+    QComboBox,
     QDialog,
     QHBoxLayout,
     QPushButton,
@@ -19,8 +20,7 @@ from ui.common import (
     LayoutUtil, 
     Icons, 
     TableCheckBox, 
-    TableSpinBox,
-    TableComboBox
+    TableSpinBox
 )
 from utility import MidiUtil, Util
 from ui.dialogs import GroupTracksDialog
@@ -122,7 +122,9 @@ class TracksTab(QWidget):
         col += 1
 
         # groups dropdown
-        combo = TableComboBox(self.table)
+        combo = QComboBox()
+        # allow opening while preserving selected table rows
+        combo.setFocusPolicy(Qt.FocusPolicy.NoFocus) 
         combo.addItem("None", None)
         for tg in self.vis_config.track_groups:
             combo.addItem(tg.name, str(tg.group_id))

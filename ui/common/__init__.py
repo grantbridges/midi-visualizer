@@ -1,7 +1,6 @@
 from ui.common.color_button import ColorButton
 from ui.common.table_checkbox import TableCheckBox
 from ui.common.table_spinbox import TableSpinBox
-from ui.common.table_combobox import TableComboBox
 from ui.common.section_divider import SectionDivider
 from ui.common.layout_util import LayoutUtil
 from ui.common.widget_util import WidgetUtil
