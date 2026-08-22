@@ -17,12 +17,12 @@ from models import VisConfig
 from utility import Util
 from ui.common import (
     ColorButton, 
-    TableCheckbox, 
-    TableSpinbox,
+    TableCheckBox, 
+    TableSpinBox,
     LayoutUtil, 
     Icons, 
-    ScaledSpinbox, 
-    ScaledDoubleSpinbox
+    ScaledSpinBox, 
+    ScaledDoubleSpinBox
 )
 import copy
 from uuid import uuid4
@@ -121,13 +121,13 @@ class TrackGroupsTab(QWidget):
         col += 1
 
         # solo
-        checkbox = TableCheckbox(track_group.solo)
+        checkbox = TableCheckBox(track_group.solo)
         checkbox.valueChanged.connect(lambda checked, row=row: self._on_solo_changed(row, checked))
         self.table.setCellWidget(row, col, checkbox)
         col += 1
 
         # visible
-        checkbox = TableCheckbox(track_group.visible)
+        checkbox = TableCheckBox(track_group.visible)
         checkbox.valueChanged.connect(lambda checked, row=row: self._on_visible_changed(row, checked))
         self.table.setCellWidget(row, col, checkbox)
         col += 1
@@ -139,7 +139,7 @@ class TrackGroupsTab(QWidget):
         col += 1
 
         # opacity
-        opacity = ScaledSpinbox(
+        opacity = ScaledSpinBox(
             internal_value=track_group.alpha, 
             display_min=0, 
             display_max=100, 
@@ -152,25 +152,25 @@ class TrackGroupsTab(QWidget):
         col += 1
 
         # sparks
-        checkbox = TableCheckbox(track_group.note_sparks_enabled)
+        checkbox = TableCheckBox(track_group.note_sparks_enabled)
         checkbox.valueChanged.connect(lambda checked, row=row: self._on_sparks_changed(row, checked))
         self.table.setCellWidget(row, col, checkbox)
         col += 1
 
         # bounce
-        checkbox = TableCheckbox(track_group.note_bounce_enabled)
+        checkbox = TableCheckBox(track_group.note_bounce_enabled)
         checkbox.valueChanged.connect(lambda checked, row=row: self._on_bounce_changed(row, checked))
         self.table.setCellWidget(row, col, checkbox)
         col += 1
 
         # velocity fx
-        checkbox = TableCheckbox(track_group.note_velocity_fx_enabled)
+        checkbox = TableCheckBox(track_group.note_velocity_fx_enabled)
         checkbox.valueChanged.connect(lambda checked, row=row: self._on_velocity_fx_changed(row, checked))
         self.table.setCellWidget(row, col, checkbox)
         col += 1
 
         # bar height ratio
-        bar_height = ScaledDoubleSpinbox(
+        bar_height = ScaledDoubleSpinBox(
             decimals=2, 
             singleStep=0.01, 
             display_min=1.0, 
@@ -185,7 +185,7 @@ class TrackGroupsTab(QWidget):
         col += 1
 
         # pixels/sec
-        sec_across_screen = ScaledDoubleSpinbox(
+        sec_across_screen = ScaledDoubleSpinBox(
             decimals=1,
             singleStep=0.1,
             display_min=0.1,
@@ -202,7 +202,7 @@ class TrackGroupsTab(QWidget):
         # pitch offset
         group_pitch_min = self.vis_config.get_min_pitch_for_track_group(track_group.group_id, True)
         group_pitch_max = self.vis_config.get_max_pitch_for_track_group(track_group.group_id, True)
-        pitch_offset = TableSpinbox()
+        pitch_offset = TableSpinBox()
         spinner_min = 0 - group_pitch_min
         spinner_max = 127 - group_pitch_max
         pitch_offset.setRange(spinner_min, spinner_max)

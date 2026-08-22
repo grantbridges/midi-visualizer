@@ -2,6 +2,10 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QSlider, QStyle, QStyleOptionSlider, QWidget
 
 class IllustriSlider(QSlider):
+    '''
+    Override of QSlider that permits clicking anywhere along to have
+    handle/value immediately jump to mouse position.
+    '''
     def __init__(self, orientation: Qt.Orientation, parent: QWidget | None = None):
         super().__init__(orientation, parent)
 
@@ -17,6 +21,7 @@ class IllustriSlider(QSlider):
         super().mousePressEvent(event)
 
     def _value_from_pos(self, pos):
+        # for a given position, compure corresponding value
         opt = QStyleOptionSlider()
         self.initStyleOption(opt)
 

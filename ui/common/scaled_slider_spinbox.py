@@ -2,7 +2,7 @@ from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtWidgets import QSpinBox, QWidget, QHBoxLayout
 from ui.common.illustri_slider import IllustriSlider
 
-class ScaledSliderSpinbox(QWidget):
+class ScaledSliderSpinBox(QWidget):
     valueChanged = Signal(int)
 
     SPINBOX_WIDTH = 90

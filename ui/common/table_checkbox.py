@@ -3,7 +3,7 @@ from typing import override
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QCheckBox
 from PySide6.QtCore import Qt, Signal
 
-class TableCheckbox(QWidget):
+class TableCheckBox(QWidget):
     '''
     Wrapper around QCheckBox for use in tables so it centers nicely
     '''

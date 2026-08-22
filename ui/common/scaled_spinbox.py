@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QWidget, QSpinBox
 
-class ScaledSpinbox(QSpinBox):
+class ScaledSpinBox(QSpinBox):
     '''
     Simple wrapper around QSpinBox that handles converting from internal 
     values to display and pulling converted internal value back out.

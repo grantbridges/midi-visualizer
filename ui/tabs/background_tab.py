@@ -17,8 +17,8 @@ from ui.common import (
     ColorButton, 
     LayoutUtil, 
     Icons,
-    ScaledSliderSpinbox,
-    SliderDoubleSpinbox
+    ScaledSliderSpinBox,
+    SliderDoubleSpinBox
 )
 
 class BackgroundTab(QWidget):
@@ -63,7 +63,7 @@ class BackgroundTab(QWidget):
         self.bg_video_file_clear_btn = QPushButton()
         self.bg_video_file_clear_btn.setIcon(Icons.trash_can())
         self.bg_video_file_clear_btn.clicked.connect(self._clear_bg_video_file)
-        self.bg_video_time_offset_input = SliderDoubleSpinbox(decimals=2, minimum=-10.0, maximum=10.0, singleStep=0.01, suffix=" sec")
+        self.bg_video_time_offset_input = SliderDoubleSpinBox(decimals=2, minimum=-10.0, maximum=10.0, singleStep=0.01, suffix=" sec")
         self.bg_video_time_offset_input.valueChanged.connect(self._on_changes)
         self.bg_video_loop_checkbox = QCheckBox()
         self.bg_video_loop_checkbox.toggled.connect(self._on_changes)
@@ -72,7 +72,7 @@ class BackgroundTab(QWidget):
         self.bg_tint_checkbox.toggled.connect(self._on_changes)
         self.bg_tint_color_button = ColorButton()
         self.bg_tint_color_button.valueChanged.connect(self._on_changes)
-        self.bg_tint_opacity_input = ScaledSliderSpinbox(display_min=0, display_max=100, internal_min=0, internal_max=255)
+        self.bg_tint_opacity_input = ScaledSliderSpinBox(display_min=0, display_max=100, internal_min=0, internal_max=255)
         self.bg_tint_opacity_input.valueChanged.connect(self._on_changes)
 
     def shutdown(self):

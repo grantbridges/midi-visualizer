@@ -11,8 +11,8 @@ from models import VisConfig
 from ui.common import (
     LayoutUtil, 
     ColorButton,
-    SliderSpinbox,
-    SliderDoubleSpinbox
+    SliderSpinBox,
+    SliderDoubleSpinBox
 )
 
 class NotesTab(QWidget):
@@ -33,20 +33,20 @@ class NotesTab(QWidget):
         self.enhance_color_checkbox.toggled.connect(self._on_changes)
         self.round_edges_checkbox = QCheckBox()
         self.round_edges_checkbox.toggled.connect(self._on_changes)
-        self.round_edges_input = SliderDoubleSpinbox(decimals=2, minimum=0.00, maximum=1.0, singleStep=0.01)
+        self.round_edges_input = SliderDoubleSpinBox(decimals=2, minimum=0.00, maximum=1.0, singleStep=0.01)
         self.round_edges_input.valueChanged.connect(self._on_changes)
 
         self.fadein_checkbox = QCheckBox()
         self.fadein_checkbox.toggled.connect(self._on_changes)
-        self.fadein_start_input = SliderDoubleSpinbox(decimals=2, minimum=0.01, maximum=1.00, singleStep=.01)
+        self.fadein_start_input = SliderDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.00, singleStep=.01)
         self.fadein_start_input.valueChanged.connect(self._on_fadein_start_changed)
-        self.fadein_end_input = SliderDoubleSpinbox(decimals=2, minimum=0.00, maximum=0.99, singleStep=.01)
+        self.fadein_end_input = SliderDoubleSpinBox(decimals=2, minimum=0.00, maximum=0.99, singleStep=.01)
         self.fadein_end_input.valueChanged.connect(self._on_fadein_end_changed)
         self.fadeout_checkbox = QCheckBox()
         self.fadeout_checkbox.toggled.connect(self._on_changes)
-        self.fadeout_start_input = SliderDoubleSpinbox(decimals=2, minimum=0.01, maximum=1.00, singleStep=.01)
+        self.fadeout_start_input = SliderDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.00, singleStep=.01)
         self.fadeout_start_input.valueChanged.connect(self._on_fadeout_start_changed)
-        self.fadeout_end_input = SliderDoubleSpinbox(decimals=2, minimum=0.00, maximum=0.99, singleStep=.01)
+        self.fadeout_end_input = SliderDoubleSpinBox(decimals=2, minimum=0.00, maximum=0.99, singleStep=.01)
         self.fadeout_end_input.valueChanged.connect(self._on_fadeout_end_changed)
 
         self.glow_checkbox = QCheckBox()
@@ -55,9 +55,9 @@ class NotesTab(QWidget):
         self.glow_played_region_checkbox.toggled.connect(self._on_changes)
         self.glow_color = ColorButton()
         self.glow_color.valueChanged.connect(self._on_changes)
-        self.glow_size_input = SliderDoubleSpinbox(decimals=2, minimum=0.00, maximum=2.0, singleStep=0.01)
+        self.glow_size_input = SliderDoubleSpinBox(decimals=2, minimum=0.00, maximum=2.0, singleStep=0.01)
         self.glow_size_input.valueChanged.connect(self._on_changes)
-        self.glow_intensity_input = SliderDoubleSpinbox(decimals=2, minimum=0.00, maximum=1.00, singleStep=0.01)
+        self.glow_intensity_input = SliderDoubleSpinBox(decimals=2, minimum=0.00, maximum=1.00, singleStep=0.01)
         self.glow_intensity_input.valueChanged.connect(self._on_changes)
 
         self.highlight_checkbox = QCheckBox()
@@ -68,35 +68,35 @@ class NotesTab(QWidget):
         self.highlight_use_vel_checkbox.toggled.connect(self._on_changes)
         self.highlight_color = ColorButton()
         self.highlight_color.valueChanged.connect(self._on_changes)
-        self.highlight_intensity_input = SliderDoubleSpinbox(decimals=2, minimum=0.01, maximum=1.00, singleStep=0.01)
+        self.highlight_intensity_input = SliderDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.00, singleStep=0.01)
         self.highlight_intensity_input.valueChanged.connect(self._on_changes)
-        self.highlight_min_intensity_input = SliderDoubleSpinbox(decimals=2, minimum=0.01, maximum=0.99, singleStep=0.01)
+        self.highlight_min_intensity_input = SliderDoubleSpinBox(decimals=2, minimum=0.01, maximum=0.99, singleStep=0.01)
         self.highlight_min_intensity_input.valueChanged.connect(self._on_highlight_min_intensity_changed)
-        self.highlight_max_intensity_input = SliderDoubleSpinbox(decimals=2, minimum=0.02, maximum=1.00, singleStep=0.01)
+        self.highlight_max_intensity_input = SliderDoubleSpinBox(decimals=2, minimum=0.02, maximum=1.00, singleStep=0.01)
         self.highlight_max_intensity_input.valueChanged.connect(self._on_highlight_max_intensity_changed)
 
         self.sparks_checkbox = QCheckBox()
         self.sparks_checkbox.toggled.connect(self._on_changes)
-        self.sparks_start_dist_input = SliderDoubleSpinbox(decimals=1, minimum=0.0, maximum=10.0, singleStep=0.1)
+        self.sparks_start_dist_input = SliderDoubleSpinBox(decimals=1, minimum=0.0, maximum=10.0, singleStep=0.1)
         self.sparks_start_dist_input.valueChanged.connect(self._on_changes)
-        self.sparks_start_length_input = SliderDoubleSpinbox(decimals=2, minimum=0.25, maximum=10.0, singleStep=0.01)
+        self.sparks_start_length_input = SliderDoubleSpinBox(decimals=2, minimum=0.25, maximum=10.0, singleStep=0.01)
         self.sparks_start_length_input.valueChanged.connect(self._on_changes)
-        self.sparks_speed_input = SliderDoubleSpinbox(decimals=2, minimum=0.01, maximum=4.9, singleStep=0.01)
+        self.sparks_speed_input = SliderDoubleSpinBox(decimals=2, minimum=0.01, maximum=4.9, singleStep=0.01)
         self.sparks_speed_input.valueChanged.connect(self._on_speed_min_changed)
-        self.sparks_speed_var_input = SliderDoubleSpinbox(decimals=2, minimum=0.02, maximum=5.0, singleStep=0.01)
+        self.sparks_speed_var_input = SliderDoubleSpinBox(decimals=2, minimum=0.02, maximum=5.0, singleStep=0.01)
         self.sparks_speed_var_input.valueChanged.connect(self._on_speed_max_changed)
-        self.sparks_opacity_ratio_input = SliderDoubleSpinbox(decimals=2, minimum=0.01, maximum=1.0, singleStep=0.01)
+        self.sparks_opacity_ratio_input = SliderDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.0, singleStep=0.01)
         self.sparks_opacity_ratio_input.valueChanged.connect(self._on_changes)
-        self.sparks_count_input = SliderSpinbox(minimum=1, maximum=50)
+        self.sparks_count_input = SliderSpinBox(minimum=1, maximum=50)
         self.sparks_count_input.valueChanged.connect(self._on_changes)
-        self.sparks_angle_input = SliderSpinbox(minimum=0, maximum=180, suffix="°")
+        self.sparks_angle_input = SliderSpinBox(minimum=0, maximum=180, suffix="°")
         self.sparks_angle_input.valueChanged.connect(self._on_changes)
-        self.sparks_fade_time_input = SliderDoubleSpinbox(decimals=2, minimum=0.01, maximum=5.0, singleStep=0.01, suffix=" sec")
+        self.sparks_fade_time_input = SliderDoubleSpinBox(decimals=2, minimum=0.01, maximum=5.0, singleStep=0.01, suffix=" sec")
         self.sparks_fade_time_input.valueChanged.connect(self._on_changes)
 
         self.bounce_checkbox = QCheckBox()
         self.bounce_checkbox.toggled.connect(self._on_changes)
-        self.bounce_height_input = SliderDoubleSpinbox(decimals=2, minimum=0.01, maximum=5.0, singleStep=0.01)
+        self.bounce_height_input = SliderDoubleSpinBox(decimals=2, minimum=0.01, maximum=5.0, singleStep=0.01)
         self.bounce_height_input.valueChanged.connect(self._on_changes)
 
     def shutdown(self):

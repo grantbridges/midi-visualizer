@@ -15,10 +15,10 @@ from utility import MidiUtil
 from ui.common import (
     ColorButton, 
     LayoutUtil, 
-    SliderSpinbox,
-    SliderDoubleSpinbox,
-    ScaledSliderSpinbox, 
-    ScaledSliderDoubleSpinbox
+    SliderSpinBox,
+    SliderDoubleSpinBox,
+    ScaledSliderSpinBox, 
+    ScaledSliderDoubleSpinBox
 )
 
 class GeneralTab(QWidget):
@@ -47,43 +47,43 @@ class GeneralTab(QWidget):
         self.show_playhead_checkbox.toggled.connect(self._on_changes)
         self.playhead_color_button = ColorButton()
         self.playhead_color_button.valueChanged.connect(self._on_changes)
-        self.playhead_opacity_input = ScaledSliderSpinbox(display_min=0, display_max=100, internal_min=0, internal_max=255)
+        self.playhead_opacity_input = ScaledSliderSpinBox(display_min=0, display_max=100, internal_min=0, internal_max=255)
         self.playhead_opacity_input.valueChanged.connect(self._on_changes)
-        self.playhead_thickness_input = ScaledSliderDoubleSpinbox(display_min=.01, display_max=1, internal_min=0.0001, internal_max=0.1, decimals=2, singleStep=0.01)
+        self.playhead_thickness_input = ScaledSliderDoubleSpinBox(display_min=.01, display_max=1, internal_min=0.0001, internal_max=0.1, decimals=2, singleStep=0.01)
         self.playhead_thickness_input.valueChanged.connect(self._on_changes)
-        self.playhead_pos_input = SliderDoubleSpinbox(decimals=2, minimum=0.01, maximum=1.00, singleStep=0.01)
+        self.playhead_pos_input = SliderDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.00, singleStep=0.01)
         self.playhead_pos_input.valueChanged.connect(self._on_changes)
 
-        self.vertical_padding_input = SliderDoubleSpinbox(decimals=2, minimum=0.00, maximum=1.00, singleStep=0.01)
+        self.vertical_padding_input = SliderDoubleSpinBox(decimals=2, minimum=0.00, maximum=1.00, singleStep=0.01)
         self.vertical_padding_input.valueChanged.connect(self._on_changes)
-        self.vertical_offset_input = SliderDoubleSpinbox(decimals=2, minimum=-1.00, maximum=1.00, singleStep=0.01)
+        self.vertical_offset_input = SliderDoubleSpinBox(decimals=2, minimum=-1.00, maximum=1.00, singleStep=0.01)
         self.vertical_offset_input.valueChanged.connect(self._on_changes)
 
         self.auto_calc_pitch_bounds_checkbox = QCheckBox()
         self.auto_calc_pitch_bounds_checkbox.toggled.connect(self._on_changes)
-        self.pitch_min_input = SliderSpinbox(minimum=1, maximum=126)
+        self.pitch_min_input = SliderSpinBox(minimum=1, maximum=126)
         self.pitch_min_input.valueChanged.connect(self._on_pitch_min_changed)
-        self.pitch_max_input = SliderSpinbox(minimum=2, maximum=127)      
+        self.pitch_max_input = SliderSpinBox(minimum=2, maximum=127)      
         self.pitch_max_input.valueChanged.connect(self._on_pitch_max_changed)
 
         self.apply_time_offsets_checkbox = QCheckBox()
         self.apply_time_offsets_checkbox.toggled.connect(self._on_changes)
-        self.start_time_input = SliderDoubleSpinbox(decimals=2, minimum=-10.0, maximum=10.0, singleStep=0.01, suffix=" sec")
+        self.start_time_input = SliderDoubleSpinBox(decimals=2, minimum=-10.0, maximum=10.0, singleStep=0.01, suffix=" sec")
         self.start_time_input.valueChanged.connect(self._on_changes)
-        self.end_time_input = SliderDoubleSpinbox(decimals=2, minimum=-10.0, maximum=10.0, singleStep=0.01, suffix=" sec")
+        self.end_time_input = SliderDoubleSpinBox(decimals=2, minimum=-10.0, maximum=10.0, singleStep=0.01, suffix=" sec")
         self.end_time_input.valueChanged.connect(self._on_changes)
 
         self.fade_in_checkbox = QCheckBox()
         self.fade_in_checkbox.toggled.connect(self._on_changes)
         self.fade_in_color = ColorButton()
         self.fade_in_color.valueChanged.connect(self._on_changes)
-        self.fade_in_time = SliderDoubleSpinbox(decimals=2, minimum=0.1, maximum=10.00, singleStep=0.1, suffix=" sec")
+        self.fade_in_time = SliderDoubleSpinBox(decimals=2, minimum=0.1, maximum=10.00, singleStep=0.1, suffix=" sec")
         self.fade_in_time.valueChanged.connect(self._on_changes)
         self.fade_out_checkbox = QCheckBox()
         self.fade_out_checkbox.toggled.connect(self._on_changes)
         self.fade_out_color = ColorButton()
         self.fade_out_color.valueChanged.connect(self._on_changes)
-        self.fade_out_time = SliderDoubleSpinbox(decimals=2, minimum=0.1, maximum=10.00, singleStep=0.1, suffix=" sec")
+        self.fade_out_time = SliderDoubleSpinBox(decimals=2, minimum=0.1, maximum=10.00, singleStep=0.1, suffix=" sec")
         self.fade_out_time.valueChanged.connect(self._on_changes)
 
     def shutdown(self):

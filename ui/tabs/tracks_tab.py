@@ -10,13 +10,18 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QTableWidget,
     QTableWidgetItem,
-    QComboBox,
     QHeaderView,
     QMenu,
     QAbstractItemView
 )
 from models import VisConfig, Track
-from ui.common import LayoutUtil, Icons, TableCheckbox, TableSpinbox
+from ui.common import (
+    LayoutUtil, 
+    Icons, 
+    TableCheckBox, 
+    TableSpinBox,
+    TableComboBox
+)
 from utility import MidiUtil, Util
 from ui.dialogs import GroupTracksDialog
 
@@ -117,7 +122,7 @@ class TracksTab(QWidget):
         col += 1
 
         # groups dropdown
-        combo = QComboBox()
+        combo = TableComboBox(self.table)
         combo.addItem("None", None)
         for tg in self.vis_config.track_groups:
             combo.addItem(tg.name, str(tg.group_id))
@@ -143,20 +148,20 @@ class TracksTab(QWidget):
         col += 1
 
         # solo
-        solo_checkbox = TableCheckbox(track.solo)
+        solo_checkbox = TableCheckBox(track.solo)
         solo_checkbox.valueChanged.connect(lambda checked, row=row: self._on_solo_changed(row, checked))
         self.table.setCellWidget(row, col, solo_checkbox)
         col += 1
 
         # override pitch range
-        override_pitch_checkbox = TableCheckbox(track.override_pitch_min_max)
+        override_pitch_checkbox = TableCheckBox(track.override_pitch_min_max)
         override_pitch_checkbox.valueChanged.connect(lambda checked, row=row: self._on_override_pitch_changed(row, checked))
         self.table.setCellWidget(row, col, override_pitch_checkbox)
         col += 1
 
         # pitch min
         pitch_min = track.get_min_pitch()
-        pitch_min_input = TableSpinbox(value=pitch_min, suffix=self._pitch_suffix(pitch_min))
+        pitch_min_input = TableSpinBox(value=pitch_min, suffix=self._pitch_suffix(pitch_min))
         pitch_min_input.setFixedWidth(80)
         pitch_min_input.setRange(1, track.manual_pitch_max)
         pitch_min_input.setEnabled(track.override_pitch_min_max)
@@ -166,7 +171,7 @@ class TracksTab(QWidget):
 
         # pitch max
         pitch_max = track.get_max_pitch()
-        pitch_max_input = TableSpinbox(value=pitch_max, suffix=self._pitch_suffix(pitch_max))
+        pitch_max_input = TableSpinBox(value=pitch_max, suffix=self._pitch_suffix(pitch_max))
         pitch_max_input.setFixedWidth(80)
         pitch_max_input.setRange(track.manual_pitch_min, 127)
         pitch_max_input.setEnabled(track.override_pitch_min_max)
@@ -316,12 +321,12 @@ class TracksTab(QWidget):
 
         # update suffix of this cell
         col = self.track_columns.index("Pitch Min")
-        pitch_min_input: TableSpinbox = self.table.cellWidget(row, col)
+        pitch_min_input: TableSpinBox = self.table.cellWidget(row, col)
         pitch_min_input.setSuffix(self._pitch_suffix(value))
 
         # update maximum value of pitch min cell
         col = self.track_columns.index("Pitch Max")
-        pitch_max_input: TableSpinbox = self.table.cellWidget(row, col)
+        pitch_max_input: TableSpinBox = self.table.cellWidget(row, col)
         if pitch_max_input:
             pitch_max_input.setMinimum(track.manual_pitch_min)
 
@@ -336,12 +341,12 @@ class TracksTab(QWidget):
 
         # update suffix of this cell
         col = self.track_columns.index("Pitch Max")
-        pitch_max_input: TableSpinbox = self.table.cellWidget(row, col)
+        pitch_max_input: TableSpinBox = self.table.cellWidget(row, col)
         pitch_max_input.setSuffix(self._pitch_suffix(value))
 
         # update maximum value of pitch min cell
         col = self.track_columns.index("Pitch Min")
-        pitch_min_input: TableSpinbox = self.table.cellWidget(row, col)
+        pitch_min_input: TableSpinBox = self.table.cellWidget(row, col)
         if pitch_min_input:
             pitch_min_input.setMaximum(track.manual_pitch_max)
 
