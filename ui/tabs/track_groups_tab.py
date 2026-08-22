@@ -51,7 +51,7 @@ class TrackGroupsTab(QWidget):
         self.clear_solo_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         self.clear_solo_btn.clicked.connect(self._on_clear_solo)
 
-        self.track_columns = ["", "", "Name", "Tracks", "Solo", "Visible", "Color", "Opacity", "Note Sparks", "Note Bounce", "Note Vel. Fx", "Bar Height", "Speed", "Pitch Offset", ""]
+        self.track_columns = ["", "", "Name", "Tracks", "Solo", "Visible", "Color", "Opacity", "Note\nSparks", "Note\nBounce", "Note\nVel. Fx", "Bar Height", "Speed", "Pitch Offset", ""]
         self.table = QTableWidget(0, len(self.track_columns))
         self.table.setHorizontalHeaderLabels(self.track_columns)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
