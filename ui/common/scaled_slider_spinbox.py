@@ -109,3 +109,6 @@ class ScaledSliderSpinbox(QWidget):
         internal_value = self._internal_min + t * (self._internal_max - self._internal_min)
 
         return int(round(internal_value))
+
+    def setSuffix(self, suffix: str):
+        self._spinbox.setSuffix(suffix)

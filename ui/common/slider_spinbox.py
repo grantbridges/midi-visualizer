@@ -86,3 +86,6 @@ class SliderSpinbox(QWidget):
     def setValue(self, value: int):
         # Setting the spinbox triggers _on_spinbox_changed, which syncs the slider
         self._spinbox.setValue(value)
+
+    def setSuffix(self, suffix: str):
+        self._spinbox.setSuffix(suffix)

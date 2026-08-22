@@ -15,7 +15,8 @@ from utility import MidiUtil
 from ui.common import (
     ColorButton, 
     LayoutUtil, 
-    SliderDoubleSpinbox, 
+    SliderSpinbox,
+    SliderDoubleSpinbox,
     ScaledSliderSpinbox, 
     ScaledSliderDoubleSpinbox
 )
@@ -60,10 +61,10 @@ class GeneralTab(QWidget):
 
         self.auto_calc_pitch_bounds_checkbox = QCheckBox()
         self.auto_calc_pitch_bounds_checkbox.toggled.connect(self._on_changes)
-        self.pitch_min_input = QSpinBox()
-        self.pitch_min_input.valueChanged.connect(self._on_changes)
-        self.pitch_max_input = QSpinBox()      
-        self.pitch_max_input.valueChanged.connect(self._on_changes)
+        self.pitch_min_input = SliderSpinbox(minimum=1, maximum=126)
+        self.pitch_min_input.valueChanged.connect(self._on_pitch_min_changed)
+        self.pitch_max_input = SliderSpinbox(minimum=2, maximum=127)      
+        self.pitch_max_input.valueChanged.connect(self._on_pitch_max_changed)
 
         self.apply_time_offsets_checkbox = QCheckBox()
         self.apply_time_offsets_checkbox.toggled.connect(self._on_changes)
@@ -181,13 +182,13 @@ class GeneralTab(QWidget):
         self.vertical_offset_input.setValue(self.vis_config.vertical_offset_ratio)
 
         self.auto_calc_pitch_bounds_checkbox.setChecked(self.vis_config.auto_calc_pitch_bounds)
+
         self.pitch_min_input.setDisabled(self.vis_config.auto_calc_pitch_bounds)
-        self.pitch_min_input.setRange(0, self.vis_config.manual_pitch_max)
         min_pitch = self.vis_config.get_min_pitch() if self.vis_config.auto_calc_pitch_bounds else self.vis_config.manual_pitch_min
         self.pitch_min_input.setValue(min_pitch)
         self.pitch_min_input.setSuffix(f" ({MidiUtil.midi_pitch_to_note(min_pitch)})")
+
         self.pitch_max_input.setDisabled(self.vis_config.auto_calc_pitch_bounds)
-        self.pitch_max_input.setRange(self.vis_config.manual_pitch_min, 127)
         max_pitch = self.vis_config.get_max_pitch() if self.vis_config.auto_calc_pitch_bounds else self.vis_config.manual_pitch_max
         self.pitch_max_input.setValue(max_pitch)  
         self.pitch_max_input.setSuffix(f" ({MidiUtil.midi_pitch_to_note(max_pitch)})")
@@ -244,7 +245,37 @@ class GeneralTab(QWidget):
 
     # callbacks
 
+    def _on_pitch_min_changed(self):
+        if self.block_changes_callback:
+            return
+        
+        min_pitch = self.pitch_min_input.value()
+        max_pitch = self.pitch_max_input.value()
+
+        if max_pitch <= min_pitch:
+            self.block_changes_callback = True
+            self.pitch_max_input.setValue(min_pitch + 1)
+            self.block_changes_callback = False
+
+        self._on_changes()
+
+    def _on_pitch_max_changed(self):
+        if self.block_changes_callback:
+            return
+        
+        min_pitch = self.pitch_min_input.value()
+        max_pitch = self.pitch_max_input.value()
+
+        if min_pitch >= max_pitch:
+            self.block_changes_callback = True
+            self.pitch_min_input.setValue(max_pitch - 1)
+            self.block_changes_callback = False
+
+        self._on_changes()
+
     def _on_changes(self):
-        if not self.block_changes_callback:
-            self.on_changes_callback()
-            self.refresh_ui()
+        if self.block_changes_callback:
+            return
+        
+        self.on_changes_callback()
+        self.refresh_ui()
