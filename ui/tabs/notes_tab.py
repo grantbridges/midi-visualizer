@@ -38,16 +38,16 @@ class NotesTab(QWidget):
 
         self.fadein_checkbox = QCheckBox()
         self.fadein_checkbox.toggled.connect(self._on_changes)
-        self.fadein_start_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.00, singleStep=.01)
-        self.fadein_start_input.valueChanged.connect(self._on_changes)
-        self.fadein_end_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.00, singleStep=.01)
-        self.fadein_end_input.valueChanged.connect(self._on_changes)
+        self.fadein_start_input = SliderDoubleSpinbox(decimals=2, minimum=0.01, maximum=1.00, singleStep=.01)
+        self.fadein_start_input.valueChanged.connect(self._on_fadein_start_changed)
+        self.fadein_end_input = SliderDoubleSpinbox(decimals=2, minimum=0.00, maximum=0.99, singleStep=.01)
+        self.fadein_end_input.valueChanged.connect(self._on_fadein_end_changed)
         self.fadeout_checkbox = QCheckBox()
         self.fadeout_checkbox.toggled.connect(self._on_changes)
-        self.fadeout_start_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.00, singleStep=.01)
-        self.fadeout_start_input.valueChanged.connect(self._on_changes)
-        self.fadeout_end_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.00, singleStep=.01)
-        self.fadeout_end_input.valueChanged.connect(self._on_changes)
+        self.fadeout_start_input = SliderDoubleSpinbox(decimals=2, minimum=0.01, maximum=1.00, singleStep=.01)
+        self.fadeout_start_input.valueChanged.connect(self._on_fadeout_start_changed)
+        self.fadeout_end_input = SliderDoubleSpinbox(decimals=2, minimum=0.00, maximum=0.99, singleStep=.01)
+        self.fadeout_end_input.valueChanged.connect(self._on_fadeout_end_changed)
 
         self.glow_checkbox = QCheckBox()
         self.glow_checkbox.toggled.connect(self._on_changes)
@@ -68,12 +68,12 @@ class NotesTab(QWidget):
         self.highlight_use_vel_checkbox.toggled.connect(self._on_changes)
         self.highlight_color = ColorButton()
         self.highlight_color.valueChanged.connect(self._on_changes)
-        self.highlight_intensity_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.00, singleStep=0.01)
+        self.highlight_intensity_input = SliderDoubleSpinbox(decimals=2, minimum=0.01, maximum=1.00, singleStep=0.01)
         self.highlight_intensity_input.valueChanged.connect(self._on_changes)
-        self.highlight_min_intensity_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.00, singleStep=0.01)
-        self.highlight_min_intensity_input.valueChanged.connect(self._on_changes)
-        self.highlight_max_intensity_input = QDoubleSpinBox(decimals=2, minimum=0.01, maximum=1.00, singleStep=0.01)
-        self.highlight_max_intensity_input.valueChanged.connect(self._on_changes)
+        self.highlight_min_intensity_input = SliderDoubleSpinbox(decimals=2, minimum=0.01, maximum=0.99, singleStep=0.01)
+        self.highlight_min_intensity_input.valueChanged.connect(self._on_highlight_min_intensity_changed)
+        self.highlight_max_intensity_input = SliderDoubleSpinbox(decimals=2, minimum=0.02, maximum=1.00, singleStep=0.01)
+        self.highlight_max_intensity_input.valueChanged.connect(self._on_highlight_max_intensity_changed)
 
         self.sparks_checkbox = QCheckBox()
         self.sparks_checkbox.toggled.connect(self._on_changes)
@@ -81,10 +81,10 @@ class NotesTab(QWidget):
         self.sparks_start_dist_input.valueChanged.connect(self._on_changes)
         self.sparks_start_length_input = SliderDoubleSpinbox(decimals=2, minimum=0.25, maximum=10.0, singleStep=0.01)
         self.sparks_start_length_input.valueChanged.connect(self._on_changes)
-        self.sparks_speed_input = SliderDoubleSpinbox(decimals=2, minimum=0.01, maximum=5.0, singleStep=0.01)
-        self.sparks_speed_input.valueChanged.connect(self._on_changes)
-        self.sparks_speed_var_input = SliderDoubleSpinbox(decimals=2, minimum=0.01, maximum=5.0, singleStep=0.01)
-        self.sparks_speed_var_input.valueChanged.connect(self._on_changes)
+        self.sparks_speed_input = SliderDoubleSpinbox(decimals=2, minimum=0.01, maximum=4.9, singleStep=0.01)
+        self.sparks_speed_input.valueChanged.connect(self._on_speed_min_changed)
+        self.sparks_speed_var_input = SliderDoubleSpinbox(decimals=2, minimum=0.02, maximum=5.0, singleStep=0.01)
+        self.sparks_speed_var_input.valueChanged.connect(self._on_speed_max_changed)
         self.sparks_opacity_ratio_input = SliderDoubleSpinbox(decimals=2, minimum=0.01, maximum=1.0, singleStep=0.01)
         self.sparks_opacity_ratio_input.valueChanged.connect(self._on_changes)
         self.sparks_count_input = SliderSpinbox(minimum=1, maximum=50)
@@ -193,18 +193,14 @@ class NotesTab(QWidget):
 
         self.fadein_checkbox.setChecked(self.vis_config.note_fadein_enabled)
         self.fadein_start_input.setValue(self.vis_config.note_fadein_start_ratio)
-        self.fadein_start_input.setMinimum(self.vis_config.note_fadein_end_ratio + .01)
         self.fadein_start_input.setEnabled(self.vis_config.note_fadein_enabled)
         self.fadein_end_input.setValue(self.vis_config.note_fadein_end_ratio)
-        self.fadein_end_input.setMaximum(self.vis_config.note_fadein_start_ratio - .01)
         self.fadein_end_input.setEnabled(self.vis_config.note_fadein_enabled)
 
         self.fadeout_checkbox.setChecked(self.vis_config.note_fadeout_enabled)
         self.fadeout_start_input.setValue(self.vis_config.note_fadeout_start_ratio)
-        self.fadeout_start_input.setMinimum(self.vis_config.note_fadeout_end_ratio + .01)
         self.fadeout_start_input.setEnabled(self.vis_config.note_fadeout_enabled)
         self.fadeout_end_input.setValue(self.vis_config.note_fadeout_end_ratio)
-        self.fadeout_end_input.setMaximum(self.vis_config.note_fadeout_start_ratio - .01)
         self.fadeout_end_input.setEnabled(self.vis_config.note_fadeout_enabled)
 
         self.glow_checkbox.setChecked(self.vis_config.note_glow_enabled)
@@ -229,11 +225,9 @@ class NotesTab(QWidget):
         self.highlight_intensity_row.setVisible(not self.vis_config.note_highlight_use_velocity)
         self.highlight_min_intensity_input.setValue(self.vis_config.note_highlight_min_intensity)
         self.highlight_min_intensity_input.setEnabled(self.vis_config.note_highlight_enabled)
-        self.highlight_min_intensity_input.setMaximum(self.vis_config.note_highlight_max_intensity - .01)
         self.highlight_min_intensity_row.setVisible(self.vis_config.note_highlight_use_velocity)
         self.highlight_max_intensity_input.setValue(self.vis_config.note_highlight_max_intensity)
         self.highlight_max_intensity_input.setEnabled(self.vis_config.note_highlight_enabled)
-        self.highlight_max_intensity_input.setMinimum(self.vis_config.note_highlight_min_intensity + .01)
         self.highlight_max_intensity_row.setVisible(self.vis_config.note_highlight_use_velocity)
 
         self.sparks_checkbox.setChecked(self.vis_config.note_sparks_enabled)
@@ -302,8 +296,120 @@ class NotesTab(QWidget):
         self.vis_config.note_bounce_height_ratio = self.bounce_height_input.value()
 
     # callbacks
+    def _on_fadein_start_changed(self):
+        if self.block_changes_callback:
+            return
+
+        fadein_start = self.fadein_start_input.value()
+        fadein_end = self.fadein_end_input.value()
+
+        if fadein_start <= fadein_end:
+            self.block_changes_callback = True
+            self.fadein_end_input.setValue(fadein_start - .01)
+            self.block_changes_callback = False
+
+        self._on_changes()
+
+    def _on_fadein_end_changed(self):
+        if self.block_changes_callback:
+            return
+
+        fadein_start = self.fadein_start_input.value()
+        fadein_end = self.fadein_end_input.value()
+
+        if fadein_end >= fadein_start:
+            self.block_changes_callback = True
+            self.fadein_start_input.setValue(fadein_end + .01)
+            self.block_changes_callback = False
+
+        self._on_changes()
+
+    def _on_fadeout_start_changed(self):
+        if self.block_changes_callback:
+            return
+
+        fadeout_start = self.fadeout_start_input.value()
+        fadeout_end = self.fadeout_end_input.value()
+
+        if fadeout_start <= fadeout_end:
+            self.block_changes_callback = True
+            self.fadeout_end_input.setValue(fadeout_start - .01)
+            self.block_changes_callback = False
+
+        self._on_changes()
+
+    def _on_fadeout_end_changed(self):
+        if self.block_changes_callback:
+            return
+
+        fadeout_start = self.fadeout_start_input.value()
+        fadeout_end = self.fadeout_end_input.value()
+
+        if fadeout_end >= fadeout_start:
+            self.block_changes_callback = True
+            self.fadeout_start_input.setValue(fadeout_end + .01)
+            self.block_changes_callback = False
+
+        self._on_changes()
+
+    def _on_highlight_min_intensity_changed(self):
+        if self.block_changes_callback:
+            return
+
+        min_intensity = self.highlight_min_intensity_input.value()
+        max_intensity = self.highlight_max_intensity_input.value()
+
+        if min_intensity >= max_intensity:
+            self.block_changes_callback = True
+            self.highlight_max_intensity_input.setValue(min_intensity + .01)
+            self.block_changes_callback = False
+
+        self._on_changes()
+
+    def _on_highlight_max_intensity_changed(self):
+        if self.block_changes_callback:
+            return
+
+        min_intensity = self.highlight_min_intensity_input.value()
+        max_intensity = self.highlight_max_intensity_input.value()
+
+        if max_intensity <= min_intensity:
+            self.block_changes_callback = True
+            self.highlight_min_intensity_input.setValue(max_intensity - .01)
+            self.block_changes_callback = False
+
+        self._on_changes()
+
+    def _on_speed_min_changed(self):
+        if self.block_changes_callback:
+            return
+
+        speed_min = self.sparks_speed_input.value()
+        speed_max = self.sparks_speed_var_input.value()
+
+        if speed_min >= speed_max:
+            self.block_changes_callback = True
+            self.sparks_speed_var_input.setValue(speed_min + .01)
+            self.block_changes_callback = False
+
+        self._on_changes()
+
+    def _on_speed_max_changed(self):
+        if self.block_changes_callback:
+            return
+
+        speed_min = self.sparks_speed_input.value()
+        speed_max = self.sparks_speed_var_input.value()
+
+        if speed_max <= speed_min:
+            self.block_changes_callback = True
+            self.sparks_speed_input.setValue(speed_max - .01)
+            self.block_changes_callback = False
+
+        self._on_changes()
 
     def _on_changes(self):
-        if not self.block_changes_callback:
-            self.on_changes_callback()
-            self.refresh_ui()
+        if self.block_changes_callback:
+            return
+        self.on_changes_callback()
+        self.refresh_ui()
