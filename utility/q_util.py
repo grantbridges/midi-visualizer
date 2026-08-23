@@ -52,7 +52,7 @@ class QUtil:
         app.setPalette(palette)
 
         # Font
-        app.setFont(QFont(Const.PRIMARY_FONT))
+        #app.setFont(QFont(Const.PRIMARY_FONT))
 
         # Apply some general app styling
         class _style(QProxyStyle):
@@ -62,12 +62,12 @@ class QUtil:
                     return 200 # ms, default 700
                 return super().styleHint(hint, option, widget, returnData)
 
-            def polish(self, widget):
-                # manually set font & default size on all widgets
-                super().polish(widget)
-                default_font_widgets = (QLabel, QLineEdit, QPushButton, QComboBox, QTableWidget, QMenu)
-                if isinstance(widget, default_font_widgets) and not widget.testAttribute(Qt.WidgetAttribute.WA_SetFont):
-                    widget.setFont(QFont(Const.PRIMARY_FONT, QUtil.scale_font_size(12)))
+            # def polish(self, widget):
+            #     # manually set font & default size on all widgets
+            #     super().polish(widget)
+            #     default_font_widgets = (QLabel, QLineEdit, QPushButton, QComboBox, QTableWidget, QMenu)
+            #     if isinstance(widget, default_font_widgets) and not widget.testAttribute(Qt.WidgetAttribute.WA_SetFont):
+            #         widget.setFont(QFont(Const.PRIMARY_FONT, QUtil.scale_font_size(12)))
 
         class _tooltip(QLabel):
             def __init__(self):
