@@ -1,7 +1,9 @@
 import sys
-from PySide6.QtGui import QColor, QFontDatabase, QPalette, Qt
-from PySide6.QtWidgets import QApplication
+from PySide6.QtGui import QColor, QCursor, QFont, QFontDatabase, QPalette, Qt
+from PySide6.QtWidgets import QApplication, QLabel, QProxyStyle, QStyle, QToolTip
+from PySide6.QtCore import QObject, QEvent, QPoint
 from common import RGB, Color
+from common.constants import Const
 from utility.file_util import FileUtil
 
 import logging
@@ -13,7 +15,7 @@ class QUtil:
     
     # -- Theme helpers --
 
-    def apply_dark_theme(app: QApplication):
+    def init_app_styles(app: QApplication):
         '''
         Utility to force style & base colors throughout application
         Allows consistent color/styling between Mac and OS (always in dark mode)
@@ -48,6 +50,56 @@ class QUtil:
         palette.setColor(QPalette.Disabled, QPalette.HighlightedText, QColor(130, 130, 130))
 
         app.setPalette(palette)
+
+        # Apply tooltip styling
+        # Use small wrapper to intercept style hint and return faster tooltip delay
+        class _style(QProxyStyle):
+            def styleHint(self, hint, option=None, widget=None, returnData=None):
+                if hint == QStyle.StyleHint.SH_ToolTip_WakeUpDelay:
+                    return 200 # ms, default 700
+                return super().styleHint(hint, option, widget, returnData)
+
+        class _tooltip(QLabel):
+            def __init__(self):
+                super().__init__(None, Qt.WindowType.ToolTip | Qt.WindowType.FramelessWindowHint)
+                self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+                #self.setWordWrap(True)
+                #self.setMaximumWidth(250)
+                self.setStyleSheet(f"""
+                    QLabel {{
+                        background-color: rgba(38, 38, 38, 0.75);
+                        color: #ccc;
+                        border: 1px solid #222;
+                        padding: 3px 4px;
+                        border-radius: 3px;
+                        font-family: "{Const.PRIMARY_FONT}";
+                        font-size: 10pt;
+                    }}
+                """)
+
+        class _tooltipFilter(QObject):
+            def __init__(self, parent=None):
+                super().__init__(parent)
+                self._tip = _tooltip()
+
+            def eventFilter(self, obj, event):
+                if event.type() == QEvent.Type.ToolTip:
+                    text = obj.toolTip()
+                    if text:
+                        self._tip.setText(text)
+                        self._tip.adjustSize()
+                        pos = QCursor.pos() + QPoint(12, 20)  # tweak offset to taste
+                        self._tip.move(pos)
+                        self._tip.show()
+                    else:
+                        self._tip.hide()
+                    return True
+                if event.type() in (QEvent.Type.Leave, QEvent.Type.MouseButtonPress):
+                    self._tip.hide()
+                return super().eventFilter(obj, event)
+
+        app.setStyle(_style(app.style()))
+        app.installEventFilter(_tooltipFilter(app))
 
     @staticmethod
     def load_fonts():

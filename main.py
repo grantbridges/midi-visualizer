@@ -26,7 +26,7 @@ def main():
     LogUtil.configure_logging()
     logger.info("%s started - version %s, built %s", Const.APP_NAME, build_info.VERSION, build_info.BUILD_DATE)
 
-    QUtil.apply_dark_theme(app)
+    QUtil.init_app_styles(app)
     QUtil.load_fonts()
 
     # show splash screen
