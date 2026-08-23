@@ -1,6 +1,6 @@
 import sys
 from PySide6.QtGui import QColor, QCursor, QFont, QFontDatabase, QPalette, Qt
-from PySide6.QtWidgets import QApplication, QLabel, QProxyStyle, QStyle, QToolTip
+from PySide6.QtWidgets import QApplication, QComboBox, QLabel, QLineEdit, QMenu, QProxyStyle, QPushButton, QStyle, QTableWidget, QToolTip
 from PySide6.QtCore import QObject, QEvent, QPoint
 from common import RGB, Color
 from common.constants import Const
@@ -51,13 +51,23 @@ class QUtil:
 
         app.setPalette(palette)
 
-        # Apply tooltip styling
-        # Use small wrapper to intercept style hint and return faster tooltip delay
+        # Font
+        app.setFont(QFont(Const.PRIMARY_FONT))
+
+        # Apply some general app styling
         class _style(QProxyStyle):
             def styleHint(self, hint, option=None, widget=None, returnData=None):
+                # slightly faster tooltip delay response
                 if hint == QStyle.StyleHint.SH_ToolTip_WakeUpDelay:
                     return 200 # ms, default 700
                 return super().styleHint(hint, option, widget, returnData)
+
+            def polish(self, widget):
+                # manually set font & default size on all widgets
+                super().polish(widget)
+                default_font_widgets = (QLabel, QLineEdit, QPushButton, QComboBox, QTableWidget, QMenu)
+                if isinstance(widget, default_font_widgets) and not widget.testAttribute(Qt.WidgetAttribute.WA_SetFont):
+                    widget.setFont(QFont(Const.PRIMARY_FONT, QUtil.scale_font_size(12)))
 
         class _tooltip(QLabel):
             def __init__(self):
@@ -72,7 +82,6 @@ class QUtil:
                         border: 1px solid #222;
                         padding: 3px 4px;
                         border-radius: 3px;
-                        font-family: "{Const.PRIMARY_FONT}";
                         font-size: 10pt;
                     }}
                 """)

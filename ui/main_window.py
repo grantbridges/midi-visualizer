@@ -182,7 +182,6 @@ class MainWindow(QMainWindow):
         r, g, b = Color.ILLUSTRI_TEXT
         title.setStyleSheet(f"color: rgb({r}, {g}, {b});")
         font = title.font()
-        font.setFamily(Const.PRIMARY_FONT)
         font.setPointSize(28)
         title.setFont(font)
         layout.addWidget(title)
@@ -199,7 +198,6 @@ class MainWindow(QMainWindow):
             label.setAlignment(Qt.AlignCenter)
             label.setStyleSheet("color: #999999;")
             font = label.font()
-            font.setFamily(Const.PRIMARY_FONT)
             font.setPointSize(14)
             label.setFont(font)
             layout.addWidget(label)
