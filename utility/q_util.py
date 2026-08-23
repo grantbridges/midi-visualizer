@@ -82,7 +82,8 @@ class QUtil:
                         border: 1px solid #222;
                         padding: 3px 4px;
                         border-radius: 3px;
-                        font-size: 10pt;
+                        font-family: {Const.PRIMARY_FONT};
+                        font-size: {QUtil.scale_font_size(10)}pt;
                     }}
                 """)
 
