@@ -8,3 +8,5 @@ from models.user_settings import user_settings
 from models.bg_mode import BackgroundMode
 from models.orientation import Orientation
 from models.waveform import Waveform
+from models.presets_config import presets_config
+from models.track_preset import TrackPreset

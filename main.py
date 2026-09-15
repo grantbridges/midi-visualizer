@@ -7,7 +7,7 @@ from common import Const
 from ui import MainWindow
 from ui.common import SplashScreen
 from utility import LogUtil, QUtil, FileUtil
-from models import user_settings
+from models import user_settings, presets_config
 from media import audio_provider, video_provider, image_provider
 import build_info
 
@@ -34,6 +34,7 @@ def main():
     app.processEvents()
     
     user_settings.load()
+    presets_config.load()
 
     audio_provider.init()
     video_provider.init()

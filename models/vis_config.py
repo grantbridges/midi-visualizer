@@ -428,7 +428,7 @@ class VisConfig:
 
             return config
         except Exception as ex:
-            logger.error(f"Error while loading config: {str(ex)}")
+            logger.exception(f"Load | Error while loading config")
             return None
         
     def init(self):
