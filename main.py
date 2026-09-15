@@ -3,6 +3,7 @@ import sys
 import logging
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QIcon
+from PySide6.QtCore import QTimer
 from common import Const
 from ui import MainWindow
 from ui.common import SplashScreen
@@ -40,12 +41,12 @@ def main():
     video_provider.init()
     image_provider.init()
 
-    time.sleep(SPLASH_SCREEN_SHOW_TIME_SEC) # block on splash screen for a moment
+    def show_main_window():
+        window = MainWindow()
+        window.show()
+        splash.finish(window)
 
-    #def show_main_window():
-    window = MainWindow()
-    window.show()
-    splash.finish(window)
+    QTimer.singleShot(SPLASH_SCREEN_SHOW_TIME_SEC * 1000, show_main_window)
 
     exit_code = app.exec()
     logger.info("%s shutting down (code %d)", Const.APP_NAME, exit_code)
