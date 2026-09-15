@@ -20,13 +20,15 @@ from ui.common import (
     LayoutUtil, 
     Icons, 
     TableCheckBox, 
-    TableSpinBox
+    TableSpinBox,
+    WidgetUtil
 )
 from utility import MidiUtil, Util
-from ui.dialogs import GroupTracksDialog
+from ui.dialogs import GroupTracksDialog, ManageTrackPresetsDialog
 
 import logging
 logger = logging.getLogger("TracksTab")
+
 
 class TracksTab(QWidget):
     def __init__(self, vis_config: VisConfig, on_changes_callback: object, parent=None):
@@ -51,6 +53,12 @@ class TracksTab(QWidget):
         self.clear_solo_btn = QPushButton("Clear Solo")
         self.clear_solo_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         self.clear_solo_btn.clicked.connect(self._on_clear_solo)
+
+        self.manage_presets_btn = WidgetUtil.icon_btn(Icons.dock_window(), "Manage Track Presets")
+        self.manage_presets_btn.clicked.connect(self._on_manage_presets)
+
+        self.apply_presets_btn = WidgetUtil.icon_btn(Icons.tray_arrow_down(), "Apply Track Presets")
+        self.apply_presets_btn.clicked.connect(self._on_apply_presets)
 
         self.track_columns = ["", "", "Name", "Group", "Solo", "Override\nPitches", "Pitch Min", "Pitch Max", "Notes", "Start (sec)", "End (sec)", "Vel. Min", "Vel. Max"]
         self.table = QTableWidget(0, len(self.track_columns))
@@ -80,6 +88,8 @@ class TracksTab(QWidget):
         btns_layout.addWidget(self.sort_by_group_btn)
         btns_layout.addWidget(self.clear_solo_btn)
         btns_layout.addStretch()
+        btns_layout.addWidget(self.manage_presets_btn)
+        btns_layout.addWidget(self.apply_presets_btn)
         v_layout.addLayout(btns_layout)
         v_layout.addWidget(self.table)
 
@@ -291,6 +301,15 @@ class TracksTab(QWidget):
         
         self.refresh_ui()
         self.on_changes_callback()
+
+    def _on_manage_presets(self):
+        dialog = ManageTrackPresetsDialog(self)
+        dialog.exec()
+
+    def _on_apply_presets(self):
+        pass # TODO
+        #dialog.exec() != QDialog.Accepted:
+        #    return
 
     def _on_solo_changed(self, row: int, checked: bool):
         if self.table.signalsBlocked():

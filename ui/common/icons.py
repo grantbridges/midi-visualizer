@@ -105,6 +105,26 @@ class Icons:
         return Icons._get_icon("mdi6.content-paste")
     
     @staticmethod
+    def chevron_right():
+        return Icons._get_icon("mdi6.chevron-right")
+    
+    @staticmethod
+    def chevron_double_right():
+        return Icons._get_icon("mdi6.chevron-double-right")
+    
+    @staticmethod
+    def dock_window():
+        return Icons._get_icon("mdi6.dock-window")
+    
+    @staticmethod
+    def tray_arrow_down():
+        return Icons._get_icon("mdi6.tray-arrow-down")
+    
+    @staticmethod
+    def info():
+        return Icons._get_icon("mdi6.information")    
+    
+    @staticmethod
     def _get_icon(name: str):
         return qta.icon(
             name,

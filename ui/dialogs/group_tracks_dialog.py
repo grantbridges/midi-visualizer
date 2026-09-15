@@ -29,7 +29,7 @@ class GroupTracksDialog(QDialog):
 
         track_names = ", ".join(track.name for track in self.tracks)
         track_names = Util.truncate(track_names, 100)
-        description = WidgetUtil.hint_label(f"Create track group for {track_names}")
+        description = WidgetUtil.info_text(f"Create track group for {track_names}")
 
         # for a new group
         self.name_input = QLineEdit(text="New Group")
