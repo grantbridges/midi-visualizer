@@ -52,6 +52,7 @@ class QUtil:
         app.setPalette(palette)
 
         # Font
+        # Commenting out - hard to get right between OSes
         #app.setFont(QFont(Const.PRIMARY_FONT))
 
         # Apply some general app styling
