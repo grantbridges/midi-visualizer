@@ -98,7 +98,7 @@ class QUtil:
                     if text:
                         self._tip.setText(text)
                         self._tip.adjustSize()
-                        pos = QCursor.pos() + QPoint(12, 20)  # tweak offset to taste
+                        pos = QCursor.pos() + QPoint(10, 10) # offset
                         self._tip.move(pos)
                         self._tip.show()
                     else:
