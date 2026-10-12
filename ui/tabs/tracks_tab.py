@@ -29,7 +29,6 @@ from ui.dialogs import GroupTracksDialog, ManageTrackPresetsDialog
 import logging
 logger = logging.getLogger("TracksTab")
 
-
 class TracksTab(QWidget):
     def __init__(self, vis_config: VisConfig, on_changes_callback: object, parent=None):
         super().__init__(parent)
@@ -303,7 +302,7 @@ class TracksTab(QWidget):
         self.on_changes_callback()
 
     def _on_manage_presets(self):
-        dialog = ManageTrackPresetsDialog(self)
+        dialog = ManageTrackPresetsDialog(self.vis_config, self)
         dialog.exec()
 
     def _on_apply_presets(self):
