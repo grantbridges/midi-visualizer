@@ -3,7 +3,16 @@ from enum import StrEnum
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QAbstractItemView, QDialog, QDialogButtonBox, QHBoxLayout, QHeaderView, QLabel, QPushButton, QTableWidget, QTableWidgetItem, QVBoxLayout
+    QAbstractItemView, 
+    QDialog, 
+    QDialogButtonBox, 
+    QHBoxLayout, 
+    QHeaderView, 
+    QLabel, 
+    QPushButton, 
+    QTableWidget, 
+    QTableWidgetItem, 
+    QVBoxLayout
 )
 from common import Const
 from ui.common import WidgetUtil, Icons, LayoutUtil
@@ -211,10 +220,8 @@ class ManageTrackPresetsDialog(QDialog):
             ))
 
     def _refresh_buttons(self):
-        count = len(self._get_selected_current_track_rows())
-        enabled = count > 0
+        enabled = len(self._get_selected_current_track_rows()) > 0
         self.copy_right_btn.setEnabled(enabled)
-        self.copy_all_btn.setEnabled(enabled)
 
     def _refresh_ui(self):
         # prevent callbacks while populating table rows
@@ -355,7 +362,32 @@ class ManageTrackPresetsDialog(QDialog):
         self._refresh_ui()
 
     def _save(self):
-        # TODO save changes
+        # create new track preset list and save
+        presets: list[TrackPreset] = []
+
+        # add any added or updated from current tracks
+        for t in self.current_tracks:
+            if t.selected_for_add:
+                presets.append(TrackPreset(
+                    name=t.name, 
+                    pitch_min=t.pitch_min, 
+                    pitch_max=t.pitch_max
+                ))
+
+        # add any existing tracks not marked for delete or copied over
+        for p in self.existing_track_presets:
+            if not p.selected_for_delete and not any(x.name == p.name for x in presets):
+                presets.append(TrackPreset(
+                    name=p.name, 
+                    pitch_min=p.pitch_min, 
+                    pitch_max=p.pitch_max
+                ))
+
+        presets.sort(key=lambda p: p.name)
+
+        presets_config.track_presets = presets
+        presets_config.save()
+
         self.accept()
 
     # Getters
