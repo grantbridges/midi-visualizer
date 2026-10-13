@@ -63,7 +63,7 @@ class PresetsConfig:
 
             schema_version = data["schema_version"]
 
-            self.track_groups = [
+            self.track_presets = [
                 TrackPreset.load(track_presets_data, schema_version)
                 for track_presets_data in data["track_presets"]
             ]

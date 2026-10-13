@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QAbstractItemView, 
     QDialog, 
@@ -14,9 +15,10 @@ from PySide6.QtWidgets import (
     QTableWidgetItem, 
     QVBoxLayout
 )
-from common import Const
+from common import Color
 from ui.common import WidgetUtil, Icons, LayoutUtil
 from models import presets_config, Track, TrackPreset, VisConfig
+from utility.q_util import QUtil
 
 # UI Model for metadata about current tracks
 @dataclass
@@ -60,7 +62,7 @@ class UITrackPreset:
         )
 
 class TableTrackPresetState(StrEnum):
-    DEFAULT = "", # existing preset, no changes
+    DEFAULT = "Default", # existing preset, no changes
     NEW = "New", # newly added from current tracks
     UPDATED = "Updated", # replaced from current tracks
     DELETED = "Deleted", # marked for deletion from presets
@@ -85,12 +87,20 @@ class ManageTrackPresetsDialog(QDialog):
         self.setFixedSize(800, 600)
 
         # -- Initialize UI Models --
-        self.current_tracks: list[UICurrentTrack] = [
-            UICurrentTrack.create(t) 
-            for t in vis_config.tracks 
-            if t.override_pitch_min_max
-        ]
-        self.current_tracks.sort(key=lambda t: t.name)
+        self.current_tracks: list[UICurrentTrack] = []
+        for t in vis_config.tracks:
+            if not t.override_pitch_min_max:
+                continue
+
+            # check if we already have an identical preset to this track
+            preset = next((
+                p for p in presets_config.track_presets if p.name == t.name
+            ), None)
+
+            if preset and t.manual_pitch_min == preset.pitch_min and t.manual_pitch_max == preset.pitch_max:
+                continue # skip
+
+            self.current_tracks.append(UICurrentTrack.create(t))
 
         self.existing_track_presets: list[UITrackPreset] = [
             UITrackPreset.create(p)
@@ -106,7 +116,7 @@ class ManageTrackPresetsDialog(QDialog):
 
         # -- Create Controls --
 
-        info_label = WidgetUtil.info_text(f"Select tracks to save to track presets. Only current tracks with overridden values are shown.")
+        info_label = WidgetUtil.info_text(f"Select tracks to save to track presets. Only tracks with overridden values that aren't already in presets are shown.")
 
         # current tracks table
         current_tracks_label = QLabel("Current Tracks")
@@ -129,11 +139,11 @@ class ManageTrackPresetsDialog(QDialog):
 
         # track presets table
         track_presets_label = QLabel("Track Presets")
-        self.track_presets_columns = ["", "Name", "Pitch Min", "Pitch Max", ""]
+        self.track_presets_columns = ["Name", "Pitch Min", "Pitch Max", ""]
         self.track_presets_table = QTableWidget(0, len(self.track_presets_columns))
         self.track_presets_table.setHorizontalHeaderLabels(self.track_presets_columns)
         self.track_presets_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
-        self.track_presets_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+        self.track_presets_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
         self.track_presets_table.itemSelectionChanged.connect(self._on_track_presets_selection_changed)
         # set whole-row multi-select
         self.track_presets_table.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -204,8 +214,7 @@ class ManageTrackPresetsDialog(QDialog):
                     t.pitch_max, 
                     TableTrackPresetState.UPDATED if existing_preset_by_name else TableTrackPresetState.NEW
                 ))
-        self.visible_track_presets.sort(key=lambda x: (x.state, x.name))
-
+        
         for p in self.existing_track_presets:
             # skip any already in list (due to being added or updated from current tracks)
             already_in_list = any(x.name == p.name for x in self.visible_track_presets)
@@ -258,20 +267,33 @@ class ManageTrackPresetsDialog(QDialog):
         for row, preset in enumerate(self.visible_track_presets):
             col = 0
 
-            # state
-            name_item = QTableWidgetItem(preset.state.value)
-            name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
-            self.track_presets_table.setItem(row, col, name_item)
-            col += 1
+            font = QFont()
+            color = QUtil.rgb_to_qcolor(Color.WHITE)
+            if preset.state in [TableTrackPresetState.NEW, TableTrackPresetState.UPDATED]:
+                font.setBold(True)
+            if preset.state == TableTrackPresetState.DELETED:
+                font.setStrikeOut(True)
+                color = QUtil.rgb_to_qcolor(Color.LIGHT_GRAY)
 
             # name
-            name_item = QTableWidgetItem(preset.name)
+            preset_name = ""
+            match preset.state:
+                case TableTrackPresetState.NEW:
+                    preset_name = "(New) "
+                case TableTrackPresetState.UPDATED:
+                    preset_name = "(Edit) "
+            preset_name += preset.name
+            name_item = QTableWidgetItem(preset_name)
+            name_item.setFont(font)
+            name_item.setForeground(color)
             name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
             self.track_presets_table.setItem(row, col, name_item)
             col += 1
 
             # pitch min
             pitch_min_item = QTableWidgetItem(f"{preset.pitch_min}")
+            pitch_min_item.setFont(font)
+            pitch_min_item.setForeground(color)
             pitch_min_item.setFlags(pitch_min_item.flags() & ~Qt.ItemIsEditable)
             pitch_min_item.setTextAlignment(Qt.AlignCenter)
             self.track_presets_table.setItem(row, col, pitch_min_item)
@@ -279,6 +301,8 @@ class ManageTrackPresetsDialog(QDialog):
 
             # pitch max
             pitch_max_item = QTableWidgetItem(f"{preset.pitch_max}")
+            pitch_max_item.setFont(font)
+            pitch_max_item.setForeground(color)
             pitch_max_item.setFlags(pitch_max_item.flags() & ~Qt.ItemIsEditable)
             pitch_max_item.setTextAlignment(Qt.AlignCenter)
             self.track_presets_table.setItem(row, col, pitch_max_item)
@@ -322,6 +346,15 @@ class ManageTrackPresetsDialog(QDialog):
         for t in tracks:
             t.selected_for_add = True
 
+            # if this will overlap an existing preset, undo
+            # its mark for deletion, if present
+            existing_preset = next((
+                p for p in self.existing_track_presets 
+                if p.name == t.name
+            ), None)
+            if existing_preset:
+                existing_preset.selected_for_delete = False
+
         self._compute_table_data()
         self._refresh_ui()
 
@@ -329,6 +362,15 @@ class ManageTrackPresetsDialog(QDialog):
         # mark all current tracks for add
         for t in self.current_tracks:
             t.selected_for_add = True
+
+            # if this will overlap an existing preset, undo
+            # its mark for deletion, if present
+            existing_preset = next((
+                p for p in self.existing_track_presets 
+                if p.name == t.name
+            ), None)
+            if existing_preset:
+                existing_preset.selected_for_delete = False
 
         self._compute_table_data()
         self._refresh_ui()
@@ -339,14 +381,21 @@ class ManageTrackPresetsDialog(QDialog):
         if row not in rows:
             rows.append(row)
 
-        for row in rows:
-            selected_preset = self.visible_track_presets[row]
-            if selected_preset.state in (TableTrackPresetState.NEW, TableTrackPresetState.UPDATED):
+        presets = [self.visible_track_presets[row] for row in rows]
+
+        # Special case - if, across the selection, there's a mix of Default and Deleted states
+        # on existing presets, then we'll force all of these to Deleted. Makes a cleaner UX.
+        default_present = any(x.state == TableTrackPresetState.DEFAULT for x in presets)
+        deleted_present = any(x.state == TableTrackPresetState.DELETED for x in presets)
+        force_existing_to_deleted = default_present and deleted_present
+
+        for selected_preset in presets:
+            if selected_preset.state in [TableTrackPresetState.NEW, TableTrackPresetState.UPDATED]:
                 # this is a current track marked for adding - un-add it
                 track = next((
                     t for t in self.current_tracks 
                     if t.name == selected_preset.name
-                ))
+                ), None)
                 if track:
                     track.selected_for_add = False
             else:
@@ -354,9 +403,12 @@ class ManageTrackPresetsDialog(QDialog):
                 preset = next((
                     p for p in self.existing_track_presets
                     if p.name == selected_preset.name
-                ))
+                ), None)
                 if preset:
-                    preset.selected_for_delete = not preset.selected_for_delete
+                    if force_existing_to_deleted:
+                        preset.selected_for_delete = True
+                    else:
+                        preset.selected_for_delete = not preset.selected_for_delete
 
         self._compute_table_data()
         self._refresh_ui()
@@ -409,7 +461,7 @@ class ManageTrackPresetsDialog(QDialog):
                 track = next((
                     t for t in self.current_tracks 
                     if t.name == self.visible_current_tracks[row].name
-                ))
+                ), None)
                 if track:
                     tracks.append(track)
         return tracks
