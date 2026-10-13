@@ -149,6 +149,12 @@ class ManageTrackPresetsDialog(QDialog):
         self.track_presets_table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.track_presets_table.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
+        self.changes_label = QLabel()
+        self.changes_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        font = self.changes_label.font()
+        font.setPointSizeF(font.pointSizeF() * 0.9)
+        self.changes_label.setFont(font)
+
         button_box = QDialogButtonBox()
         button_box.addButton("Cancel", QDialogButtonBox.RejectRole)
         apply_button = button_box.addButton("Save", QDialogButtonBox.AcceptRole)
@@ -188,7 +194,12 @@ class ManageTrackPresetsDialog(QDialog):
         panels_layout.addLayout(track_presets_layout)
 
         main_layout.addLayout(panels_layout)
-        main_layout.addWidget(button_box)
+
+        bottom_layout = QHBoxLayout()
+        bottom_layout.addWidget(self.changes_label, 1)
+        bottom_layout.addWidget(button_box)
+
+        main_layout.addLayout(bottom_layout)
 
         self._refresh_ui()
 
@@ -231,6 +242,30 @@ class ManageTrackPresetsDialog(QDialog):
     def _refresh_buttons(self):
         enabled = len(self._get_selected_current_track_rows()) > 0
         self.copy_right_btn.setEnabled(enabled)
+
+    def _refresh_changes_label(self):
+        changes = []
+        added_count = sum(
+            1 for t in self.current_tracks 
+            if t.selected_for_add and not any(t.name == p.name for p in self.existing_track_presets)
+        )
+        updated_count = sum(
+            1 for t in self.current_tracks 
+            if t.selected_for_add and any(t.name == p.name for p in self.existing_track_presets)
+        )
+        deleted_count = sum(
+            1 for p in self.existing_track_presets
+            if p.selected_for_delete
+        )
+
+        if added_count > 0:
+            changes.append(f"{added_count} added")
+        if updated_count > 0:
+            changes.append(f"{updated_count} updated")
+        if deleted_count > 0:
+            changes.append(f"{deleted_count} deleted")
+
+        self.changes_label.setText(", ".join(changes))
 
     def _refresh_ui(self):
         # prevent callbacks while populating table rows
@@ -320,6 +355,7 @@ class ManageTrackPresetsDialog(QDialog):
         self.track_presets_table.blockSignals(False)
 
         self._refresh_buttons()
+        self._refresh_changes_label()
 
     def _on_current_tracks_selection_changed(self):
         # clear selection on track presets table, if exists
