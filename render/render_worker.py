@@ -78,13 +78,16 @@ class RenderWorker(QObject):
             pitch_max = self.vis_config.get_max_pitch()
 
             midi_delay_ms = max(0, int((-start_time) * 1000))
+            stderr_log = tempfile.NamedTemporaryFile(delete=True)
             ffmpeg = RenderWorker.open_ffmpeg_rawvideo_process(
                 vis_config=self.vis_config,
                 midi_delay_ms=midi_delay_ms,
                 duration_sec=(end_time - start_time),
-                output_file=temp_output_file
+                output_file=temp_output_file,
+                stderr_log=stderr_log
             )
             logger.debug(f"Starting ffmpeg process (pid: {ffmpeg.pid})")
+            logger.debug(f"Logging stderr to {stderr_log.name}")
 
             # track next frame index to submit for rendering and next 
             # completed frame index to write to ffmpeg process sequentially
@@ -192,13 +195,15 @@ class RenderWorker(QObject):
                 except Exception as e:
                     logger.warning(f"Unable to close ffmpeg stdin - ignoring: {str(e)}")
 
-                stderr = ffmpeg.stderr.read().decode("utf-8", errors="replace") if ffmpeg.stderr else ""
+                stderr_log.seek(0)
+                ffmpeg_output = stderr_log.read().decode("utf-8", errors="replace")
+                stderr_log.close()
 
                 return_code = ffmpeg.wait()
 
                 if not self._cancel_event.is_set():
                     if return_code != 0:
-                        raise RuntimeError(f"FFmpeg failed with exit code {return_code}.\n\n{stderr}")
+                        raise RuntimeError(f"FFmpeg failed with exit code {return_code}.\n\n{ffmpeg_output}")
 
             if self._cancel_requested:
                 logger.info("Handling render cancel request")
@@ -289,7 +294,7 @@ class RenderWorker(QObject):
         )
     
     @staticmethod
-    def open_ffmpeg_rawvideo_process(vis_config: VisConfig, midi_delay_ms: int, duration_sec: float, output_file: Path) -> subprocess.Popen:
+    def open_ffmpeg_rawvideo_process(vis_config: VisConfig, midi_delay_ms: int, duration_sec: float, output_file: Path, stderr_log) -> subprocess.Popen:
         width, height = vis_config.export_resolution.value
 
         loop_video = vis_config.bg_video_loop
@@ -419,6 +424,7 @@ class RenderWorker(QObject):
             if audio_delay_ms >= 0:
                 filter_parts.append(
                     f"[{audio_input_index}:a]"
+                    f"asetpts=PTS-STARTPTS,"
                     f"adelay={audio_delay_ms}:all=1"
                     f"[a]"
                 )
@@ -488,7 +494,7 @@ class RenderWorker(QObject):
         kwargs = dict(
             stdin=subprocess.PIPE,
             stdout=subprocess.DEVNULL,
-            stderr=subprocess.PIPE,
+            stderr=stderr_log,
         )
 
         if sys.platform == "win32":
