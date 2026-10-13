@@ -77,7 +77,7 @@ class RenderWorker(QObject):
             pitch_min = self.vis_config.get_min_pitch()
             pitch_max = self.vis_config.get_max_pitch()
 
-            midi_delay_ms = max(0, int((-start_time) * 1000))
+            midi_delay_ms = int((-start_time) * 1000)
             stderr_log = tempfile.NamedTemporaryFile(delete=True)
             ffmpeg = RenderWorker.open_ffmpeg_rawvideo_process(
                 vis_config=self.vis_config,
