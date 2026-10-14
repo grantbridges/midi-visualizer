@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import QAction, QIcon, QKeySequence, QLinearGradient, QPalette, QShortcut
 from common import Const, Color
-from models import VisConfig, Track, user_settings
+from models import VisConfig, Track, user_settings, presets_config
 from render import RenderWorker
 from media import video_provider, audio_provider, image_provider
 from ui.tabs import GeneralTab, BackgroundTab, AudioTab, TrackGroupsTab, TracksTab, NotesTab
@@ -30,7 +30,8 @@ from ui.dialogs import (
     ExportProgressDialog, 
     ExportOptionsDialog, 
     ProgressDialog,
-    AboutDialog
+    AboutDialog,
+    ApplyTrackPresetsDialog
 )
 from utility import LogUtil, FileUtil
 
@@ -536,6 +537,22 @@ class MainWindow(QMainWindow):
 
         # re-init UI
         self.init_vis_config_editor_view()
+
+        # prompt user to apply existing track presets
+        if len(presets_config.track_presets) > 0:
+            result = QMessageBox.question(
+                self,
+                "Apply Track Presets",
+                "Would you like to apply track presets?",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.Yes,
+            )
+
+            if result == QMessageBox.Yes:
+                dialog = ApplyTrackPresetsDialog(vis_config=self.vis_config, auto_apply_on_open=True, parent=self)
+                if dialog.exec() == QDialog.Accepted:
+                    self.refresh_ui()
+                    self.on_config_changed()
         
     def _load_config_resources(self):
         # will only load each of these if present

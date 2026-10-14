@@ -58,8 +58,11 @@ class ApplyTrackPresetsDialog(QDialog):
 
         info_label = WidgetUtil.info_text(f"Select track presets to apply. Tracks with \"None\" selected will not be affected.")
 
-        auto_apply_btn = QPushButton("Auto-Select All")
-        auto_apply_btn.clicked.connect(self._on_auto_apply_all_presets)
+        self.auto_apply_btn = QPushButton("Auto-Select All")
+        self.auto_apply_btn.clicked.connect(self._on_auto_apply_all_presets)
+
+        self.clear_btn = QPushButton("Clear")
+        self.clear_btn.clicked.connect(self._on_clear_selections)
 
         # tracks table
         self.tracks_columns = ["Name", "Preset", "Pitch Min", "Pitch Max", "", ""]
@@ -67,6 +70,7 @@ class ApplyTrackPresetsDialog(QDialog):
         self.table.setHorizontalHeaderLabels(self.tracks_columns)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
         # set whole-row multi-select
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.ExtendedSelection)
@@ -93,7 +97,8 @@ class ApplyTrackPresetsDialog(QDialog):
         main_layout.addWidget(info_label)
 
         btn_layout = QHBoxLayout()
-        btn_layout.addWidget(auto_apply_btn)
+        btn_layout.addWidget(self.auto_apply_btn)
+        btn_layout.addWidget(self.clear_btn)
         btn_layout.addStretch()
 
         main_layout.addLayout(btn_layout)
@@ -117,6 +122,10 @@ class ApplyTrackPresetsDialog(QDialog):
         else:
             self._refresh_ui()
 
+    def _refresh_btns(self):
+        count = sum(1 for x in self.tracks if x.preset_to_apply)
+        self.clear_btn.setEnabled(count > 0)
+
     def _refresh_changes_label(self):
         updated_count = sum(1 for t in self.tracks if t.preset_to_apply is not None)
 
@@ -132,6 +141,7 @@ class ApplyTrackPresetsDialog(QDialog):
             self._refresh_row(row)
 
         self._refresh_changes_label()
+        self._refresh_btns()
 
     def _refresh_row(self, row: int):
         # prevent callbacks while populating table row
@@ -233,12 +243,19 @@ class ApplyTrackPresetsDialog(QDialog):
 
         self._refresh_row(row)
         self._refresh_changes_label()
+        self._refresh_btns()
 
     def _on_auto_apply_all_presets(self):
         for row in range(len(self.tracks)):
             self._auto_apply_preset(row)
 
-        self._refresh_ui()    
+        self._refresh_ui()
+
+    def _on_clear_selections(self):
+        for track in self.tracks:
+            track.preset_to_apply = None
+
+        self._refresh_ui()
 
     def _on_auto_apply_preset(self, row: int):
         rows = self._get_selected_rows()
@@ -250,6 +267,7 @@ class ApplyTrackPresetsDialog(QDialog):
             self._refresh_row(r)
 
         self._refresh_changes_label()
+        self._refresh_btns()
 
     def _on_clear_selection(self, row: int):
         rows = self._get_selected_rows()
@@ -263,6 +281,7 @@ class ApplyTrackPresetsDialog(QDialog):
                 self._refresh_row(r)
 
         self._refresh_changes_label()
+        self._refresh_btns()
 
     # Getters
     def _get_selected_rows(self) -> list[int]:
