@@ -122,7 +122,15 @@ class Icons:
     
     @staticmethod
     def info():
-        return Icons._get_icon("mdi6.information")    
+        return Icons._get_icon("mdi6.information")
+
+    @staticmethod
+    def format_list_group():
+        return Icons._get_icon("mdi6.format-list-group")
+    
+    @staticmethod
+    def format_list_group_plus():
+        return Icons._get_icon("mdi6.format-list-group-plus")
     
     @staticmethod
     def _get_icon(name: str):

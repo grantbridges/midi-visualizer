@@ -54,10 +54,10 @@ class TracksTab(QWidget):
         self.clear_solo_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         self.clear_solo_btn.clicked.connect(self._on_clear_solo)
 
-        self.manage_presets_btn = WidgetUtil.icon_btn(Icons.dock_window(), "Manage Track Presets")
+        self.manage_presets_btn = WidgetUtil.icon_btn(Icons.format_list_group(), "Manage Track Presets")
         self.manage_presets_btn.clicked.connect(self._on_manage_presets)
 
-        self.apply_presets_btn = WidgetUtil.icon_btn(Icons.tray_arrow_down(), "Apply Track Presets")
+        self.apply_presets_btn = WidgetUtil.icon_btn(Icons.format_list_group_plus(), "Apply Track Presets")
         self.apply_presets_btn.clicked.connect(self._on_apply_presets)
 
         self.track_columns = ["", "", "Name", "Group", "Solo", "Override\nPitches", "Pitch Min", "Pitch Max", "Notes", "Start (sec)", "End (sec)", "Vel. Min", "Vel. Max"]
