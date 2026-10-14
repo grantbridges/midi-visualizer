@@ -11,7 +11,8 @@ from PySide6.QtWidgets import (
     QHBoxLayout, 
     QHeaderView, 
     QLabel, 
-    QPushButton, 
+    QPushButton,
+    QSizePolicy, 
     QTableWidget, 
     QTableWidgetItem, 
     QVBoxLayout
@@ -28,19 +29,17 @@ logger = logging.getLogger("ApplyTrackPresetsDialog")
 @dataclass
 class UITrack:
     name: str = ''
-    existing_preset: TrackPreset | None = None
     preset_to_apply: TrackPreset | None = None
 
     @staticmethod
     def create(track: Track):
         return UITrack(
             name = track.name,
-            existing_preset = None,
             preset_to_apply = None
         )
 
 class ApplyTrackPresetsDialog(QDialog):
-    def __init__(self, vis_config: VisConfig, parent=None):
+    def __init__(self, vis_config: VisConfig, auto_apply_on_open: bool = False, parent=None):
         super().__init__(parent)
 
         self.setWindowTitle(f"Apply Track Presets")
@@ -57,17 +56,20 @@ class ApplyTrackPresetsDialog(QDialog):
 
         # -- Create Controls --
 
-        info_label = WidgetUtil.info_text(f"Select track presets to copy values from. Tracks with \"None\" selected will have no updates applied.")
+        info_label = WidgetUtil.info_text(f"Select track presets to apply. Tracks with \"None\" selected will not be affected.")
+
+        auto_apply_btn = QPushButton("Auto-Select All")
+        auto_apply_btn.clicked.connect(self._on_auto_apply_all_presets)
 
         # tracks table
-        self.tracks_columns = ["Name", "Preset", "Pitch Min", "Pitch Max"]
+        self.tracks_columns = ["Name", "Preset", "Pitch Min", "Pitch Max", "", ""]
         self.table = QTableWidget(0, len(self.tracks_columns))
         self.table.setHorizontalHeaderLabels(self.tracks_columns)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
-        # disable selection
-        self.table.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
-        self.table.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        # set whole-row multi-select
+        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.table.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
         self.changes_label = QLabel()
         self.changes_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
@@ -89,6 +91,12 @@ class ApplyTrackPresetsDialog(QDialog):
         main_layout = QVBoxLayout(self)
 
         main_layout.addWidget(info_label)
+
+        btn_layout = QHBoxLayout()
+        btn_layout.addWidget(auto_apply_btn)
+        btn_layout.addStretch()
+
+        main_layout.addLayout(btn_layout)
         main_layout.addSpacing(5)
 
         # tracks table
@@ -103,7 +111,11 @@ class ApplyTrackPresetsDialog(QDialog):
 
         main_layout.addLayout(bottom_layout)
 
-        self._refresh_ui()
+        if auto_apply_on_open:
+            self._on_auto_apply_all_presets()
+            # automatically refreshes after applying
+        else:
+            self._refresh_ui()
 
     def _refresh_changes_label(self):
         updated_count = sum(1 for t in self.tracks if t.preset_to_apply is not None)
@@ -174,6 +186,22 @@ class ApplyTrackPresetsDialog(QDialog):
         self.table.setItem(row, col, pitch_max_item)
         col += 1
 
+        # auto-apply btn
+        auto_apply_btn = QPushButton("Auto")
+        auto_apply_btn.setStyleSheet("padding: 3px 6px")
+        auto_apply_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+        auto_apply_btn.clicked.connect(lambda _, row=row: self._on_auto_apply_preset(row))
+        self.table.setCellWidget(row, col, LayoutUtil.center(auto_apply_btn))
+        col += 1
+
+        # clear button
+        clear_btn = QPushButton()
+        clear_btn.setIcon(Icons.close_box_outline())
+        clear_btn.setEnabled(track.preset_to_apply is not None)
+        clear_btn.clicked.connect(lambda _, row=row: self._on_clear_selection(row))
+        self.table.setCellWidget(row, col, LayoutUtil.center(clear_btn))
+        col += 1
+
         # resume callbacks
         self.table.blockSignals(False)
 
@@ -194,6 +222,7 @@ class ApplyTrackPresetsDialog(QDialog):
         
         self.accept()
 
+    # Callbacks
     def _on_preset_changed(self, row: int, col: int):
         # get selected value from this row
         combo: QComboBox = self.table.cellWidget(row, self.tracks_columns.index("Preset"))
@@ -204,3 +233,51 @@ class ApplyTrackPresetsDialog(QDialog):
 
         self._refresh_row(row)
         self._refresh_changes_label()
+
+    def _on_auto_apply_all_presets(self):
+        for row in range(len(self.tracks)):
+            self._auto_apply_preset(row)
+
+        self._refresh_ui()    
+
+    def _on_auto_apply_preset(self, row: int):
+        rows = self._get_selected_rows()
+        if row not in rows:
+            rows.append(row)
+
+        for r in rows:
+            self._auto_apply_preset(r)
+            self._refresh_row(r)
+
+        self._refresh_changes_label()
+
+    def _on_clear_selection(self, row: int):
+        rows = self._get_selected_rows()
+        if row not in rows:
+            rows.append(row)
+
+        for r in rows:
+            track = self.tracks[r]
+            if track.preset_to_apply:
+                track.preset_to_apply = None
+                self._refresh_row(r)
+
+        self._refresh_changes_label()
+
+    # Getters
+    def _get_selected_rows(self) -> list[int]:
+        selected_rows: set[int] = set()
+
+        for selection_range in self.table.selectedRanges():
+            for row in range(selection_range.topRow(), selection_range.bottomRow() + 1):
+                selected_rows.add(row)
+
+        return sorted(selected_rows)
+
+    # Helpers
+    def _auto_apply_preset(self, row: int):
+        track = self.tracks[row]
+
+        matching_preset = presets_config.get_track_preset(track.name)
+        if matching_preset:
+            track.preset_to_apply = matching_preset

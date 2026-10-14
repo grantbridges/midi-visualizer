@@ -73,5 +73,13 @@ class PresetsConfig:
         except Exception:
             logger.exception(f"Load | Unable to load presets config - using default")
 
+    # Getters
+
+    def get_track_preset(self, name: str) -> TrackPreset | None:
+        return next((
+            p for p in self.track_presets 
+            if p.name == name
+        ), None)
+
 # module-level singleton instance
 presets_config = PresetsConfig()

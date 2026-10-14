@@ -303,11 +303,11 @@ class TracksTab(QWidget):
         self.on_changes_callback()
 
     def _on_manage_presets(self):
-        dialog = ManageTrackPresetsDialog(self.vis_config, self)
+        dialog = ManageTrackPresetsDialog(vis_config=self.vis_config, parent=self)
         dialog.exec()
 
     def _on_apply_presets(self):
-        dialog = ApplyTrackPresetsDialog(self.vis_config, self)
+        dialog = ApplyTrackPresetsDialog(vis_config=self.vis_config, auto_apply_on_open=False, parent=self)
         if dialog.exec() == QDialog.Accepted:
             self.refresh_ui()
             self.on_changes_callback()

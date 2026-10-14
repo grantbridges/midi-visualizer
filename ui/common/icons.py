@@ -53,6 +53,10 @@ class Icons:
         return Icons._get_icon("mdi6.arrow-u-left-top")
     
     @staticmethod
+    def close_box_outline():
+        return Icons._get_icon("mdi6.close-box-outline")
+    
+    @staticmethod
     def arrow_right_thin():
         return Icons._get_icon("mdi6.arrow-right-thin")
     
