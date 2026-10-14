@@ -21,6 +21,9 @@ from ui.common import WidgetUtil, Icons, LayoutUtil, TableComboBox
 from models import presets_config, Track, TrackPreset, VisConfig
 from utility.q_util import QUtil
 
+import logging
+logger = logging.getLogger("ApplyTrackPresetsDialog")
+
 # UI Model for metadata about current tracks
 @dataclass
 class UITrack:
@@ -41,6 +44,8 @@ class ApplyTrackPresetsDialog(QDialog):
         super().__init__(parent)
 
         self.setWindowTitle(f"Apply Track Presets")
+
+        self.vis_config = vis_config
 
         self.setModal(True)
         self.setFixedSize(600, 600)
@@ -173,7 +178,20 @@ class ApplyTrackPresetsDialog(QDialog):
         self.table.blockSignals(False)
 
     def _save(self):
-        # TODO
+        for t in self.tracks:
+            preset = t.preset_to_apply
+            if not preset:
+                continue
+
+            track = self.vis_config.get_track_by_name(t.name)
+            if not track:
+                logger.warning(f"Unable to find track \"{t.name}\" while saving")
+                continue
+
+            track.override_pitch_min_max = True
+            track.manual_pitch_min = preset.pitch_min
+            track.manual_pitch_max = preset.pitch_max
+        
         self.accept()
 
     def _on_preset_changed(self, row: int, col: int):

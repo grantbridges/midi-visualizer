@@ -308,7 +308,9 @@ class TracksTab(QWidget):
 
     def _on_apply_presets(self):
         dialog = ApplyTrackPresetsDialog(self.vis_config, self)
-        dialog.exec()
+        if dialog.exec() == QDialog.Accepted:
+            self.refresh_ui()
+            self.on_changes_callback()
 
     def _on_solo_changed(self, row: int, checked: bool):
         if self.table.signalsBlocked():
