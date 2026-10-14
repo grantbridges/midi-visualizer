@@ -4,7 +4,7 @@ from typing import List
 from dataclasses import dataclass, field
 from uuid import UUID
 import pretty_midi
-from common import Color, RGB
+from common import Color, RGB, Const
 from models.orientation import Orientation
 from models.track_group import TrackGroup
 from models.track import Track
@@ -309,7 +309,7 @@ class VisConfig:
             json.dump(data, f, indent=2)
 
     @staticmethod
-    def load(path: str) -> VisConfig:
+    def load(path: str) -> tuple[VisConfig, str]: # config, message
         try:
             logger.info(f'Load | Loading config from "{path}"')
 
@@ -317,6 +317,9 @@ class VisConfig:
                 data = json.load(f)
 
             schema_version = data["schema_version"]
+
+            if schema_version > VIS_CONFIG_SCHEMA_VERSION:
+                return (None, f"File was created with a newer version of {Const.APP_NAME}")
 
             config = VisConfig()
 
@@ -426,10 +429,10 @@ class VisConfig:
             size_bytes = asizeof.asizeof(config)
             logger.info(f"Load | Loaded config ({size_bytes / 1024 / 1024:.3f} MB)")
 
-            return config
+            return (config, "")
         except Exception as ex:
             logger.exception(f"Load | Error while loading config")
-            return None
+            return (None, "")
         
     def init(self):
         for tg in self.track_groups:

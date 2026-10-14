@@ -103,14 +103,15 @@ class MainWindow(QMainWindow):
             logger.info(f"No previous active project detected - starting default view")
         
         if load_path:
-            loaded_vis_config = VisConfig.load(load_path)
+            (loaded_vis_config, err_msg) = VisConfig.load(load_path)
 
             if loaded_vis_config is not None:
                 self.vis_config = loaded_vis_config
                 self.vis_config.init()
                 self._load_config_resources()
             else:
-                QMessageBox.critical(self, "Load Failed", f"Unable to load previous project at {load_path}. See logs for details.")
+                msg = f'Unable to load {Const.APP_NAME} project file{f": {err_msg}" if err_msg else ""}'
+                QMessageBox.critical(self, "Load Failed", msg)
 
         self.refresh_file_menu()
         self.refresh_recent_projects_menu()
@@ -465,12 +466,13 @@ class MainWindow(QMainWindow):
                 return # user cancelled load
         
         # load new file in
-        vis_config = VisConfig.load(load_path)
+        (vis_config, err_msg) = VisConfig.load(load_path)
         if vis_config is None:
             user_settings.remove_from_recent_projects(load_path)
             user_settings.save()
             self.refresh_recent_projects_menu()
-            QMessageBox.critical(self, "Load Failed", f'Unable to load {Const.APP_NAME} project file')
+            msg = f'Unable to load {Const.APP_NAME} project file{f": {err_msg}" if err_msg else ""}'
+            QMessageBox.critical(self, "Load Failed", msg)
             return
         
         # update local working model
