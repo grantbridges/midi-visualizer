@@ -21,10 +21,11 @@ from ui.common import (
     Icons, 
     TableCheckBox, 
     TableSpinBox,
+    TableComboBox,
     WidgetUtil
 )
 from utility import MidiUtil, Util
-from ui.dialogs import GroupTracksDialog, ManageTrackPresetsDialog
+from ui.dialogs import GroupTracksDialog, ManageTrackPresetsDialog, ApplyTrackPresetsDialog
 
 import logging
 logger = logging.getLogger("TracksTab")
@@ -131,7 +132,7 @@ class TracksTab(QWidget):
         col += 1
 
         # groups dropdown
-        combo = QComboBox()
+        combo = TableComboBox()
         # allow opening while preserving selected table rows
         combo.setFocusPolicy(Qt.FocusPolicy.NoFocus) 
         combo.addItem("None", None)
@@ -306,9 +307,8 @@ class TracksTab(QWidget):
         dialog.exec()
 
     def _on_apply_presets(self):
-        pass # TODO
-        #dialog.exec() != QDialog.Accepted:
-        #    return
+        dialog = ApplyTrackPresetsDialog(self.vis_config, self)
+        dialog.exec()
 
     def _on_solo_changed(self, row: int, checked: bool):
         if self.table.signalsBlocked():
