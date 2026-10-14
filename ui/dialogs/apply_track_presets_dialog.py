@@ -56,12 +56,12 @@ class ApplyTrackPresetsDialog(QDialog):
 
         # -- Create Controls --
 
-        info_label = WidgetUtil.info_text(f"Select track presets to apply. Tracks with \"None\" selected will not be affected.")
+        info_label = WidgetUtil.info_text(f"Select track presets to apply. Tracks with \"None\" assigned will not be affected.")
 
-        self.auto_apply_btn = QPushButton("Auto-Select All")
+        self.auto_apply_btn = QPushButton("Auto-Assign All")
         self.auto_apply_btn.clicked.connect(self._on_auto_apply_all_presets)
 
-        self.clear_btn = QPushButton("Clear")
+        self.clear_btn = QPushButton("Clear Assignments")
         self.clear_btn.clicked.connect(self._on_clear_selections)
 
         # tracks table
@@ -173,7 +173,7 @@ class ApplyTrackPresetsDialog(QDialog):
             if index >= 0:
                 combo.setCurrentIndex(index)
 
-        combo.currentIndexChanged.connect(lambda index, row=row: self._on_preset_changed(row, index))
+        combo.currentIndexChanged.connect(lambda _, row=row: self._on_preset_changed(row))
         self.table.setCellWidget(row, col, combo)
 
         col += 1
@@ -233,15 +233,21 @@ class ApplyTrackPresetsDialog(QDialog):
         self.accept()
 
     # Callbacks
-    def _on_preset_changed(self, row: int, col: int):
+    def _on_preset_changed(self, row: int):
         # get selected value from this row
         combo: QComboBox = self.table.cellWidget(row, self.tracks_columns.index("Preset"))
         preset = combo.currentData()
 
-        track = self.tracks[row]
-        track.preset_to_apply = preset
+        # apply selection to all selected rows
+        rows = self._get_selected_rows()
+        if row not in rows:
+            rows.append(row)
 
-        self._refresh_row(row)
+        for r in rows:
+            track = self.tracks[r]
+            track.preset_to_apply = preset
+            self._refresh_row(r)
+        
         self._refresh_changes_label()
         self._refresh_btns()
 

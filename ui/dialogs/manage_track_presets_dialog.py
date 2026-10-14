@@ -92,14 +92,6 @@ class ManageTrackPresetsDialog(QDialog):
             if not t.override_pitch_min_max:
                 continue
 
-            # check if we already have an identical preset to this track
-            preset = next((
-                p for p in presets_config.track_presets if p.name == t.name
-            ), None)
-
-            if preset and t.manual_pitch_min == preset.pitch_min and t.manual_pitch_max == preset.pitch_max:
-                continue # skip
-
             self.current_tracks.append(UICurrentTrack.create(t))
 
         self.existing_track_presets: list[UITrackPreset] = [
@@ -116,7 +108,7 @@ class ManageTrackPresetsDialog(QDialog):
 
         # -- Create Controls --
 
-        info_label = WidgetUtil.info_text(f"Select tracks to save to track presets. Only tracks with overridden values that aren't already in presets are shown.")
+        info_label = WidgetUtil.info_text(f"Select tracks to save to track presets. Only tracks with overridden values are shown.")
 
         # current tracks table
         current_tracks_label = QLabel("Current Tracks")
@@ -304,8 +296,10 @@ class ManageTrackPresetsDialog(QDialog):
 
             font = QFont()
             color = QUtil.rgb_to_qcolor(Color.WHITE)
+            del_icon = Icons.trash_can()
             if preset.state in [TableTrackPresetState.NEW, TableTrackPresetState.UPDATED]:
                 font.setBold(True)
+                del_icon = Icons.chevron_left()
             if preset.state == TableTrackPresetState.DELETED:
                 font.setStrikeOut(True)
                 color = QUtil.rgb_to_qcolor(Color.LIGHT_GRAY)
@@ -345,7 +339,7 @@ class ManageTrackPresetsDialog(QDialog):
 
             # delete button
             delete_btn = QPushButton()
-            delete_btn.setIcon(Icons.trash_can())
+            delete_btn.setIcon(del_icon)
             delete_btn.clicked.connect(lambda _, row=row: self._on_delete_preset(row))
             self.track_presets_table.setCellWidget(row, col, LayoutUtil.center(delete_btn))
             col += 1

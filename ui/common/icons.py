@@ -117,6 +117,14 @@ class Icons:
         return Icons._get_icon("mdi6.chevron-double-right")
     
     @staticmethod
+    def chevron_left():
+        return Icons._get_icon("mdi6.chevron-left")
+    
+    @staticmethod
+    def chevron_double_left():
+        return Icons._get_icon("mdi6.chevron-double-left")
+    
+    @staticmethod
     def dock_window():
         return Icons._get_icon("mdi6.dock-window")
     
