@@ -77,3 +77,23 @@ class Util:
         if len(text) > max_length:
             return text[:max_length - 3] + "..."
         return text
+
+    @staticmethod
+    def int_internal_to_display(
+        internal_value: int, 
+        internal_min: int, internal_max: int, 
+        display_min: int, display_max: int
+    ) -> int:
+        t = (internal_value - internal_min) / (internal_max - internal_min)
+        display_value = display_min + t * (display_max - display_min)
+        return int(round(display_value))
+
+    @staticmethod
+    def float_internal_to_display(
+        internal_value: float, 
+        internal_min: float, internal_max: float, 
+        display_min: float, display_max: float
+    ) -> float:
+        t = (internal_value - internal_min) / (internal_max - internal_min)
+        display_value = display_min + t * (display_max - display_min)
+        return display_value

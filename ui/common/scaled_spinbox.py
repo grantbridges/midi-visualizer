@@ -26,17 +26,17 @@ class ScaledSpinBox(QSpinBox):
             raise ValueError("internal_max cannot equal internal_min")
 
         # store internals
-        self.display_min = display_min
-        self.display_max = display_max
-        self.internal_min = internal_min
-        self.internal_max = internal_max
-        self.disable_mouse_wheel = disable_mouse_wheel
+        self._display_min = display_min
+        self._display_max = display_max
+        self._internal_min = internal_min
+        self._internal_max = internal_max
+        self._disable_mouse_wheel = disable_mouse_wheel
 
         self.setRange(display_min, display_max)
         self.setInternalValue(internal_value)
 
     def wheelEvent(self, event):
-        if self.disable_mouse_wheel:
+        if self._disable_mouse_wheel:
             event.ignore()
             return
 
@@ -57,11 +57,11 @@ class ScaledSpinBox(QSpinBox):
         if internal_value is None:
             return None
 
-        t = (internal_value - self.internal_min) / (self.internal_max - self.internal_min)
-        display_value = self.display_min + t * (self.display_max - self.display_min)
+        t = (internal_value - self._internal_min) / (self._internal_max - self._internal_min)
+        display_value = self._display_min + t * (self._display_max - self._display_min)
         return int(round(display_value))
 
     def _display_to_internal(self, display_value: int) -> int:
-        t = (display_value - self.display_min) / (self.display_max - self.display_min)
-        internal_value = self.internal_min + t * (self.internal_max - self.internal_min)
+        t = (display_value - self._display_min) / (self._display_max - self._display_min)
+        internal_value = self._internal_min + t * (self._internal_max - self._internal_min)
         return int(round(internal_value))

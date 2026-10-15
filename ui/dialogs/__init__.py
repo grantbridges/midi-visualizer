@@ -6,3 +6,4 @@ from ui.dialogs.progress_dialog import ProgressDialog
 from ui.dialogs.about_dialog import AboutDialog
 from ui.dialogs.manage_track_presets_dialog import ManageTrackPresetsDialog
 from ui.dialogs.apply_track_presets_dialog import ApplyTrackPresetsDialog
+from ui.dialogs.manage_track_group_presets_dialog import ManageTrackGroupPresetsDialog

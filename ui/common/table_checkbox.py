@@ -25,6 +25,10 @@ class TableCheckBox(QWidget):
     def _on_clicked(self):
         self.valueChanged.emit(self.isChecked())
 
+    def setReadOnly(self, read_only: bool):
+        self.setAttribute(Qt.WA_TransparentForMouseEvents, read_only)
+        self.checkbox.setFocusPolicy(Qt.NoFocus if read_only else Qt.StrongFocus)
+
     @override
     def isChecked(self) -> bool:
         return self.checkbox.isChecked()

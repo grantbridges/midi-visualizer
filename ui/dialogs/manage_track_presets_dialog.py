@@ -44,6 +44,14 @@ class TableCurrentTrack:
     pitch_min: int = 1
     pitch_max: int = 127
 
+    @staticmethod
+    def create(track: UICurrentTrack):
+        return TableCurrentTrack(
+            name = track.name,
+            pitch_min = track.manual_pitch_min,
+            pitch_max = track.manual_pitch_max,
+        )
+
 # UI Model for metadata about existing presets
 @dataclass
 class UITrackPreset:
@@ -75,6 +83,24 @@ class TableTrackPreset:
     pitch_max: int = 127
     state: TableTrackPresetState = TableTrackPresetState.DEFAULT
 
+    @staticmethod
+    def create_from_track(track: UICurrentTrack, is_existing: bool):
+        return TableTrackPreset(
+            name = track.name, 
+            pitch_min = track.pitch_min, 
+            pitch_max = track.pitch_max, 
+            state = TableTrackPresetState.UPDATED if is_existing else TableTrackPresetState.NEW
+        )
+
+    @staticmethod
+    def create_from_preset(preset: UITrackPreset):
+        return TableTrackPreset(
+            name = preset.name, 
+            pitch_min = preset.pitch_min, 
+            pitch_max = preset.pitch_max, 
+            state = TableTrackPresetState.DELETED if preset.selected_for_delete else TableTrackPresetState.DEFAULT
+        )
+
 # ----
 
 class ManageTrackPresetsDialog(QDialog):
@@ -101,8 +127,8 @@ class ManageTrackPresetsDialog(QDialog):
         self.existing_track_presets.sort(key=lambda p: p.name)
 
         # table data - recomputed any time user changes occur in _compute_table_data
-        self.visible_current_tracks: list[TableCurrentTrack] = []
-        self.visible_track_presets: list[TableTrackPreset] = []
+        self.table_current_tracks: list[TableCurrentTrack] = []
+        self.table_track_presets: list[TableTrackPreset] = []
 
         self._compute_table_data()
 
@@ -198,38 +224,35 @@ class ManageTrackPresetsDialog(QDialog):
     def _compute_table_data(self):
         # current tracks - any that aren't selected for add (since those
         # are over on the presets table now)
-        self.visible_current_tracks = [
-            t for t in self.current_tracks
-            if not t.selected_for_add
+        self.table_current_tracks = [
+            TableCurrentTrack.create(t) 
+            for t in self.current_tracks if not t.selected_for_add
         ]
 
         # track presets library table order:
         #   1. newly added
         #   2. updated
         #   3. existing (including marked for deletion)
-        self.visible_track_presets = []
+
+        # append new & updated from current tracks
+        self.table_track_presets = []
         for t in self.current_tracks:
             if t.selected_for_add:
                 existing_preset_by_name = any(p.name == t.name for p in self.existing_track_presets)
-                self.visible_track_presets.append(TableTrackPreset(
-                    t.name, 
-                    t.pitch_min, 
-                    t.pitch_max, 
-                    TableTrackPresetState.UPDATED if existing_preset_by_name else TableTrackPresetState.NEW
-                ))
-        
+                self.table_track_presets.append(
+                    TableTrackPreset.create_from_track(t, existing_preset_by_name)
+                )
+
+        # append existing & deleted from existing presets
         for p in self.existing_track_presets:
             # skip any already in list (due to being added or updated from current tracks)
-            already_in_list = any(x.name == p.name for x in self.visible_track_presets)
+            already_in_list = any(x.name == p.name for x in self.table_track_presets)
             if already_in_list:
                 continue
 
-            self.visible_track_presets.append(TableTrackPreset(
-                p.name, 
-                p.pitch_min, 
-                p.pitch_max, 
-                TableTrackPresetState.DELETED if p.selected_for_delete else TableTrackPresetState.DEFAULT
-            ))
+            self.table_track_presets.append(
+                TableTrackPreset.create_from_preset(p)
+            )
 
     def _refresh_buttons(self):
         enabled = len(self._get_selected_current_track_rows()) > 0
@@ -265,8 +288,8 @@ class ManageTrackPresetsDialog(QDialog):
         self.track_presets_table.blockSignals(True)
 
         # current tracks table
-        self.current_tracks_table.setRowCount(len(self.visible_current_tracks))
-        for row, track in enumerate(self.visible_current_tracks):
+        self.current_tracks_table.setRowCount(len(self.table_current_tracks))
+        for row, track in enumerate(self.table_current_tracks):
             col = 0
 
             # name
@@ -290,8 +313,8 @@ class ManageTrackPresetsDialog(QDialog):
             col += 1        
 
         # track presets table
-        self.track_presets_table.setRowCount(len(self.visible_track_presets))
-        for row, preset in enumerate(self.visible_track_presets):
+        self.track_presets_table.setRowCount(len(self.table_track_presets))
+        for row, preset in enumerate(self.table_track_presets):
             col = 0
 
             font = QFont()
@@ -415,7 +438,7 @@ class ManageTrackPresetsDialog(QDialog):
         if row not in rows:
             rows.append(row)
 
-        presets = [self.visible_track_presets[row] for row in rows]
+        presets = [self.table_track_presets[row] for row in rows]
 
         # Special case - if, across the selection, there's a mix of Default and Deleted states
         # on existing presets, then we'll force all of these to Deleted. Makes a cleaner UX.
@@ -490,11 +513,11 @@ class ManageTrackPresetsDialog(QDialog):
         rows = self._get_selected_current_track_rows()
         tracks = []
         for row in rows:
-            if row >= 0 and row < len(self.visible_current_tracks):
+            if row >= 0 and row < len(self.table_current_tracks):
                 # get actual UI model track by name of this row
                 track = next((
                     t for t in self.current_tracks 
-                    if t.name == self.visible_current_tracks[row].name
+                    if t.name == self.table_current_tracks[row].name
                 ), None)
                 if track:
                     tracks.append(track)

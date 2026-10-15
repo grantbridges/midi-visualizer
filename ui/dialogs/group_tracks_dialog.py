@@ -33,7 +33,7 @@ class GroupTracksDialog(QDialog):
 
         # for a new group
         self.name_input = QLineEdit(text="New Group")
-        self.color_input = ColorButton(Color.KAYLA_1)
+        self.color_input = ColorButton(color=Color.KAYLA_1)
 
         button_box = QDialogButtonBox()
         button_box.addButton("Cancel", QDialogButtonBox.RejectRole)

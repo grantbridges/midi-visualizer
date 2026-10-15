@@ -15,15 +15,21 @@ from PySide6.QtWidgets import (
 class ColorButton(QPushButton):
     valueChanged = Signal(tuple)
 
-    def __init__(self, color: RGB = None, parent=None):
+    def __init__(self, color: RGB = None, read_only: bool = False, parent=None):
         super().__init__(parent)
 
         self._rgb = color if color is not None else Color.WHITE
+        self._read_only = read_only
 
         # allows for selecting in style formatting
         self.setObjectName("ColorButton")
 
         self.clicked.connect(self._pick_color)
+        self.refresh()
+
+    def setReadOnly(self, read_only: bool):
+        # blocks interaction events, but still shows in enabled/disabled state
+        self._read_only = read_only
         self.refresh()
 
     def setEnabled(self, enabled: bool):
@@ -61,6 +67,9 @@ class ColorButton(QPushButton):
         )
 
     def contextMenuEvent(self, event):
+        if self._read_only:
+            return
+        
         menu = QMenu(self)
 
         copy_action = QAction("Copy", icon=Icons.copy(), parent=self)
@@ -121,6 +130,9 @@ class ColorButton(QPushButton):
         self.valueChanged.emit(self._rgb)
 
     def _pick_color(self):
+        if self._read_only:
+            return
+
         color = QColorDialog.getColor(
             QUtil.rgb_to_qcolor(self._rgb),
             self,

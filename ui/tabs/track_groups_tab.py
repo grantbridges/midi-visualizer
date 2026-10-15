@@ -1,6 +1,7 @@
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QDialog,
     QMessageBox,
     QWidget,
     QVBoxLayout,
@@ -14,6 +15,9 @@ from PySide6.QtWidgets import (
 )
 from common import RGB
 from models import VisConfig
+from ui.dialogs import (
+    ManageTrackGroupPresetsDialog
+)
 from utility import Util
 from ui.common import (
     ColorButton, 
@@ -22,7 +26,8 @@ from ui.common import (
     LayoutUtil, 
     Icons, 
     ScaledSpinBox, 
-    ScaledDoubleSpinBox
+    ScaledDoubleSpinBox,
+    WidgetUtil
 )
 import copy
 from uuid import uuid4
@@ -51,6 +56,12 @@ class TrackGroupsTab(QWidget):
         self.clear_solo_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         self.clear_solo_btn.clicked.connect(self._on_clear_solo)
 
+        self.manage_presets_btn = WidgetUtil.icon_btn(Icons.format_list_group(), "Manage Track Group Presets")
+        self.manage_presets_btn.clicked.connect(self._on_manage_presets)
+
+        self.apply_presets_btn = WidgetUtil.icon_btn(Icons.format_list_group_plus(), "Apply Track Group Presets")
+        self.apply_presets_btn.clicked.connect(self._on_apply_presets)
+
         self.track_columns = ["", "", "Name", "Tracks", "Solo", "Visible", "Color", "Opacity", "Note\nSparks", "Note\nBounce", "Note\nVel. Fx", "Bar Height", "Speed", "Pitch Offset", ""]
         self.table = QTableWidget(0, len(self.track_columns))
         self.table.setHorizontalHeaderLabels(self.track_columns)
@@ -73,6 +84,8 @@ class TrackGroupsTab(QWidget):
         btns_layout.addWidget(self.clear_selection_btn)
         btns_layout.addWidget(self.clear_solo_btn)
         btns_layout.addStretch()
+        btns_layout.addWidget(self.manage_presets_btn)
+        btns_layout.addWidget(self.apply_presets_btn)
         v_layout.addLayout(btns_layout)
         v_layout.addWidget(self.table)
 
@@ -264,6 +277,17 @@ class TrackGroupsTab(QWidget):
         
         self.refresh_ui()
         self.on_changes_callback()
+
+    def _on_manage_presets(self):
+        dialog = ManageTrackGroupPresetsDialog(vis_config=self.vis_config, parent=self)
+        dialog.exec()
+
+    def _on_apply_presets(self):
+        pass
+        # dialog = ApplyTrackGroupPresetsDialog(vis_config=self.vis_config, auto_apply_on_open=False, parent=self)
+        # if dialog.exec() == QDialog.Accepted:
+        #     self.refresh_ui()
+        #     self.on_changes_callback()
 
     def _on_remove_group(self, row: int):
         if 0 <= row < len(self.vis_config.track_groups):
