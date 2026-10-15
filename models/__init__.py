@@ -10,3 +10,4 @@ from models.orientation import Orientation
 from models.waveform import Waveform
 from models.presets_config import presets_config
 from models.track_preset import TrackPreset
+from models.track_group_preset import TrackGroupPreset

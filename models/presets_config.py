@@ -6,6 +6,7 @@ from typing import List
 from utility.file_util import FileUtil
 
 from models.track_preset import TrackPreset
+from models.track_group_preset import TrackGroupPreset
 logger = logging.getLogger("PresetsConfig")
 
 # ----
@@ -23,6 +24,7 @@ class PresetsConfig:
     App-level presets config container
     '''
     track_presets: List[TrackPreset] = field(default_factory=list)
+    track_group_presets: List[TrackGroupPreset] = field(default_factory=list)
 
     @staticmethod
     def _config_path() -> Path:
@@ -41,6 +43,10 @@ class PresetsConfig:
                     track_preset.save()
                     for track_preset in self.track_presets
                 ],
+                "track_group_presets": [
+                    track_group_preset.save()
+                    for track_group_preset in self.track_group_presets
+                ]
             }
 
             with path.open("w", encoding="utf-8") as f:
@@ -66,6 +72,11 @@ class PresetsConfig:
             self.track_presets = [
                 TrackPreset.load(track_presets_data, schema_version)
                 for track_presets_data in data["track_presets"]
+            ]
+
+            self.track_group_presets = [
+                TrackGroupPreset.load(track_group_presets_data, schema_version)
+                for track_group_presets_data in data["track_group_presets"]
             ]
 
             logger.info(f"Load | Loaded presets config")
