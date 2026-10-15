@@ -239,7 +239,8 @@ class ApplyTrackPresetsDialog(QDialog):
         preset = combo.currentData()
 
         # apply selection to all selected rows
-        rows = self._get_selected_rows()
+        rows = self._get_rows_for_bulk_edit(row)
+
         if row not in rows:
             rows.append(row)
 
@@ -264,9 +265,7 @@ class ApplyTrackPresetsDialog(QDialog):
         self._refresh_ui()
 
     def _on_auto_apply_preset(self, row: int):
-        rows = self._get_selected_rows()
-        if row not in rows:
-            rows.append(row)
+        rows = self._get_rows_for_bulk_edit(row)
 
         for r in rows:
             self._auto_apply_preset(r)
@@ -276,9 +275,7 @@ class ApplyTrackPresetsDialog(QDialog):
         self._refresh_btns()
 
     def _on_clear_selection(self, row: int):
-        rows = self._get_selected_rows()
-        if row not in rows:
-            rows.append(row)
+        rows = self._get_rows_for_bulk_edit(row)
 
         for r in rows:
             track = self.tracks[r]
@@ -298,6 +295,18 @@ class ApplyTrackPresetsDialog(QDialog):
                 selected_rows.add(row)
 
         return sorted(selected_rows)
+
+    def _get_rows_for_bulk_edit(self, changed_row: int):
+        # get all currently selected rows (including changed row)
+        rows = self._get_selected_rows()
+        if len(rows) == 1:
+            # if only one other row is selected, exclude it - it 
+            # feels a bit jarring otherwise
+            rows = []
+
+        if changed_row not in rows:
+            rows.append(changed_row)
+        return rows
 
     # Helpers
     def _auto_apply_preset(self, row: int):

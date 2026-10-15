@@ -408,6 +408,10 @@ class ManageTrackPresetsDialog(QDialog):
     def _on_delete_preset(self, row: int):
         # get all selected rows
         rows = self._get_selected_track_preset_rows()
+        if len(rows) == 1:
+            # if only one other row is selected, ignore
+            rows = []
+
         if row not in rows:
             rows.append(row)
 
