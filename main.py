@@ -1,3 +1,4 @@
+import platform
 import time
 import sys
 import logging
@@ -15,6 +16,18 @@ import build_info
 logger = logging.getLogger("Main")
 
 SPLASH_SCREEN_SHOW_TIME_SEC = 2
+
+MIN_MACOS_VERSION = (14, 0)
+if sys.platform == "darwin":
+    mac_ver = tuple(int(p) for p in platform.mac_ver()[0].split(".")[:2])
+    if mac_ver < MIN_MACOS_VERSION:
+        import subprocess
+        subprocess.run([
+            "osascript", "-e",
+            f'display dialog "{Const.APP_NAME} app requires macOS {MIN_MACOS_VERSION[0]}.{MIN_MACOS_VERSION[1]} or later. '
+            f'You are running {platform.mac_ver()[0]}." with title "Unsupported macOS Version" buttons {{"OK"}} with icon caution'
+        ])
+        sys.exit(1)
 
 # create main window and start
 def main():
