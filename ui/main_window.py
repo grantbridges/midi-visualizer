@@ -33,7 +33,8 @@ from ui.dialogs import (
     ProgressDialog,
     AboutDialog,
     ApplyTrackPresetsDialog,
-    AddTrackGroupPresetsDialog
+    AddTrackGroupPresetsDialog,
+    ImportResultDialog
 )
 from utility import LogUtil, FileUtil
 
@@ -532,7 +533,13 @@ class MainWindow(QMainWindow):
             return
             
         # import into local working model
-        self.vis_config = VisConfig.create_from_midi_data(Path(midi_path).stem, midi_data)
+        result = VisConfig.create_from_midi_data(Path(midi_path).stem, midi_data)
+
+        if len(result.skipped_tracks) > 0:
+            dialog = ImportResultDialog(result, parent=self)
+            dialog.exec()
+
+        self.vis_config = result.vis_config
         self.vis_config.init()
         self._load_config_resources()
 

@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import random
 from typing import List
 from dataclasses import dataclass, field
 from uuid import UUID
@@ -31,6 +32,17 @@ VIS_CONFIG_SCHEMA_VERSION = 2
 class VisConfigLoadResult:
     vis_config: VisConfig | None = None # successful if populated
     err_msg: str | None = None
+
+@dataclass
+class SkippedImportTrack:
+    name: str = ''
+    notes_count: int = 0
+    reason: str = ''
+
+@dataclass
+class CreateFromMidiResult:
+    vis_config: VisConfig | None = None # successful if populated
+    skipped_tracks : list[SkippedImportTrack] = field(default_factory=list)
 
 @dataclass
 class VisConfig:
@@ -171,8 +183,11 @@ class VisConfig:
     waveform: Waveform = field(default_factory=Waveform)
     
     @staticmethod
-    def create_from_midi_data(track_name: str, midi_data: pretty_midi.PrettyMIDI) -> None:
+    def create_from_midi_data(track_name: str, midi_data: pretty_midi.PrettyMIDI) -> CreateFromMidiResult:
         vis_config = VisConfig(track_name=track_name)
+        result = CreateFromMidiResult(
+            vis_config=vis_config
+        )
 
         instruments: List[pretty_midi.Instrument] = midi_data.instruments
 
@@ -184,22 +199,37 @@ class VisConfig:
         for inst in instruments:
             if not inst.name:
                 logger.warning("Create | Loaded track from MIDI data with no name - skipping")
+                result.skipped_tracks.append(SkippedImportTrack(
+                    name=inst.name,
+                    notes_count=len(inst.notes),
+                    reason="Missing Track Name"
+                ))
                 continue
 
             if inst.name in inst_names:
                 logger.warning(f"Create | Loaded track with duplicate name \"{inst.name}\" - skipping")
+                result.skipped_tracks.append(SkippedImportTrack(
+                    name=inst.name,
+                    notes_count=len(inst.notes),
+                    reason="Duplicate Name"
+                ))
                 continue
 
             track = Track.create_from_midi_data(inst)
             if len(track.notes) == 0:
                 logger.warning(f"Create | Loaded track with no notes \"{inst.name}\" - skipping")
+                result.skipped_tracks.append(SkippedImportTrack(
+                    name=inst.name,
+                    notes_count=len(inst.notes),
+                    reason="Missing Note Data"
+                ))
                 continue
 
             track.group_id = track_group.group_id
             vis_config.tracks.append(track)
             inst_names.add(inst.name)
 
-        return vis_config
+        return result
 
     def save(self, path: str) -> None:
         logger.debug(f'Save | Saving config to "{path}"')

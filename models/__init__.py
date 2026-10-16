@@ -1,4 +1,7 @@
 from models.vis_config import VisConfig
+from models.vis_config import VisConfigLoadResult
+from models.vis_config import CreateFromMidiResult
+from models.vis_config import SkippedImportTrack
 from models.track_group import TrackGroup
 from models.track import Track
 from models.note import Note
