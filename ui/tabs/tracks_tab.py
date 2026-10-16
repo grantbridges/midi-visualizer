@@ -1,6 +1,6 @@
 from typing import List
 from uuid import UUID
-from PySide6.QtCore import QPoint, Qt
+from PySide6.QtCore import QItemSelection, QItemSelectionModel, QPoint, Qt
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -60,11 +60,31 @@ class TracksTab(QWidget):
         self.apply_presets_btn = WidgetUtil.icon_btn(Icons.format_list_group_plus(), "Apply Track Presets")
         self.apply_presets_btn.clicked.connect(self._on_apply_presets)
 
-        self.track_columns = ["", "", "Name", "Group", "Solo", "Override\nPitches", "Pitch Min", "Pitch Max", "Notes", "Start (sec)", "End (sec)", "Vel. Min", "Vel. Max"]
+        self.move_top_btn = QPushButton()
+        self.move_top_btn.setIcon(Icons.chevron_double_up())
+        self.move_top_btn.setStyleSheet("padding: 3px 3px")
+        self.move_top_btn.clicked.connect(self._on_move_track_top)
+
+        self.move_up_btn = QPushButton()
+        self.move_up_btn.setIcon(Icons.chevron_up())
+        self.move_up_btn.setStyleSheet("padding: 3px 3px")
+        self.move_up_btn.clicked.connect(self._on_move_track_up)
+
+        self.move_down_btn = QPushButton()
+        self.move_down_btn.setIcon(Icons.chevron_down())
+        self.move_down_btn.setStyleSheet("padding: 3px 3px")
+        self.move_down_btn.clicked.connect(self._on_move_track_down)
+
+        self.move_bottom_btn = QPushButton()
+        self.move_bottom_btn.setIcon(Icons.chevron_double_down())
+        self.move_bottom_btn.setStyleSheet("padding: 3px 3px")
+        self.move_bottom_btn.clicked.connect(self._on_move_track_bottom)
+
+        self.track_columns = ["Name", "Group", "Solo", "Override\nPitches", "Pitch Min", "Pitch Max", "Notes", "Start (sec)", "End (sec)", "Vel. Min", "Vel. Max"]
         self.table = QTableWidget(0, len(self.track_columns))
         self.table.setHorizontalHeaderLabels(self.track_columns)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
+        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch) # name
         self.table.verticalHeader().setVisible(False) # hide row numbers
 
         self.table.itemSelectionChanged.connect(self._on_selection_changed)
@@ -83,6 +103,7 @@ class TracksTab(QWidget):
     def layout_controls(self):
         # layout controls
         v_layout = QVBoxLayout(self)
+
         btns_layout = QHBoxLayout()
         btns_layout.addWidget(self.group_tracks_btn)
         btns_layout.addWidget(self.clear_selection_btn)
@@ -92,7 +113,19 @@ class TracksTab(QWidget):
         btns_layout.addWidget(self.manage_presets_btn)
         btns_layout.addWidget(self.apply_presets_btn)
         v_layout.addLayout(btns_layout)
-        v_layout.addWidget(self.table)
+
+        move_layout = QVBoxLayout()
+        move_layout.addSpacing(30)
+        move_layout.addWidget(self.move_top_btn)
+        move_layout.addWidget(self.move_up_btn)
+        move_layout.addWidget(self.move_down_btn)
+        move_layout.addWidget(self.move_bottom_btn)
+        move_layout.addStretch()
+
+        table_layout = QHBoxLayout()
+        table_layout.addLayout(move_layout)
+        table_layout.addWidget(self.table)
+        v_layout.addLayout(table_layout)
 
     def refresh_ui(self):
         self._refresh_buttons()
@@ -110,21 +143,21 @@ class TracksTab(QWidget):
 
         col = 0
 
-        # move up button
-        up_btn = QPushButton()
-        up_btn.setIcon(Icons.arrow_up_bold())
-        up_btn.setDisabled(row == 0)
-        up_btn.clicked.connect(lambda _, row=row: self._on_move_track_up(row))
-        self.table.setCellWidget(row, col, LayoutUtil.center(up_btn))
-        col += 1
+        # # move up button
+        # up_btn = QPushButton()
+        # up_btn.setIcon(Icons.arrow_up_bold())
+        # up_btn.setDisabled(row == 0)
+        # up_btn.clicked.connect(lambda _, row=row: self._on_move_track_up(row))
+        # self.table.setCellWidget(row, col, LayoutUtil.center(up_btn))
+        # col += 1
 
-        # move down button
-        down_btn = QPushButton()
-        down_btn.setIcon(Icons.arrow_down_bold())
-        down_btn.setDisabled(row == len(self.vis_config.tracks) - 1)
-        down_btn.clicked.connect(lambda _, row=row: self._on_move_track_down(row))
-        self.table.setCellWidget(row, col, LayoutUtil.center(down_btn))
-        col += 1
+        # # move down button
+        # down_btn = QPushButton()
+        # down_btn.setIcon(Icons.arrow_down_bold())
+        # down_btn.setDisabled(row == len(self.vis_config.tracks) - 1)
+        # down_btn.clicked.connect(lambda _, row=row: self._on_move_track_down(row))
+        # self.table.setCellWidget(row, col, LayoutUtil.center(down_btn))
+        # col += 1
 
         # name
         name_item = QTableWidgetItem(track.name)
@@ -231,12 +264,19 @@ class TracksTab(QWidget):
         self.table.blockSignals(False)
 
     def _refresh_buttons(self):
-        selected_rows_count = len(self._get_selected_rows())
+        selected_rows = self._get_selected_rows()
+        selected_rows_count = len(selected_rows)
 
         self.group_tracks_btn.setEnabled(selected_rows_count > 0)
         self.group_tracks_btn.setText(f"Group {selected_rows_count} Track{"s" if selected_rows_count > 1 else ""}" if selected_rows_count > 0 else "Group Tracks")
 
         self.clear_selection_btn.setEnabled(selected_rows_count > 0)
+
+        tracks_count = len(self.vis_config.tracks)
+        self.move_top_btn.setEnabled(selected_rows_count > 0 and 0 not in selected_rows)
+        self.move_up_btn.setEnabled(selected_rows_count > 0 and 0 not in selected_rows)
+        self.move_down_btn.setEnabled(selected_rows_count > 0 and (tracks_count - 1) not in selected_rows)
+        self.move_bottom_btn.setEnabled(selected_rows_count > 0 and (tracks_count - 1) not in selected_rows)
 
         any_solo = any(x.solo for x in self.vis_config.tracks)
         self.clear_solo_btn.setEnabled(any_solo)
@@ -245,19 +285,17 @@ class TracksTab(QWidget):
         # No work here - we update vis_config tracks directly on changes
         pass
 
-    def _on_move_track_up(self, row: int):
-        if row > 0:
-            Util.swap(self.vis_config.tracks, row, row-1)
-            
-            self.refresh_ui()
-            self.on_changes_callback()
+    def _on_move_track_up(self):
+        self._move_selected_tracks(-1)
 
-    def _on_move_track_down(self, row: int):
-        if row < len(self.vis_config.tracks) - 1:
-            Util.swap(self.vis_config.tracks, row, row+1)
-            
-            self.refresh_ui()
-            self.on_changes_callback()
+    def _on_move_track_down(self):
+        self._move_selected_tracks(1)
+
+    def _on_move_track_top(self):
+        self._move_selected_tracks(-len(self.vis_config.tracks))
+
+    def _on_move_track_bottom(self):
+        self._move_selected_tracks(len(self.vis_config.tracks))
 
     def _on_group_changed(self, row: int, col: int):
         # get selected value from this row
@@ -449,5 +487,52 @@ class TracksTab(QWidget):
     def _pitch_suffix(self, pitch: int) -> str:
         return f" ({MidiUtil.midi_pitch_to_note(pitch)})"
 
+    # Helpers
+    def _move_selected_tracks(self, delta: int):
+        rows = sorted(self._get_selected_rows())
+        if not rows:
+            return
+
+        tracks = self.vis_config.tracks
+        n = len(tracks)
+
+        # clamp so the whole selection stays in range (gaps between rows are preserved)
+        delta = max(-rows[0], min(delta, n - 1 - rows[-1]))
+        if delta == 0:
+            return
+
+        # reorder tracks based on move
+        row_set = set(rows)
+        targets = {r + delta: tracks[r] for r in rows}
+        remaining = iter(t for i, t in enumerate(tracks) if i not in row_set)
+        tracks[:] = [targets[i] if i in targets else next(remaining) for i in range(n)]
+
+        # update table selection
+        self._select_rows([r + delta for r in rows])
+
+        # refresh UI and notify parent
+        self.refresh_ui()
+        self.on_changes_callback()
+
+        # scroll table to ensure selection is in view
+        # (after refresh UI so we don't fight the rebuild)
+        new_rows = [r + delta for r in rows]
+        edge_row = new_rows[-1] if delta > 0 else new_rows[0]
+        self.table.scrollTo(
+            self.table.model().index(edge_row, 0),
+            QAbstractItemView.EnsureVisible,
+        )
+
+    def _select_rows(self, rows: list[int]):
+        model = self.table.model()
+        selection = QItemSelection()
+        for row in rows:
+            idx = model.index(row, 0)
+            selection.select(idx, idx)
+
+        self.table.selectionModel().select(
+            selection,
+            QItemSelectionModel.ClearAndSelect | QItemSelectionModel.Rows,
+        )
 
 
