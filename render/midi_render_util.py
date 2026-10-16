@@ -214,7 +214,7 @@ class MidiRenderUtil:
 
                 color = track.color
                 alpha = track.alpha
-                radius_ratio = 1.0 if not vis_config.note_round_edges else vis_config.note_round_ratio
+                radius_ratio = vis_config.note_round_ratio
                 radius = int(round(radius_ratio * (h / 2)))
 
                 # start fading in when note is within range of playhead
