@@ -230,12 +230,15 @@ class TracksTab(QWidget):
         self.table.blockSignals(False)
 
     def _refresh_buttons(self):
-        count = len(self._get_selected_rows())
+        selected_rows_count = len(self._get_selected_rows())
 
-        self.group_tracks_btn.setEnabled(count > 0)
-        self.group_tracks_btn.setText(f"Group {count} Track{"s" if count > 1 else ""}" if count > 0 else "Group Tracks")
+        self.group_tracks_btn.setEnabled(selected_rows_count > 0)
+        self.group_tracks_btn.setText(f"Group {selected_rows_count} Track{"s" if selected_rows_count > 1 else ""}" if selected_rows_count > 0 else "Group Tracks")
 
-        self.clear_selection_btn.setEnabled(count > 0)
+        self.clear_selection_btn.setEnabled(selected_rows_count > 0)
+
+        any_solo = any(x.solo for x in self.vis_config.tracks)
+        self.clear_solo_btn.setEnabled(any_solo)
 
     def update_model(self):
         # No work here - we update vis_config tracks directly on changes
