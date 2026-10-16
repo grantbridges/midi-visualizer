@@ -27,6 +27,11 @@ History
 '''
 VIS_CONFIG_SCHEMA_VERSION = 2
 
+@dataclass 
+class VisConfigLoadResult:
+    vis_config: VisConfig | None = None # successful if populated
+    err_msg: str | None = None
+
 @dataclass
 class VisConfig:
     '''
@@ -307,7 +312,9 @@ class VisConfig:
             json.dump(data, f, indent=2)
 
     @staticmethod
-    def load(path: str) -> tuple[VisConfig, str]: # config, message
+    def load(path: str) -> VisConfigLoadResult:
+        result = VisConfigLoadResult()
+
         try:
             logger.info(f'Load | Loading config from "{path}"')
 
@@ -317,7 +324,8 @@ class VisConfig:
             schema_version = data["schema_version"]
 
             if schema_version > VIS_CONFIG_SCHEMA_VERSION:
-                return (None, f"File was created with a newer version of {Const.APP_NAME}")
+                result.err_msg = f"Project file was created with a newer version of {Const.APP_NAME_SHORT}"
+                return result
 
             config = VisConfig()
 
@@ -426,10 +434,11 @@ class VisConfig:
             size_bytes = asizeof.asizeof(config)
             logger.info(f"Load | Loaded config ({size_bytes / 1024 / 1024:.3f} MB)")
 
-            return (config, "")
+            result.vis_config = config
+            return result
         except Exception as ex:
             logger.exception(f"Load | Error while loading config")
-            return (None, "")
+            return result
         
     def init(self):
         for tg in self.track_groups:
@@ -446,6 +455,7 @@ class VisConfig:
         
         for t in self.tracks:
             t.init()
+            
 
     # Loads in all note data from midi (assumes tracks are already defined)
     def populate_notes_from_midi_data(self, midi_data: pretty_midi.PrettyMIDI):

@@ -1,3 +1,4 @@
+import html
 import os
 from pathlib import Path
 import subprocess
@@ -20,7 +21,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import QAction, QIcon, QKeySequence, QLinearGradient, QPalette, QShortcut
 from common import Const, Color
-from models import VisConfig, Track, user_settings, presets_config
+from models import VisConfig, Track, user_settings, presets_config, BackgroundMode
 from render import RenderWorker
 from media import video_provider, audio_provider, image_provider
 from ui.tabs import GeneralTab, BackgroundTab, AudioTab, TrackGroupsTab, TracksTab, NotesTab
@@ -104,14 +105,17 @@ class MainWindow(QMainWindow):
             logger.info(f"No previous active project detected - starting default view")
         
         if load_path:
-            (loaded_vis_config, err_msg) = VisConfig.load(load_path)
+            result = VisConfig.load(load_path)
 
-            if loaded_vis_config is not None:
-                self.vis_config = loaded_vis_config
+            if result.vis_config is not None:
+                self.vis_config = result.vis_config
                 self.vis_config.init()
+                self._validate_config_resources()
                 self._load_config_resources()
             else:
-                msg = f'Unable to load {Const.APP_NAME} project file{f": {err_msg}" if err_msg else ""}'
+                msg = f'Unable to load {Const.APP_NAME} project file'
+                if result.err_msg:
+                    msg += f": {result.err_msg}"
                 QMessageBox.critical(self, "Load Failed", msg)
 
         self.refresh_file_menu()
@@ -467,18 +471,21 @@ class MainWindow(QMainWindow):
                 return # user cancelled load
         
         # load new file in
-        (vis_config, err_msg) = VisConfig.load(load_path)
-        if vis_config is None:
+        result = VisConfig.load(load_path)
+        if result.vis_config is None:
             user_settings.remove_from_recent_projects(load_path)
             user_settings.save()
             self.refresh_recent_projects_menu()
-            msg = f'Unable to load {Const.APP_NAME} project file{f": {err_msg}" if err_msg else ""}'
+            msg = f'Unable to load {Const.APP_NAME} project file'
+            if result.err_msg:
+                msg += f": {result.err_msg}"
             QMessageBox.critical(self, "Load Failed", msg)
             return
         
         # update local working model
-        self.vis_config = vis_config
+        self.vis_config = result.vis_config
         self.vis_config.init()
+        self._validate_config_resources()
         self._load_config_resources()
 
         # update active project entry
@@ -576,6 +583,31 @@ class MainWindow(QMainWindow):
         if presets_used:
             self.refresh_ui()
             self.on_config_changed()
+
+    def _validate_config_resources(self):
+        missing = []
+        if self.vis_config.bg_mode == BackgroundMode.Video:
+            video_filepath = self.vis_config.bg_video_filepath
+            if video_filepath and not Path(video_filepath).is_file():
+                missing.append(f"Background video: '{video_filepath}'")
+        if self.vis_config.bg_mode == BackgroundMode.Image:
+            image_filepath = self.vis_config.bg_image_filepath
+            if image_filepath and not Path(image_filepath).is_file():
+                missing.append(f"Background image: '{image_filepath}'")
+        if self.vis_config.play_audio:
+            audio_filepath = self.vis_config.audio_filepath
+            if audio_filepath and not Path(audio_filepath).is_file():
+                missing.append(f"Audio: '{audio_filepath}'")
+
+        if len(missing) > 0:
+            msg = QMessageBox(
+                QMessageBox.Warning,
+                "Missing Files",
+                "One or more supporting project files were not found. See below for details.",
+                parent=self
+            )
+            msg.setDetailedText("\n".join(f"• {i}" for i in missing))
+            msg.exec()
 
     def _load_config_resources(self):
         # will only load each of these if present
