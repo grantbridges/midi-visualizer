@@ -143,22 +143,6 @@ class TracksTab(QWidget):
 
         col = 0
 
-        # # move up button
-        # up_btn = QPushButton()
-        # up_btn.setIcon(Icons.arrow_up_bold())
-        # up_btn.setDisabled(row == 0)
-        # up_btn.clicked.connect(lambda _, row=row: self._on_move_track_up(row))
-        # self.table.setCellWidget(row, col, LayoutUtil.center(up_btn))
-        # col += 1
-
-        # # move down button
-        # down_btn = QPushButton()
-        # down_btn.setIcon(Icons.arrow_down_bold())
-        # down_btn.setDisabled(row == len(self.vis_config.tracks) - 1)
-        # down_btn.clicked.connect(lambda _, row=row: self._on_move_track_down(row))
-        # self.table.setCellWidget(row, col, LayoutUtil.center(down_btn))
-        # col += 1
-
         # name
         name_item = QTableWidgetItem(track.name)
         name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
