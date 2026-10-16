@@ -68,6 +68,7 @@ class TrackGroupsTab(QWidget):
         self.table.setHorizontalHeaderLabels(self.track_columns)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
+        self.table.verticalHeader().setVisible(False) # hide row numbers
         self.table.itemChanged.connect(self._on_item_changed)
         self.table.currentCellChanged.connect(self._on_cell_changed)
         # set whole-row multi-select

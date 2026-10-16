@@ -65,6 +65,7 @@ class TracksTab(QWidget):
         self.table.setHorizontalHeaderLabels(self.track_columns)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
+        self.table.verticalHeader().setVisible(False) # hide row numbers
 
         self.table.itemSelectionChanged.connect(self._on_selection_changed)
 
