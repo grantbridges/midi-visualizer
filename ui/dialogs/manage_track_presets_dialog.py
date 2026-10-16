@@ -48,8 +48,8 @@ class TableCurrentTrack:
     def create(track: UICurrentTrack):
         return TableCurrentTrack(
             name = track.name,
-            pitch_min = track.manual_pitch_min,
-            pitch_max = track.manual_pitch_max,
+            pitch_min = track.pitch_min,
+            pitch_max = track.pitch_max,
         )
 
 # UI Model for metadata about existing presets
@@ -110,7 +110,9 @@ class ManageTrackPresetsDialog(QDialog):
         self.setWindowTitle(f"Manage Track Presets")
 
         self.setModal(True)
-        self.setFixedSize(800, 600)
+        min_width, min_height = 800, 600
+        self.setMinimumSize(min_width, min_height)
+        self.resize(min_width, min_height)
 
         # -- Initialize UI Models --
         self.current_tracks: list[UICurrentTrack] = []
@@ -157,11 +159,13 @@ class ManageTrackPresetsDialog(QDialog):
 
         # track presets table
         track_presets_label = QLabel("Track Presets")
-        self.track_presets_columns = ["Name", "Pitch Min", "Pitch Max", ""]
+        self.track_presets_columns = ["", "", "Name", "Pitch Min", "Pitch Max"]
         self.track_presets_table = QTableWidget(0, len(self.track_presets_columns))
         self.track_presets_table.setHorizontalHeaderLabels(self.track_presets_columns)
         self.track_presets_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
-        self.track_presets_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.track_presets_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Fixed)
+        self.track_presets_table.horizontalHeader().resizeSection(1, 40)
+        self.track_presets_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
         self.track_presets_table.itemSelectionChanged.connect(self._on_track_presets_selection_changed)
         # set whole-row multi-select
         self.track_presets_table.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -327,15 +331,33 @@ class ManageTrackPresetsDialog(QDialog):
                 font.setStrikeOut(True)
                 color = QUtil.rgb_to_qcolor(Color.LIGHT_GRAY)
 
-            # name
-            preset_name = ""
+            # delete button
+            delete_btn = QPushButton()
+            delete_btn.setIcon(del_icon)
+            delete_btn.clicked.connect(lambda _, row=row: self._on_delete_preset(row))
+            self.track_presets_table.setCellWidget(row, col, LayoutUtil.center(delete_btn))
+            col += 1
+
+            # status
+            status_font = QFont()
+            status_font.setPointSizeF(font.pointSizeF() * 0.6)
+            status_name = ""
             match preset.state:
                 case TableTrackPresetState.NEW:
-                    preset_name = "(New) "
+                    status_name = "New"
                 case TableTrackPresetState.UPDATED:
-                    preset_name = "(Edit) "
-            preset_name += preset.name
-            name_item = QTableWidgetItem(preset_name)
+                    status_name = "Update"
+                case TableTrackPresetState.DELETED:
+                    status_name = "Delete"
+            status_item = QTableWidgetItem(status_name)
+            status_item.setFont(status_font)
+            status_item.setTextAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter)
+            status_item.setFlags(status_item.flags() & ~Qt.ItemIsEditable)
+            self.track_presets_table.setItem(row, col, status_item)
+            col += 1
+
+            # name
+            name_item = QTableWidgetItem(preset.name)
             name_item.setFont(font)
             name_item.setForeground(color)
             name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
@@ -358,13 +380,6 @@ class ManageTrackPresetsDialog(QDialog):
             pitch_max_item.setFlags(pitch_max_item.flags() & ~Qt.ItemIsEditable)
             pitch_max_item.setTextAlignment(Qt.AlignCenter)
             self.track_presets_table.setItem(row, col, pitch_max_item)
-            col += 1
-
-            # delete button
-            delete_btn = QPushButton()
-            delete_btn.setIcon(del_icon)
-            delete_btn.clicked.connect(lambda _, row=row: self._on_delete_preset(row))
-            self.track_presets_table.setCellWidget(row, col, LayoutUtil.center(delete_btn))
             col += 1
 
         # resume callbacks

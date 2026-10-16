@@ -192,7 +192,7 @@ class ManageTrackGroupPresetsDialog(QDialog):
 
         # current tracks table
         current_track_groups_label = QLabel("Current Track Groups")
-        self.current_tracks_columns = ["Name", "Color", "Opacity", "Note\nSparks", "Note\nBounce", "Note\nVel. Fx", "Bar\nHeight", "Speed", "Pitch\nOffset"]
+        self.current_tracks_columns = ["Name", "Opacity", "Note\nSparks", "Note\nBounce", "Note\nVel. Fx", "Bar\nHeight", "Speed", "Pitch\nOffset"]
         self.current_track_groups_table = QTableWidget(0, len(self.current_tracks_columns))
         self.current_track_groups_table.setHorizontalHeaderLabels(self.current_tracks_columns)
         self.current_track_groups_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
@@ -210,10 +210,12 @@ class ManageTrackGroupPresetsDialog(QDialog):
 
         # track presets table
         track_group_presets_label = QLabel("Track Group Presets")
-        self.track_presets_columns = ["", "Name", "Color", "Opacity", "Note\nSparks", "Note\nBounce", "Note\nVel. Fx", "Bar\nHeight", "Speed", "Pitch\nOffset"]
+        self.track_presets_columns = ["", "", "Name", "Opacity", "Note\nSparks", "Note\nBounce", "Note\nVel. Fx", "Bar\nHeight", "Speed", "Pitch\nOffset"]
         self.track_group_presets_table = QTableWidget(0, len(self.track_presets_columns))
         self.track_group_presets_table.setHorizontalHeaderLabels(self.track_presets_columns)
         self.track_group_presets_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.track_group_presets_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Fixed)
+        self.track_group_presets_table.horizontalHeader().resizeSection(1, 40)
         self.track_group_presets_table.itemSelectionChanged.connect(self._on_track_group_presets_selection_changed)
         # set whole-row multi-select
         self.track_group_presets_table.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -344,14 +346,14 @@ class ManageTrackGroupPresetsDialog(QDialog):
         for row, track_group in enumerate(self.table_current_track_groups):
             col = 0
 
-            # name
-            name_item = QTableWidgetItem(track_group.name)
-            name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
-            self.current_track_groups_table.setItem(row, col, name_item)
-            col += 1
-
-            # color
-            color_btn = ColorButton(color=track_group.color, read_only=True)
+            # name (double up with color to save space)
+            color_btn = ColorButton(
+                color=track_group.color, 
+                read_only=True, 
+                override_text=track_group.name
+            )
+            r, g, b = track_group.color
+            color_btn.setToolTip(f"{r}, {g}, {b}")
             self.current_track_groups_table.setCellWidget(row, col, color_btn)
             col += 1
 
@@ -444,23 +446,33 @@ class ManageTrackGroupPresetsDialog(QDialog):
             self.track_group_presets_table.setCellWidget(row, col, LayoutUtil.center(delete_btn))
             col += 1
 
-            # name
-            preset_name = ""
+            # status
+            status_font = QFont()
+            status_font.setPointSizeF(font.pointSizeF() * 0.6)
+            status_name = ""
             match preset.state:
                 case TableTrackGroupPresetState.NEW:
-                    preset_name = "(New) "
+                    status_name = "New"
                 case TableTrackGroupPresetState.UPDATED:
-                    preset_name = "(Edit) "
-            preset_name += preset.name
-            name_item = QTableWidgetItem(preset_name)
-            name_item.setFont(font)
-            name_item.setForeground(color)
-            name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
-            self.track_group_presets_table.setItem(row, col, name_item)
+                    status_name = "Update"
+                case TableTrackGroupPresetState.DELETED:
+                    status_name = "Delete"
+            status_item = QTableWidgetItem(status_name)
+            status_item.setFont(status_font)
+            status_item.setTextAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter)
+            status_item.setFlags(status_item.flags() & ~Qt.ItemIsEditable)
+            self.track_group_presets_table.setItem(row, col, status_item)
             col += 1
-
-            # # color
-            color_btn = ColorButton(color=preset.color, read_only=True)
+            
+            # name (double up with color to save space)
+            color_btn = ColorButton(
+                color=preset.color, 
+                read_only=True, 
+                override_text=preset.name
+            )
+            r, g, b = preset.color
+            color_btn.setToolTip(f"{r}, {g}, {b}")
+            color_btn.setFont(font)
             color_btn.setEnabled(preset.state != TableTrackGroupPresetState.DELETED)
             self.track_group_presets_table.setCellWidget(row, col, color_btn)
             col += 1
@@ -484,18 +496,21 @@ class ManageTrackGroupPresetsDialog(QDialog):
             # sparks
             checkbox = TableCheckBox(preset.note_sparks_enabled)
             checkbox.setReadOnly(True)
+            checkbox.setEnabled(preset.state != TableTrackGroupPresetState.DELETED)
             self.track_group_presets_table.setCellWidget(row, col, checkbox)
             col += 1
 
             # bounce
             checkbox = TableCheckBox(preset.note_bounce_enabled)
             checkbox.setReadOnly(True)
+            checkbox.setEnabled(preset.state != TableTrackGroupPresetState.DELETED)
             self.track_group_presets_table.setCellWidget(row, col, checkbox)
             col += 1
 
             # velocity fx
             checkbox = TableCheckBox(preset.note_velocity_fx_enabled)
             checkbox.setReadOnly(True)
+            checkbox.setEnabled(preset.state != TableTrackGroupPresetState.DELETED)
             self.track_group_presets_table.setCellWidget(row, col, checkbox)
             col += 1
 

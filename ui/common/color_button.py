@@ -3,7 +3,7 @@ from common import Color
 from ui.common.icons import Icons
 from utility import QUtil, Util
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
     QPushButton,
@@ -15,22 +15,27 @@ from PySide6.QtWidgets import (
 class ColorButton(QPushButton):
     valueChanged = Signal(tuple)
 
-    def __init__(self, color: RGB = None, read_only: bool = False, parent=None):
+    def __init__(self, color: RGB = None, read_only: bool = False, override_text: str | None = None, parent=None):
         super().__init__(parent)
 
         self._rgb = color if color is not None else Color.WHITE
-        self._read_only = read_only
+        self._override_text = override_text
 
         # allows for selecting in style formatting
         self.setObjectName("ColorButton")
 
         self.clicked.connect(self._pick_color)
+        self.setReadOnly(read_only)
         self.refresh()
 
     def setReadOnly(self, read_only: bool):
+        self._setReadOnly(read_only)
+        self.refresh()
+
+    def _setReadOnly(self, read_only: bool):
         # blocks interaction events, but still shows in enabled/disabled state
         self._read_only = read_only
-        self.refresh()
+        self.setFocusPolicy(Qt.NoFocus if read_only else Qt.StrongFocus)
 
     def setEnabled(self, enabled: bool):
         super().setEnabled(enabled)
@@ -50,8 +55,12 @@ class ColorButton(QPushButton):
     def refresh(self):
         r, g, b = self._rgb
         text_r, text_g, text_b = Util.contrast_color((r, g, b))
-       
-        self.setText(f"{r}, {g}, {b}")
+
+        if self._override_text:
+            self.setText(str(self._override_text))
+        else:
+            self.setText(f"{r}, {g}, {b}")
+
         if not self.isEnabled():
             r, g, b = Color.DARK_GRAY
             text_r, text_g, text_b = Color.LIGHTISH_GRAY
@@ -86,6 +95,24 @@ class ColorButton(QPushButton):
         menu.addAction(paste_action)
 
         menu.exec(event.globalPos())
+
+    def mousePressEvent(self, event):
+        if self._read_only:
+            event.ignore()
+            return
+        super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        if self._read_only:
+            event.ignore()
+            return
+        super().mouseReleaseEvent(event)
+
+    def keyPressEvent(self, event):
+        if self._read_only:
+            event.ignore()
+            return
+        super().keyPressEvent(event)
 
     def _copy_color(self):
         r, g, b = self._rgb

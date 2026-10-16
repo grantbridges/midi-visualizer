@@ -47,7 +47,9 @@ class ApplyTrackPresetsDialog(QDialog):
         self.vis_config = vis_config
 
         self.setModal(True)
-        self.setFixedSize(600, 600)
+        min_width, min_height = 600, 400
+        self.setMinimumSize(min_width, min_height)
+        self.resize(min_width, min_height)
 
         # -- Initialize UI Models --
         self.tracks: list[UITrack] = [
@@ -198,6 +200,7 @@ class ApplyTrackPresetsDialog(QDialog):
 
         # auto-apply btn
         auto_apply_btn = QPushButton("Auto")
+        auto_apply_btn.setToolTip("Auto-Assign Preset")
         auto_apply_btn.setStyleSheet("padding: 3px 6px")
         auto_apply_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         auto_apply_btn.clicked.connect(lambda _, row=row: self._on_auto_apply_preset(row))
@@ -206,6 +209,7 @@ class ApplyTrackPresetsDialog(QDialog):
 
         # clear button
         clear_btn = QPushButton()
+        clear_btn.setToolTip("Clear Assignment")
         clear_btn.setIcon(Icons.close_box_outline())
         clear_btn.setEnabled(track.preset_to_apply is not None)
         clear_btn.clicked.connect(lambda _, row=row: self._on_clear_selection(row))
