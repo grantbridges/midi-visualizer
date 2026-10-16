@@ -15,11 +15,19 @@ from PySide6.QtWidgets import (
 class ColorButton(QPushButton):
     valueChanged = Signal(tuple)
 
-    def __init__(self, color: RGB = None, read_only: bool = False, override_text: str | None = None, parent=None):
+    def __init__(
+        self, 
+        color: RGB = None, 
+        read_only: bool = False,
+        override_text: str | None = None, 
+        left_align: bool = False,
+        parent=None
+    ):
         super().__init__(parent)
 
         self._rgb = color if color is not None else Color.WHITE
         self._override_text = override_text
+        self._left_align = left_align
 
         # allows for selecting in style formatting
         self.setObjectName("ColorButton")
@@ -66,11 +74,13 @@ class ColorButton(QPushButton):
             text_r, text_g, text_b = Color.LIGHTISH_GRAY
 
         # color bg + text by color
+        align_css = "text-align: left; padding-left: 6px;" if self._left_align else ""
         self.setStyleSheet(
             f"""
             QPushButton#ColorButton {{
                 background-color: rgb({r}, {g}, {b});
                 color: rgb({text_r}, {text_g}, {text_b});
+                {align_css}
             }}
             """
         )

@@ -197,6 +197,7 @@ class ManageTrackGroupPresetsDialog(QDialog):
         self.current_track_groups_table.setHorizontalHeaderLabels(self.current_tracks_columns)
         self.current_track_groups_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.current_track_groups_table.itemSelectionChanged.connect(self._on_current_track_groups_selection_changed)
+        self.current_track_groups_table.verticalHeader().setVisible(False) # hide row numbers
         # set whole-row multi-select
         self.current_track_groups_table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.current_track_groups_table.setSelectionMode(QAbstractItemView.ExtendedSelection)
@@ -215,8 +216,9 @@ class ManageTrackGroupPresetsDialog(QDialog):
         self.track_group_presets_table.setHorizontalHeaderLabels(self.track_presets_columns)
         self.track_group_presets_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.track_group_presets_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Fixed)
-        self.track_group_presets_table.horizontalHeader().resizeSection(1, 40)
+        self.track_group_presets_table.horizontalHeader().resizeSection(1, 40) # status column
         self.track_group_presets_table.itemSelectionChanged.connect(self._on_track_group_presets_selection_changed)
+        self.track_group_presets_table.verticalHeader().setVisible(False) # hide row numbers
         # set whole-row multi-select
         self.track_group_presets_table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.track_group_presets_table.setSelectionMode(QAbstractItemView.ExtendedSelection)

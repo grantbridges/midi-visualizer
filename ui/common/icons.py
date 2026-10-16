@@ -143,6 +143,14 @@ class Icons:
     @staticmethod
     def format_list_group_plus():
         return Icons._get_icon("mdi6.format-list-group-plus")
+
+    @staticmethod
+    def plus_box_outline():
+        return Icons._get_icon("mdi6.plus-box-outline")
+
+    @staticmethod
+    def minus_box_outline():
+        return Icons._get_icon("mdi6.minus-box-outline")
     
     @staticmethod
     def _get_icon(name: str):
