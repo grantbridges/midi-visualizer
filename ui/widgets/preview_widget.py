@@ -177,7 +177,7 @@ class PreviewWidget(QWidget):
         self.loop_btn.setToolTip("Loop playback" if not user_settings.loop_preview else "Disable looped playback")
 
         self.mute_btn.setIcon(Icons.audio() if not user_settings.mute_audio else Icons.muted())
-        self.mute_btn.setToolTip("Mute" if not user_settings.mute_audio else "Unmute")
+        self.mute_btn.setToolTip("Mute Preview" if not user_settings.mute_audio else "Unmute Preview")
         self.mute_btn.setEnabled(self.vis_config.has_audio())
 
 

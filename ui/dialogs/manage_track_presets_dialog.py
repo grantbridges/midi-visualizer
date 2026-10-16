@@ -145,6 +145,7 @@ class ManageTrackPresetsDialog(QDialog):
         self.current_tracks_table.setHorizontalHeaderLabels(self.current_tracks_columns)
         self.current_tracks_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.current_tracks_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.current_tracks_table.verticalHeader().setVisible(False) # hide row numbers
         self.current_tracks_table.itemSelectionChanged.connect(self._on_current_tracks_selection_changed)
         # set whole-row multi-select
         self.current_tracks_table.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -166,6 +167,7 @@ class ManageTrackPresetsDialog(QDialog):
         self.track_presets_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Fixed)
         self.track_presets_table.horizontalHeader().resizeSection(1, 40)
         self.track_presets_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
+        self.track_presets_table.verticalHeader().setVisible(False) # hide row numbers
         self.track_presets_table.itemSelectionChanged.connect(self._on_track_presets_selection_changed)
         # set whole-row multi-select
         self.track_presets_table.setSelectionBehavior(QAbstractItemView.SelectRows)

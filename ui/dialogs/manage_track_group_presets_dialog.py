@@ -107,8 +107,8 @@ class UITrackGroupPreset:
 
 class TableTrackGroupPresetState(StrEnum):
     DEFAULT = "Default", # existing preset, no changes
-    NEW = "New", # newly added from current tracks
-    UPDATED = "Updated", # replaced from current tracks
+    NEW = "New", # newly added from current track groups
+    UPDATED = "Updated", # replaced from current track groups
     DELETED = "Deleted", # marked for deletion from presets
 
 # Table model for presets table
@@ -190,11 +190,11 @@ class ManageTrackGroupPresetsDialog(QDialog):
 
         info_label = WidgetUtil.info_text(f"Select track groups to save to track group presets.")
 
-        # current tracks table
+        # current track groups table
         current_track_groups_label = QLabel("Current Track Groups")
-        self.current_tracks_columns = ["Name", "Opacity", "Note\nSparks", "Note\nBounce", "Note\nVel. Fx", "Bar\nHeight", "Speed", "Pitch\nOffset"]
-        self.current_track_groups_table = QTableWidget(0, len(self.current_tracks_columns))
-        self.current_track_groups_table.setHorizontalHeaderLabels(self.current_tracks_columns)
+        self.current_track_groups_columns = ["Name", "Opacity", "Note\nSparks", "Note\nBounce", "Note\nVel. Fx", "Bar\nHeight", "Speed", "Pitch\nOffset"]
+        self.current_track_groups_table = QTableWidget(0, len(self.current_track_groups_columns))
+        self.current_track_groups_table.setHorizontalHeaderLabels(self.current_track_groups_columns)
         self.current_track_groups_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.current_track_groups_table.itemSelectionChanged.connect(self._on_current_track_groups_selection_changed)
         self.current_track_groups_table.verticalHeader().setVisible(False) # hide row numbers
@@ -301,7 +301,7 @@ class ManageTrackGroupPresetsDialog(QDialog):
 
         # append existing & deleted from existing presets
         for p in self.existing_track_group_presets:
-            # skip any already in list (due to being added or updated from current tracks)
+            # skip any already in list (due to being added or updated from current track groups)
             already_in_list = any(x.name == p.name for x in self.table_track_group_presets)
             if already_in_list:
                 continue
@@ -581,12 +581,12 @@ class ManageTrackGroupPresetsDialog(QDialog):
         self._refresh_buttons()
 
     def _copy_right(self):
-        # get selected current tracks and mark for add
-        tracks = self._get_selected_current_track_groups()
-        if len(tracks) == 0:
+        # get selected current track groups and mark for add
+        track_groups = self._get_selected_current_track_groups()
+        if len(track_groups) == 0:
             return
         
-        for t in tracks:
+        for t in track_groups:
             t.selected_for_add = True
 
             # if this will overlap an existing preset, undo
@@ -602,7 +602,7 @@ class ManageTrackGroupPresetsDialog(QDialog):
         self._refresh_ui()
 
     def _copy_all_right(self):
-        # mark all current tracks for add
+        # mark all current track groups for add
         for t in self.current_track_groups:
             t.selected_for_add = True
 
@@ -664,7 +664,7 @@ class ManageTrackGroupPresetsDialog(QDialog):
         # create new track preset list and save
         presets: list[TrackGroupPreset] = []
 
-        # add any added or updated from current tracks
+        # add any added or updated from current track groups
         for tg in self.current_track_groups:
             if tg.selected_for_add:
                 presets.append(TrackGroupPreset(
@@ -679,7 +679,7 @@ class ManageTrackGroupPresetsDialog(QDialog):
                     note_velocity_fx_enabled = tg.note_velocity_fx_enabled
                 ))
 
-        # add any existing tracks not marked for delete or copied over
+        # add any existing track groups not marked for delete or copied over
         for p in self.existing_track_group_presets:
             if not p.selected_for_delete and not any(x.name == p.name for x in presets):
                 presets.append(TrackGroupPreset(
@@ -713,7 +713,7 @@ class ManageTrackGroupPresetsDialog(QDialog):
 
     def _get_selected_current_track_groups(self) -> list[UICurrentTrackGroup]:
         rows = self._get_selected_current_track_group_rows()
-        tracks = []
+        track_groups = []
         for row in rows:
             if row >= 0 and row < len(self.table_current_track_groups):
                 # get actual UI model track by name of this row
@@ -722,8 +722,8 @@ class ManageTrackGroupPresetsDialog(QDialog):
                     if t.name == self.table_current_track_groups[row].name
                 ), None)
                 if track:
-                    tracks.append(track)
-        return tracks
+                    track_groups.append(track)
+        return track_groups
 
     def _get_selected_track_group_preset_rows(self) -> list[int]:
         selected_rows: set[int] = set()
