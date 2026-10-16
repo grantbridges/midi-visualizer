@@ -290,7 +290,9 @@ class TrackGroupsTab(QWidget):
             self.on_changes_callback()
 
     def _on_remove_group(self, row: int):
-        if 0 <= row < len(self.vis_config.track_groups):
+        rows = self._get_rows_for_bulk_edit(row)
+
+        for row in rows:
             track_group = self.vis_config.track_groups[row]
             tracks = self.vis_config.get_tracks_by_group_id(track_group.group_id)
 
@@ -304,12 +306,12 @@ class TrackGroupsTab(QWidget):
                 )
 
                 if result != QMessageBox.Yes:
-                    return
+                    continue
 
             self.vis_config.remove_track_group(track_group.group_id)
-            self.refresh_ui()
-
-            self.on_changes_callback()
+        
+        self.refresh_ui()
+        self.on_changes_callback()
 
     def _on_move_group_up(self, row: int):
         if row > 0:
