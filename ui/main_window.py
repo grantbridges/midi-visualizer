@@ -31,7 +31,8 @@ from ui.dialogs import (
     ExportOptionsDialog, 
     ProgressDialog,
     AboutDialog,
-    ApplyTrackPresetsDialog
+    ApplyTrackPresetsDialog,
+    AddTrackGroupPresetsDialog
 )
 from utility import LogUtil, FileUtil
 
@@ -540,6 +541,8 @@ class MainWindow(QMainWindow):
         # re-init UI
         self.init_vis_config_editor_view()
 
+        presets_used = False # if true, trigger refresh
+
         # prompt user to apply existing track presets
         if len(presets_config.track_presets) > 0:
             result = QMessageBox.question(
@@ -553,9 +556,27 @@ class MainWindow(QMainWindow):
             if result == QMessageBox.Yes:
                 dialog = ApplyTrackPresetsDialog(vis_config=self.vis_config, auto_apply_on_open=True, parent=self)
                 if dialog.exec() == QDialog.Accepted:
-                    self.refresh_ui()
-                    self.on_config_changed()
-        
+                    presets_used = True
+
+        # prompt user to create groups from presets
+        if len(presets_config.track_group_presets) > 0:
+            result = QMessageBox.question(
+                self,
+                "Create Track Groups from Presets",
+                "Would you like to create track groups from presets?",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.Yes,
+            )
+
+            if result == QMessageBox.Yes:
+                dialog = AddTrackGroupPresetsDialog(vis_config=self.vis_config, parent=self)
+                if dialog.exec() == QDialog.Accepted:
+                    presets_used = True
+
+        if presets_used:
+            self.refresh_ui()
+            self.on_config_changed()
+
     def _load_config_resources(self):
         # will only load each of these if present
         self._load_video()

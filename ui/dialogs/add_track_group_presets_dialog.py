@@ -25,7 +25,7 @@ logger = logging.getLogger("AddTrackGroupPresetsDialog")
 # UI Model for metadata about presets
 @dataclass
 class UITrackGroupPreset:
-    name: str = 'Group 1'
+    name: str = 'Default'
     color: RGB = Color.KAYLA_1
     alpha: int = 255
     bar_height_ratio: float = .02
@@ -114,9 +114,9 @@ class AddTrackGroupPresetsDialog(QDialog):
 
         button_box = QDialogButtonBox()
         button_box.addButton("Cancel", QDialogButtonBox.RejectRole)
-        apply_button = button_box.addButton("Save", QDialogButtonBox.AcceptRole)
-        apply_button.setDefault(True)
-        apply_button.setAutoDefault(True)
+        self.apply_button = button_box.addButton("Add", QDialogButtonBox.AcceptRole)
+        self.apply_button.setDefault(True)
+        self.apply_button.setAutoDefault(True)
 
         button_box.accepted.connect(self._save)
         button_box.rejected.connect(self.reject)
@@ -153,6 +153,7 @@ class AddTrackGroupPresetsDialog(QDialog):
         count = sum(1 for tg in self.track_group_presets if tg.selected_to_add)
         self.select_all_btn.setEnabled(count < len(self.track_group_presets))
         self.clear_btn.setEnabled(count > 0)
+        self.apply_button.setEnabled(count > 0)
 
     def _refresh_changes_label(self):
         added_count = sum(1 for tg in self.track_group_presets if tg.selected_to_add)
@@ -195,7 +196,7 @@ class AddTrackGroupPresetsDialog(QDialog):
         # status
         status_font = QFont()
         status_font.setPointSizeF(font.pointSizeF() * 0.6)
-        status_item = QTableWidgetItem("Create" if preset.selected_to_add else "")
+        status_item = QTableWidgetItem("Add" if preset.selected_to_add else "")
         status_item.setFont(status_font)
         status_item.setTextAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter)
         status_item.setFlags(status_item.flags() & ~Qt.ItemIsEditable)

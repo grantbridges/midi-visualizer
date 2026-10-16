@@ -10,7 +10,7 @@ class TrackGroup:
     A Track Group holds a group of midi tracks for bulk formatting
     '''
     group_id: UUID = field(default_factory=uuid4)
-    name: str = 'Group 1'
+    name: str = 'Default'
     visible: bool = True
     solo: bool = False
     color: RGB = Color.KAYLA_1

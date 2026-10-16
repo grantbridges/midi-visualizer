@@ -85,7 +85,7 @@ class ApplyTrackPresetsDialog(QDialog):
 
         button_box = QDialogButtonBox()
         button_box.addButton("Cancel", QDialogButtonBox.RejectRole)
-        apply_button = button_box.addButton("Save", QDialogButtonBox.AcceptRole)
+        apply_button = button_box.addButton("Apply", QDialogButtonBox.AcceptRole)
         apply_button.setDefault(True)
         apply_button.setAutoDefault(True)
 
