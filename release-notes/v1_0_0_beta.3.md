@@ -1,4 +1,4 @@
-See v1.0.0-beta release entry for installer instructions and quick-start guide.
+See [v1.0.0-beta](https://github.com/grantbridges/midi-visualizer/releases/tag/v1.0.0-beta) release for installer instructions and quick-start guide.
 
 ### Updates
 
