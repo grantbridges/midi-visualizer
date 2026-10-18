@@ -15,7 +15,6 @@ on:
         default: "1"
       minor_version:
         required: true
-
         type: string
         default: "0"
       patch_version:
