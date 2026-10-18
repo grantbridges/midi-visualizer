@@ -52,7 +52,7 @@ class WidgetUtil:
     def icon_btn(icon: QIcon, tooltip: str | None = None) -> QPushButton:
         btn = QPushButton()
         btn.setIcon(icon)
-        btn.setFixedWidth(32)
+        btn.setStyleSheet("padding: 3px 3px")
 
         if tooltip is not None:
             btn.setToolTip(tooltip)

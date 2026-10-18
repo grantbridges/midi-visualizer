@@ -86,9 +86,9 @@ class ApplyTrackPresetsDialog(QDialog):
 
         button_box = QDialogButtonBox()
         button_box.addButton("Cancel", QDialogButtonBox.RejectRole)
-        apply_button = button_box.addButton("Apply", QDialogButtonBox.AcceptRole)
-        apply_button.setDefault(True)
-        apply_button.setAutoDefault(True)
+        self.apply_button = button_box.addButton("Apply", QDialogButtonBox.AcceptRole)
+        self.apply_button.setDefault(True)
+        self.apply_button.setAutoDefault(True)
 
         button_box.accepted.connect(self._save)
         button_box.rejected.connect(self.reject)
@@ -128,13 +128,14 @@ class ApplyTrackPresetsDialog(QDialog):
     def _refresh_btns(self):
         count = sum(1 for x in self.tracks if x.preset_to_apply)
         self.clear_btn.setEnabled(count > 0)
+        self.apply_button.setEnabled(count > 0)
 
     def _refresh_changes_label(self):
         updated_count = sum(1 for t in self.tracks if t.preset_to_apply is not None)
 
         text = ""
         if updated_count > 0:
-            text = f"{updated_count} preset{"s" if updated_count > 1 else ""} applied"
+            text = f"Applying {updated_count} preset{"s" if updated_count > 1 else ""}"
 
         self.changes_label.setText(text)
 
@@ -209,9 +210,7 @@ class ApplyTrackPresetsDialog(QDialog):
         col += 1
 
         # clear button
-        clear_btn = QPushButton()
-        clear_btn.setToolTip("Clear Assignment")
-        clear_btn.setIcon(Icons.close_box_outline())
+        clear_btn = WidgetUtil.icon_btn(Icons.close_box_outline(), "Clear Assignment")
         clear_btn.setEnabled(track.preset_to_apply is not None)
         clear_btn.clicked.connect(lambda _, row=row: self._on_clear_selection(row))
         self.table.setCellWidget(row, col, LayoutUtil.center(clear_btn))

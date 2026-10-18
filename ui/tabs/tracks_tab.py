@@ -60,24 +60,16 @@ class TracksTab(QWidget):
         self.apply_presets_btn = WidgetUtil.icon_btn(Icons.format_list_group_plus(), "Apply Track Presets")
         self.apply_presets_btn.clicked.connect(self._on_apply_presets)
 
-        self.move_top_btn = QPushButton()
-        self.move_top_btn.setIcon(Icons.chevron_double_up())
-        self.move_top_btn.setStyleSheet("padding: 3px 3px")
+        self.move_top_btn = WidgetUtil.icon_btn(Icons.chevron_double_up(), "Move to Top")
         self.move_top_btn.clicked.connect(self._on_move_track_top)
 
-        self.move_up_btn = QPushButton()
-        self.move_up_btn.setIcon(Icons.chevron_up())
-        self.move_up_btn.setStyleSheet("padding: 3px 3px")
+        self.move_up_btn = WidgetUtil.icon_btn(Icons.chevron_up(), "Move Up")
         self.move_up_btn.clicked.connect(self._on_move_track_up)
 
-        self.move_down_btn = QPushButton()
-        self.move_down_btn.setIcon(Icons.chevron_down())
-        self.move_down_btn.setStyleSheet("padding: 3px 3px")
+        self.move_down_btn = WidgetUtil.icon_btn(Icons.chevron_down(), "Move Down")
         self.move_down_btn.clicked.connect(self._on_move_track_down)
 
-        self.move_bottom_btn = QPushButton()
-        self.move_bottom_btn.setIcon(Icons.chevron_double_down())
-        self.move_bottom_btn.setStyleSheet("padding: 3px 3px")
+        self.move_bottom_btn = WidgetUtil.icon_btn(Icons.chevron_double_down(), "Move to Bottom")
         self.move_bottom_btn.clicked.connect(self._on_move_track_bottom)
 
         self.track_columns = ["Name", "Group", "Solo", "Override\nPitches", "Pitch Min", "Pitch Max", "Notes", "Start (sec)", "End (sec)", "Vel. Min", "Vel. Max"]

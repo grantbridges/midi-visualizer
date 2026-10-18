@@ -442,8 +442,7 @@ class ManageTrackGroupPresetsDialog(QDialog):
                 color = QUtil.rgb_to_qcolor(Color.LIGHT_GRAY)
 
             # delete button
-            delete_btn = QPushButton()
-            delete_btn.setIcon(del_icon)
+            delete_btn = WidgetUtil.icon_btn(del_icon)
             delete_btn.clicked.connect(lambda _, row=row: self._on_delete_preset(row))
             self.track_group_presets_table.setCellWidget(row, col, LayoutUtil.center(delete_btn))
             col += 1

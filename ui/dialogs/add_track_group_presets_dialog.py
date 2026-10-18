@@ -185,9 +185,7 @@ class AddTrackGroupPresetsDialog(QDialog):
             font.setBold(True)
 
         # add/remove button
-        add_remove_btn = QPushButton()
-        add_remove_btn.setIcon(Icons.minus_box_outline() if preset.selected_to_add else Icons.plus_box_outline())
-        add_remove_btn.setStyleSheet("padding: 3px 3px")
+        add_remove_btn = WidgetUtil.icon_btn(Icons.minus_box_outline() if preset.selected_to_add else Icons.plus_box_outline())
         add_remove_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         add_remove_btn.clicked.connect(lambda _, row=row: self._on_toggle_add(row))
         self.table.setCellWidget(row, col, LayoutUtil.center(add_remove_btn))

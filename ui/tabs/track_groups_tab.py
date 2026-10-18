@@ -63,24 +63,16 @@ class TrackGroupsTab(QWidget):
         self.add_from_presets_btn = WidgetUtil.icon_btn(Icons.format_list_group_plus(), "Add Track Groups from Presets")
         self.add_from_presets_btn.clicked.connect(self._on_add_from_presets)
 
-        self.move_top_btn = QPushButton()
-        self.move_top_btn.setIcon(Icons.chevron_double_up())
-        self.move_top_btn.setStyleSheet("padding: 3px 3px")
+        self.move_top_btn = WidgetUtil.icon_btn(Icons.chevron_double_up(), "Move to Top")
         self.move_top_btn.clicked.connect(self._on_move_track_group_top)
 
-        self.move_up_btn = QPushButton()
-        self.move_up_btn.setIcon(Icons.chevron_up())
-        self.move_up_btn.setStyleSheet("padding: 3px 3px")
+        self.move_up_btn = WidgetUtil.icon_btn(Icons.chevron_up(), "Move Up")
         self.move_up_btn.clicked.connect(self._on_move_track_group_up)
 
-        self.move_down_btn = QPushButton()
-        self.move_down_btn.setIcon(Icons.chevron_down())
-        self.move_down_btn.setStyleSheet("padding: 3px 3px")
+        self.move_down_btn = WidgetUtil.icon_btn(Icons.chevron_down(), "Move Down")
         self.move_down_btn.clicked.connect(self._on_move_track_group_down)
 
-        self.move_bottom_btn = QPushButton()
-        self.move_bottom_btn.setIcon(Icons.chevron_double_down())
-        self.move_bottom_btn.setStyleSheet("padding: 3px 3px")
+        self.move_bottom_btn = WidgetUtil.icon_btn(Icons.chevron_double_down(), "Move to Bottom")
         self.move_bottom_btn.clicked.connect(self._on_move_track_group_bottom)
 
         self.track_columns = ["Name", "Tracks", "Solo", "Visible", "Color", "Opacity", "Note\nSparks", "Note\nBounce", "Note\nVel. Fx", "Bar Height", "Speed", "Pitch Offset", ""]
@@ -245,8 +237,7 @@ class TrackGroupsTab(QWidget):
         col += 1
 
         # delete button
-        delete_btn = QPushButton()
-        delete_btn.setIcon(Icons.trash_can())
+        delete_btn = WidgetUtil.icon_btn(Icons.trash_can(), "Delete Group")
         delete_btn.clicked.connect(lambda _, row=row: self._on_remove_group(row))
         self.table.setCellWidget(row, col, LayoutUtil.center(delete_btn))
         col += 1
