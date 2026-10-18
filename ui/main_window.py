@@ -853,16 +853,13 @@ class MainWindow(QMainWindow):
         track_names = {t.name for t in tracks}
 
         # 1. MIDI tracks not in vis_config tracks
-        missing_from_config = [t for t in midi_tracks if t.name not in track_names]
+        new_tracks = [t for t in midi_tracks if t.name not in track_names]
 
-        # 2. vis_config tracks not in MIDI tracks
-        missing_from_midi = [t for t in tracks if t.name not in midi_names]
-
-        # 3. tracks that show up in both
-        matching_tracks = [t for t in tracks if t.name in midi_names]
+        # 2. tracks that show up in both
+        existing_tracks = [t for t in tracks if t.name in midi_names]
 
         tracks_to_create: List[Track] = []
-        for midi_track in missing_from_config:
+        for midi_track in new_tracks:
             if len(midi_track.notes) == 0:
                 continue # ignore track, no notes data
 
@@ -880,41 +877,26 @@ class MainWindow(QMainWindow):
                 new_track.init()
                 tracks_to_create.append(new_track)
 
-        tracks_to_delete: List[Track] = []
-        for track in missing_from_midi:
-            msg = QMessageBox(self)
-            msg.setWindowTitle("Missing MIDI Track")
-            msg.setText(f'Track missing from updated MIDI data:\n"{track.name}"')
-            keep_btn = msg.addButton("Keep", QMessageBox.AcceptRole)
-            delete_btn = msg.addButton("Delete", QMessageBox.RejectRole)
-
-            msg.setDefaultButton(keep_btn)
-            msg.exec()
-
-            if msg.clickedButton() == delete_btn:
-                tracks_to_delete.append(track)
-
-        for track in matching_tracks:
+        # update tracks
+        for track in existing_tracks:
             midi_track = midi_tracks_by_name[track.name]
             track.update_notes_from_midi_data(midi_track)
 
-        # remove and add tracks
-        for track in tracks_to_delete:
-            self.vis_config.tracks.remove(track)
-
+        # add tracks
         self.vis_config.tracks.extend(tracks_to_create)
 
         # re-init UI with updated data
-        self.on_config_changed()
-        self.init_vis_config_editor_view()
+        self.preview_widget.model_changed()
+        self.refresh_ui(True)
+        self.has_unsaved_changes = True
+        self.refresh_window_title()
 
         QMessageBox.information(
             self,
             "Update Project MIDI",
             f"Updated project tracks from MIDI data:\n"
-            f"{len(matching_tracks)} updated\n"
             f"{len(tracks_to_create)} added\n"
-            f"{len(tracks_to_delete)} removed"
+            f"{len(existing_tracks)} updated"
         )
 
     def on_open_action(self):
