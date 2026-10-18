@@ -196,7 +196,7 @@ class AddTrackGroupPresetsDialog(QDialog):
         # status
         status_font = QFont()
         status_font.setPointSizeF(font.pointSizeF() * 0.6)
-        status_item = QTableWidgetItem("Add" if preset.selected_to_add else "")
+        status_item = QTableWidgetItem("Create" if preset.selected_to_add else "")
         status_item.setFont(status_font)
         status_item.setTextAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter)
         status_item.setFlags(status_item.flags() & ~Qt.ItemIsEditable)
