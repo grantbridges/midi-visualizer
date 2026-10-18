@@ -110,7 +110,7 @@ class ManageTrackPresetsDialog(QDialog):
         self.setWindowTitle(f"Manage Track Presets")
 
         self.setModal(True)
-        min_width, min_height = 800, 600
+        min_width, min_height = 800, 500
         self.setMinimumSize(min_width, min_height)
         self.resize(min_width, min_height)
 
