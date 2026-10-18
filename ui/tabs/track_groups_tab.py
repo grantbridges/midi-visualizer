@@ -310,22 +310,26 @@ class TrackGroupsTab(QWidget):
     def _on_remove_group(self, row: int):
         rows = self._get_rows_for_bulk_edit(row)
 
-        for row in rows:
-            track_group = self.vis_config.track_groups[row]
-            tracks = self.vis_config.get_tracks_by_group_id(track_group.group_id)
+        prompt = ""
+        if len(rows) == 1:
+            track_group_name = self.vis_config.track_groups[rows[0]].name
+            prompt = f"Are you sure you want to delete the \"{track_group_name}\" track group?"
+        else:
+            prompt = f"Are you sure you want to delete the {len(rows)} selected track groups?"
 
-            if len(tracks) > 0:
-                result = QMessageBox.question(
-                    self,
-                    "Confirm Track Group Delete",
-                    f"The \"{track_group.name}\" track group is being used by {len(tracks)} track{"s" if len(tracks) > 1 else ""} ({", ".join(x.name for x in tracks)}). Are you sure you want to delete?",
-                    QMessageBox.Cancel | QMessageBox.Yes,
-                    QMessageBox.Cancel,
-                )
+        result = QMessageBox.question(
+            self,
+            "Confirm Track Group Delete",
+            prompt,
+            QMessageBox.Cancel | QMessageBox.Yes,
+            QMessageBox.Cancel,
+        )
 
-                if result != QMessageBox.Yes:
-                    continue
+        if result != QMessageBox.Yes:
+            return
 
+        for i in sorted(rows, reverse=True):
+            track_group = self.vis_config.track_groups[i]
             self.vis_config.remove_track_group(track_group.group_id)
         
         self.refresh_ui()

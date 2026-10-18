@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
     QHBoxLayout,
+    QMessageBox,
     QPushButton,
     QSizePolicy,
     QWidget,
@@ -72,22 +73,19 @@ class TracksTab(QWidget):
         self.move_bottom_btn = WidgetUtil.icon_btn(Icons.chevron_double_down(), "Move to Bottom")
         self.move_bottom_btn.clicked.connect(self._on_move_track_bottom)
 
-        self.track_columns = ["Name", "Group", "Solo", "Override\nPitches", "Pitch Min", "Pitch Max", "Notes", "Start (sec)", "End (sec)", "Vel. Min", "Vel. Max"]
+        self.track_columns = ["Name", "Group", "Solo", "Override\nPitches", "Pitch Min", "Pitch Max", "Notes", "Start (sec)", "End (sec)", "Vel. Min", "Vel. Max", ""]
         self.table = QTableWidget(0, len(self.track_columns))
         self.table.setHorizontalHeaderLabels(self.track_columns)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch) # name
         self.table.verticalHeader().setVisible(False) # hide row numbers
-
         self.table.itemSelectionChanged.connect(self._on_selection_changed)
-
         # set up right-click handling
         self.table.setContextMenuPolicy(Qt.CustomContextMenu)
         self.table.customContextMenuRequested.connect(self._on_table_context_menu)
-
         # set whole-row multi-select
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.table.setSelectionMode(QAbstractItemView.ExtendedSelection)        
+        self.table.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
     def shutdown(self):
         pass
@@ -234,6 +232,12 @@ class TracksTab(QWidget):
         velocity_max_item.setFlags(velocity_max_item.flags() & ~Qt.ItemIsEditable)
         velocity_max_item.setTextAlignment(Qt.AlignCenter)
         self.table.setItem(row, col, velocity_max_item)
+        col += 1
+
+        # delete button
+        delete_btn = WidgetUtil.icon_btn(Icons.trash_can(), "Delete Track")
+        delete_btn.clicked.connect(lambda _, row=row: self._on_remove_track(row))
+        self.table.setCellWidget(row, col, LayoutUtil.center(delete_btn))
         col += 1
 
         # resume callbacks
@@ -409,6 +413,33 @@ class TracksTab(QWidget):
 
     def _on_selection_changed(self):
         self._refresh_buttons()
+
+    def _on_remove_track(self, row: int):
+        rows = self._get_rows_for_bulk_edit(row)
+
+        prompt = ""
+        if len(rows) == 1:
+            track_name = self.vis_config.tracks[rows[0]].name
+            prompt = f"Are you sure you want to delete \"{track_name}\"?"
+        else:
+            prompt = f"Are you sure you want to delete the {len(rows)} selected tracks?"
+
+        result = QMessageBox.question(
+            self,
+            "Confirm Track Delete",
+            prompt,
+            QMessageBox.Cancel | QMessageBox.Yes,
+            QMessageBox.Cancel,
+        )
+
+        if result != QMessageBox.Yes:
+            return
+
+        for i in sorted(rows, reverse=True):
+            del self.vis_config.tracks[i]
+        
+        self.refresh_ui()
+        self.on_changes_callback()
 
     def _group_from_selected_tracks(self):
         selected_tracks = self._get_selected_tracks()
