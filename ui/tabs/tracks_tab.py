@@ -55,22 +55,22 @@ class TracksTab(QWidget):
         self.clear_solo_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         self.clear_solo_btn.clicked.connect(self._on_clear_solo)
 
-        self.manage_presets_btn = WidgetUtil.icon_btn(Icons.format_list_group(), "Manage Track Presets")
+        self.manage_presets_btn = WidgetUtil.icon_btn(Icons.format_list_group(), "Manage track presets")
         self.manage_presets_btn.clicked.connect(self._on_manage_presets)
 
-        self.apply_presets_btn = WidgetUtil.icon_btn(Icons.format_list_group_plus(), "Apply Track Presets")
+        self.apply_presets_btn = WidgetUtil.icon_btn(Icons.format_list_group_plus(), "Apply track presets")
         self.apply_presets_btn.clicked.connect(self._on_apply_presets)
 
-        self.move_top_btn = WidgetUtil.icon_btn(Icons.chevron_double_up(), "Move to Top")
+        self.move_top_btn = WidgetUtil.icon_btn(Icons.chevron_double_up(), "Move to top")
         self.move_top_btn.clicked.connect(self._on_move_track_top)
 
-        self.move_up_btn = WidgetUtil.icon_btn(Icons.chevron_up(), "Move Up")
+        self.move_up_btn = WidgetUtil.icon_btn(Icons.chevron_up(), "Move up")
         self.move_up_btn.clicked.connect(self._on_move_track_up)
 
-        self.move_down_btn = WidgetUtil.icon_btn(Icons.chevron_down(), "Move Down")
+        self.move_down_btn = WidgetUtil.icon_btn(Icons.chevron_down(), "Move down")
         self.move_down_btn.clicked.connect(self._on_move_track_down)
 
-        self.move_bottom_btn = WidgetUtil.icon_btn(Icons.chevron_double_down(), "Move to Bottom")
+        self.move_bottom_btn = WidgetUtil.icon_btn(Icons.chevron_double_down(), "Move to bottom")
         self.move_bottom_btn.clicked.connect(self._on_move_track_bottom)
 
         self.track_columns = ["Name", "Group", "Solo", "Override\nPitches", "Pitch Min", "Pitch Max", "Notes", "Start (sec)", "End (sec)", "Vel. Min", "Vel. Max", ""]
@@ -235,7 +235,7 @@ class TracksTab(QWidget):
         col += 1
 
         # delete button
-        delete_btn = WidgetUtil.icon_btn(Icons.trash_can(), "Delete Track")
+        delete_btn = WidgetUtil.icon_btn(Icons.trash_can(), "Delete track")
         delete_btn.clicked.connect(lambda _, row=row: self._on_remove_track(row))
         self.table.setCellWidget(row, col, LayoutUtil.center(delete_btn))
         col += 1

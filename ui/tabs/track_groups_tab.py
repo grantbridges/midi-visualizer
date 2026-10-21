@@ -57,22 +57,22 @@ class TrackGroupsTab(QWidget):
         self.clear_solo_btn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         self.clear_solo_btn.clicked.connect(self._on_clear_solo)
 
-        self.manage_presets_btn = WidgetUtil.icon_btn(Icons.format_list_group(), "Manage Track Group Presets")
+        self.manage_presets_btn = WidgetUtil.icon_btn(Icons.format_list_group(), "Manage track group presets")
         self.manage_presets_btn.clicked.connect(self._on_manage_presets)
 
-        self.add_from_presets_btn = WidgetUtil.icon_btn(Icons.format_list_group_plus(), "Add Track Groups from Presets")
+        self.add_from_presets_btn = WidgetUtil.icon_btn(Icons.format_list_group_plus(), "Add track groups from presets")
         self.add_from_presets_btn.clicked.connect(self._on_add_from_presets)
 
-        self.move_top_btn = WidgetUtil.icon_btn(Icons.chevron_double_up(), "Move to Top")
+        self.move_top_btn = WidgetUtil.icon_btn(Icons.chevron_double_up(), "Move to top")
         self.move_top_btn.clicked.connect(self._on_move_track_group_top)
 
-        self.move_up_btn = WidgetUtil.icon_btn(Icons.chevron_up(), "Move Up")
+        self.move_up_btn = WidgetUtil.icon_btn(Icons.chevron_up(), "Move up")
         self.move_up_btn.clicked.connect(self._on_move_track_group_up)
 
-        self.move_down_btn = WidgetUtil.icon_btn(Icons.chevron_down(), "Move Down")
+        self.move_down_btn = WidgetUtil.icon_btn(Icons.chevron_down(), "Move down")
         self.move_down_btn.clicked.connect(self._on_move_track_group_down)
 
-        self.move_bottom_btn = WidgetUtil.icon_btn(Icons.chevron_double_down(), "Move to Bottom")
+        self.move_bottom_btn = WidgetUtil.icon_btn(Icons.chevron_double_down(), "Move to bottom")
         self.move_bottom_btn.clicked.connect(self._on_move_track_group_bottom)
 
         self.track_columns = ["Name", "Tracks", "Solo", "Visible", "Color", "Opacity", "Note\nSparks", "Note\nBounce", "Note\nVel. Fx", "Bar Height", "Speed", "Pitch Offset", ""]
@@ -237,7 +237,7 @@ class TrackGroupsTab(QWidget):
         col += 1
 
         # delete button
-        delete_btn = WidgetUtil.icon_btn(Icons.trash_can(), "Delete Group")
+        delete_btn = WidgetUtil.icon_btn(Icons.trash_can(), "Delete group")
         delete_btn.clicked.connect(lambda _, row=row: self._on_remove_group(row))
         self.table.setCellWidget(row, col, LayoutUtil.center(delete_btn))
         col += 1

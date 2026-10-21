@@ -210,7 +210,7 @@ class ApplyTrackPresetsDialog(QDialog):
         col += 1
 
         # clear button
-        clear_btn = WidgetUtil.icon_btn(Icons.close_box_outline(), "Clear Assignment")
+        clear_btn = WidgetUtil.icon_btn(Icons.close_box_outline(), "Clear assignment")
         clear_btn.setEnabled(track.preset_to_apply is not None)
         clear_btn.clicked.connect(lambda _, row=row: self._on_clear_selection(row))
         self.table.setCellWidget(row, col, LayoutUtil.center(clear_btn))
